@@ -183,7 +183,7 @@
 
 **작업**
 
-- `createdb todolist_db` · `createdb todolist_test`
+- `createdb todolist_db` · `createdb todolist_db_test`
 - `BaseEntity` (`@MappedSuperclass`, JPA Auditing)
 - `User`, `Todo` 엔티티 + `Priority` enum + `AuthProvider` enum
 - **`Todo.user`는 `@ManyToOne(fetch = FetchType.LAZY)`** (기본값 EAGER 금지)
@@ -191,7 +191,7 @@
 - 입력값 제약을 스키마와 일치시킨다 (`CLAUDE.md` 4장 제약 표)
 - `UserRepository`, `TodoRepository` (`deleted_at IS NULL` 조건 포함 쿼리)
 - 인덱스 `idx_todos_user_deleted`
-- `src/test/resources/application-test.yml` (todolist_test, `ddl-auto: create-drop`)
+- `src/test/resources/application-test.yml` (todolist_db_test, `ddl-auto: create-drop`)
 - **`@EnableJpaAuditing`은 메인 애플리케이션 클래스에 붙인다** (`@Configuration`에 두면 `@DataJpaTest`가 로드하지 않아 `created_at`이 null이 됨)
 - Repository 테스트에 **`@AutoConfigureTestDatabase(replace = NONE)` + `@ActiveProfiles("test")`** 필수 (없으면 임베디드 DB로 교체 시도)
 
@@ -200,7 +200,7 @@
 - [ ] 애플리케이션 기동 시 `users`, `todos` 테이블 자동 생성
 - [ ] `created_at`, `updated_at` 자동 기록 확인
 - [ ] Repository 단위 테스트(`@DataJpaTest`) 통과 — **통합 테스트 번호 체계(1~8)와 별개**
-- [ ] 테스트가 `todolist_test`를 바라보고 실행됨 (H2 사용하지 않음)
+- [ ] 테스트가 `todolist_db_test`를 바라보고 실행됨 (H2 사용하지 않음)
 - [ ] `@DataJpaTest`에서 `created_at`이 null이 아님 (Auditing 정상 동작)
 - [ ] 저장된 `created_at`이 UTC 기준임 (KST로 9시간 밀리지 않음)
 
@@ -513,7 +513,7 @@
 
 **환경**
 
-- [ ] `todolist_db`, `todolist_test`와 함께 PostgreSQL 실행
+- [ ] `todolist_db`, `todolist_db_test`와 함께 PostgreSQL 실행
 - [ ] `./mvnw spring-boot:run` 오류 없이 기동
 - [ ] `./mvnw test` 전체 통과 (통합 테스트 8건 + Repository 단위 테스트)
 - [ ] `npm run build` 성공
