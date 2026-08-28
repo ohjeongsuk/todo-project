@@ -63,3 +63,8 @@ Desktop.ini
 logs/
 tmp/
 temp/
+
+### Node.js (재발 방지) ###
+# 루트에는 npm 프로젝트가 없어야 한다. 실수로 npx 등을 루트에서 실행해도
+# node_modules/ 가 커밋되지 않도록 막는다.
+node_modules/

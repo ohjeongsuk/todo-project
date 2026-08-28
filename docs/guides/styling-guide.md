@@ -1,25 +1,18 @@
 # 스타일링 가이드
 
-이 문서는 TailwindCSS v4 + shadcn/ui를 활용한 스타일링 규칙과 모범 사례를 제공합니다.
+이 문서는 Tailwind CSS 4 + shadcn/ui를 활용한 스타일링 규칙과 모범 사례를 제공합니다.
 
-> ⚠️ **스택 사실의 단일 출처는 [PRD 1.3](../PRD.md#13-기술-스택)이다.** 이 가이드의 서술이 PRD와 어긋나면 PRD를 따른다.
-> 특히 **미설치 라이브러리를 `import` 하지 않는다** — PRD 1.3의 "설치 상태" 열을 먼저 확인할 것.
+> ⚠️ **스택 사실의 단일 출처는 `CLAUDE.md`(2·4장)다.** 이 가이드의 서술이 `CLAUDE.md`와 어긋나면 `CLAUDE.md`를 따른다.
+> `components.json`의 `style`·`baseColor` 등 실제 설정값이 이 문서와 다르면 `components.json`이 사실이다.
 
+## 기술 스택 개요
 
-## 🎨 기술 스택 개요
+- **Tailwind CSS 4**: 유틸리티 기반 CSS 프레임워크. `@theme`으로 CSS-first 설정(v3의 `tailwind.config.js` 방식 아님)
+- **shadcn/ui**: Radix 기반 컴포넌트 라이브러리. `components.json` 기준 `style`·`baseColor`를 따른다(설치 시점 값을 그대로 사실로 취급하고, 이 문서에서 임의로 다른 값을 상정하지 않는다)
+- **lucide-react**: 아이콘
+- **CSS 변수**: 색상·간격 등 디자인 토큰을 CSS 변수로 관리
 
-### 핵심 스타일링 도구
-
-- **TailwindCSS v4**: 유틸리티 기반 CSS 프레임워크 — ✅ 설치됨
-- **shadcn/ui**: Radix UI 기반 컴포넌트 라이브러리 — ✅ 설치됨. style은 **`radix-nova`**, baseColor는 `neutral` (`components.json` 기준. new-york 아님)
-- **tw-animate-css**: 애니메이션 라이브러리 — ✅ 설치됨
-- **CSS Variables**: 동적 테마 시스템
-- **next-themes**: 다크모드 지원 — ⏳ **미설치. M5에서 설치**
-- **prettier-plugin-tailwindcss**: 자동 클래스 정렬 — ⏳ **미설치** (도입 여부 미확정)
-
-> 아래 `next-themes` 예시는 M5에서 설치한 뒤 적용한다.
-
-## 🚀 TailwindCSS v4 사용 규칙
+## Tailwind CSS 4 사용 규칙
 
 ### 기본 원칙
 
@@ -32,446 +25,143 @@
 
 // ❌ 인라인 스타일 사용 금지
 <div style={{ display: 'flex', padding: '16px' }}>
-  <h2 style={{ fontSize: '18px' }}>제목</h2>
-</div>
 ```
 
-### 클래스 작성 순서
-
-Prettier 플러그인이 자동으로 정렬하지만, 수동 작성 시 다음 순서를 따르세요:
-
-```tsx
-<div className={cn(
-  // 1. 레이아웃 (display, position)
-  "flex absolute",
-
-  // 2. 크기 (width, height, padding, margin)
-  "w-full h-auto p-4 m-2",
-
-  // 3. 타이포그래피 (font, text)
-  "text-lg font-medium text-center",
-
-  // 4. 배경 및 테두리
-  "bg-background border border-border rounded-md",
-
-  // 5. 효과 (shadow, opacity, transform)
-  "shadow-lg opacity-90 hover:scale-105",
-
-  // 6. 상호작용 (hover, focus, active)
-  "hover:bg-accent focus:ring-2 active:scale-95",
-
-  // 조건부 클래스
-  isActive && "bg-primary text-primary-foreground",
-  className
-)}>
-```
+클래스 순서는 `prettier-plugin-tailwindcss`가 자동 정렬합니다(설치되어 있다면 `package.json`의 devDependencies로 확인). 수동으로 신경 쓸 필요는 없습니다.
 
 ### 반응형 디자인
 
+이 프로젝트는 **360px ~ 1920px** 범위에서 정상 동작해야 합니다(`UX-05`). 모바일 우선으로 작성합니다.
+
 ```tsx
-// ✅ 모바일 우선 접근법
 <div className={cn(
-  // 기본 (모바일)
-  "flex flex-col space-y-4 p-4",
-
-  // 태블릿 (768px+)
-  "md:flex-row md:space-y-0 md:space-x-6 md:p-6",
-
-  // 데스크톱 (1024px+)
-  "lg:max-w-6xl lg:mx-auto lg:p-8",
-
-  // 대형 화면 (1280px+)
-  "xl:max-w-7xl"
+  'flex flex-col space-y-4 p-4',        // 기본(모바일)
+  'md:flex-row md:space-y-0 md:space-x-6 md:p-6',  // 태블릿
+  'lg:max-w-6xl lg:mx-auto lg:p-8'      // 데스크톱
 )}>
-
-// ❌ 데스크톱 우선 접근법 지양
-<div className="hidden lg:block md:hidden">
 ```
 
-### 커스텀 클래스 최소화
+## 다크모드 — 미디어쿼리 전략 (필수)
 
-```tsx
-// ✅ Tailwind 유틸리티 클래스 우선 사용
-<button className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90">
-
-// ❌ 커스텀 CSS 클래스 지양
-<button className="custom-button">
-```
-
-## 🎭 shadcn/ui 컴포넌트 활용
-
-### 기본 사용법
-
-```tsx
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-
-// ✅ shadcn/ui 컴포넌트 활용
-export function UserCard({ user }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{user.name}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Button variant="outline">프로필 보기</Button>
-      </CardContent>
-    </Card>
-  )
-}
-```
-
-### 컴포넌트 변형 (Variants)
-
-```tsx
-// Button 컴포넌트 변형
-<Button variant="default">기본 버튼</Button>
-<Button variant="destructive">삭제 버튼</Button>
-<Button variant="outline">아웃라인 버튼</Button>
-<Button variant="secondary">보조 버튼</Button>
-<Button variant="ghost">고스트 버튼</Button>
-<Button variant="link">링크 버튼</Button>
-
-// 크기 변형
-<Button size="default">기본 크기</Button>
-<Button size="sm">작은 크기</Button>
-<Button size="lg">큰 크기</Button>
-<Button size="icon">아이콘만</Button>
-```
-
-### 컴포넌트 커스터마이징
-
-```tsx
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-
-// ✅ 기존 컴포넌트 확장
-export function CustomButton({ className, ...props }) {
-  return (
-    <Button
-      className={cn(
-        'transition-all duration-200',
-        'hover:-translate-y-0.5 hover:shadow-lg',
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-// ❌ 처음부터 새로 만들기
-export function MyButton({ className, ...props }) {
-  return (
-    <button
-      className="bg-blue-500... px-4 py-2" // 긴 클래스 나열
-      {...props}
-    />
-  )
-}
-```
-
-### 새 shadcn/ui 컴포넌트 추가
-
-```bash
-# 컴포넌트 추가
-npx shadcn@latest add button
-npx shadcn@latest add card
-npx shadcn@latest add dialog
-
-# 모든 컴포넌트 확인
-npx shadcn@latest add
-```
-
-## 🌓 다크모드 구현
-
-### next-themes 활용
-
-```tsx
-// providers/theme-provider.tsx
-import { ThemeProvider as NextThemesProvider } from 'next-themes'
-
-export function ThemeProvider({ children, ...props }) {
-  return (
-    <NextThemesProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-      {...props}
-    >
-      {children}
-    </NextThemesProvider>
-  )
-}
-```
-
-### 테마 토글 컴포넌트
-
-```tsx
-import { useTheme } from 'next-themes'
-import { Moon, Sun } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-
-export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
-
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-    >
-      <Sun className="h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-      <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-      <span className="sr-only">테마 전환</span>
-    </Button>
-  )
-}
-```
-
-### 다크모드 대응 스타일링
-
-```tsx
-// ✅ 시맨틱 색상 변수 사용
-<div className="bg-background text-foreground">
-  <h1 className="text-primary">제목</h1>
-  <p className="text-muted-foreground">설명</p>
-</div>
-
-// ❌ 하드코딩된 색상 사용
-<div className="bg-white text-black dark:bg-black dark:text-white">
-  <h1 className="text-blue-600 dark:text-blue-400">제목</h1>
-</div>
-```
-
-## 🎨 색상 시스템
-
-### CSS 변수 기반 색상
-
-`app/globals.css`에 정의된 색상 변수:
+**이 프로젝트에는 다크모드 토글 UI가 없습니다.** OS/브라우저의 `prefers-color-scheme` 설정만으로 자동 전환됩니다(`UX-07`). `next-themes` 같은 토글 라이브러리는 설치하지 않습니다 — 토글 대상이 없는데 상태 관리 라이브러리를 넣으면 죽은 코드가 됩니다.
 
 ```css
-:root {
-  --background: 0 0% 100%;
-  --foreground: 224 71.4% 4.1%;
-  --primary: 220.9 39.3% 11%;
-  --primary-foreground: 210 20% 98%;
-  --secondary: 220 14.3% 95.9%;
-  --secondary-foreground: 220.9 39.3% 11%;
-  --muted: 220 14.3% 95.9%;
-  --muted-foreground: 220 8.9% 46.1%;
-  --accent: 220 14.3% 95.9%;
-  --accent-foreground: 220.9 39.3% 11%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 20% 98%;
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --ring: 224 71.4% 4.1%;
+/* app/globals.css */
+@theme {
+  --color-background: #fafafa;
+  --color-foreground: #0a0a0a;
+  /* ... 라이트 모드 토큰 */
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-background: #0a0a0a;
+    --color-foreground: #fafafa;
+    /* ... 다크 모드 토큰 */
+  }
 }
 ```
 
-### 색상 사용 예시
+```tsx
+// ✅ 시맨틱 색상 변수 사용 — 미디어쿼리가 알아서 전환해준다
+<div className="bg-background text-foreground">
+  <h1 className="text-primary">제목</h1>
+</div>
+
+// ❌ 금지: class 전략 (`.dark` 셀렉터, `@custom-variant dark (&:is(.dark *))`)
+//    토글 UI가 없는데 클래스 전략을 쓰면 아무 것도 전환되지 않거나,
+//    OS가 다크인데 화면은 라이트로 굳어버리는 FOUC만 남는다.
+```
+
+```tsx
+// ❌ 금지: next-themes의 ThemeProvider/useTheme/토글 버튼
+//    이 프로젝트에는 테마를 전환할 UI 자체가 없다.
+import { ThemeProvider } from 'next-themes' // 이 프로젝트에서 쓰지 않음
+```
+
+> shadcn/ui `init`이 만드는 기본 `globals.css`는 보통 `class` 전략(`.dark` 셀렉터 또는 `@custom-variant dark (&:is(.dark *))`)으로 생성됩니다. 초기화 직후에는 반드시 이 절의 미디어쿼리 방식으로 바꿔야 합니다 — 그대로 두면 이 문서의 규범과 어긋난 상태로 남습니다.
+
+## 색상 시스템
+
+색상 팔레트(배경·액센트·우선순위 3색 등)는 `CLAUDE.md`에 확정된 값이 있으면 그 값을, 없다면 `app/globals.css`의 `@theme` 토큰을 정본으로 삼습니다. 이 문서에 임의의 hex 값을 못 박지 않습니다 — 토큰 값 자체가 바뀌어도 이 가이드를 다시 고칠 필요가 없도록, 색상은 항상 CSS 변수(시맨틱 이름)로만 참조합니다.
 
 ```tsx
 // ✅ 시맨틱 색상 클래스 사용
 <div className="bg-background border-border">
   <h1 className="text-foreground">메인 텍스트</h1>
   <p className="text-muted-foreground">보조 텍스트</p>
-  <Button className="bg-primary text-primary-foreground">버튼</Button>
 </div>
 
-// ❌ 직접 색상 지정
+// ❌ 직접 색상 지정 — 다크모드에서 깨진다
 <div className="bg-white border-gray-200">
   <h1 className="text-gray-900">메인 텍스트</h1>
-  <p className="text-gray-600">보조 텍스트</p>
 </div>
 ```
 
-## ✨ 애니메이션 가이드
-
-### tw-animate-css 활용
+## shadcn/ui 컴포넌트 활용
 
 ```tsx
-import 'tw-animate-css'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-// ✅ 내장 애니메이션 사용
-<div className="animate-fadeIn">페이드 인</div>
-<div className="animate-slideUp">슬라이드 업</div>
-<div className="animate-bounce">바운스</div>
-
-// ✅ Tailwind transition 활용
-<button className="transition-all duration-200 hover:scale-105 hover:shadow-lg">
-  호버 효과
-</button>
-
-// ✅ 복합 애니메이션
-<div className="transform transition-transform duration-300 hover:scale-110 hover:rotate-3">
-  복합 효과
-</div>
+export function TodoCard({ todo }: { todo: Todo }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{todo.title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Button variant="outline">상세 보기</Button>
+      </CardContent>
+    </Card>
+  )
+}
 ```
 
-### 성능 고려사항
+새 컴포넌트를 추가할 때는 `npx shadcn@latest add [component-name]`을 씁니다. 단, **`form` 컴포넌트는 추가하지 않습니다** — `react-hook-form`을 함께 설치하는데, 이 프로젝트는 폼 라이브러리를 쓰지 않기로 확정했습니다(`CLAUDE.md` 3장, `forms.md` 참조).
 
-```tsx
-// ✅ will-change 사용으로 성능 최적화
-<div className="will-change-transform transition-transform hover:scale-105">
+```bash
+# ✅ 개별 컴포넌트 추가
+npx shadcn@latest add button
+npx shadcn@latest add dialog
 
-// ✅ 애니메이션 종료 후 will-change 제거
-<div className="hover:will-change-transform transition-transform hover:scale-105">
+# ❌ 금지 — react-hook-form 유입 경로
+npx shadcn@latest add form
 ```
 
-## 📱 반응형 디자인 패턴
-
-### 컨테이너 패턴
-
-```tsx
-// ✅ 반응형 컨테이너
-<div className="container mx-auto px-4 sm:px-6 lg:px-8">
-  <div className="max-w-7xl mx-auto">
-    {/* 컨텐츠 */}
-  </div>
-</div>
-
-// ✅ 그리드 레이아웃
-<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-  {items.map(item => (
-    <Card key={item.id}>...</Card>
-  ))}
-</div>
-```
-
-### 네비게이션 패턴
-
-```tsx
-// ✅ 반응형 네비게이션
-<nav className="flex items-center justify-between p-4">
-  <div className="flex items-center space-x-4">
-    <Logo />
-    <div className="hidden md:flex md:space-x-6">
-      <NavLink href="/about">소개</NavLink>
-      <NavLink href="/contact">연락처</NavLink>
-    </div>
-  </div>
-
-  {/* 모바일 메뉴 */}
-  <div className="md:hidden">
-    <MobileMenu />
-  </div>
-</nav>
-```
-
-## 🛠️ 유틸리티 함수
-
-### cn() 헬퍼 함수
+## 유틸리티 함수
 
 ```tsx
 import { cn } from '@/lib/utils'
 
-// ✅ cn() 함수로 클래스 조합
+// ✅ cn()으로 클래스 조합
 <div className={cn(
-  "base-classes",
-  condition && "conditional-classes",
-  variant === 'primary' && "primary-classes",
-  className // props에서 받은 추가 클래스
+  'base-classes',
+  condition && 'conditional-classes',
+  className
 )}>
 
 // ❌ 수동 문자열 조합
-<div className={`base-classes ${condition ? 'conditional-classes' : ''} ${className || ''}`}>
+<div className={`base-classes ${condition ? 'conditional-classes' : ''}`}>
 ```
 
-### 조건부 스타일링
-
-```tsx
-// ✅ 조건부 클래스 적용
-<Button
-  className={cn(
-    "base-button-styles",
-    isLoading && "opacity-50 cursor-not-allowed",
-    variant === 'destructive' && "bg-destructive text-destructive-foreground",
-    size === 'sm' && "px-2 py-1 text-sm"
-  )}
-  disabled={isLoading}
->
-
-// ❌ 복잡한 삼항 연산자
-<Button
-  className={
-    isLoading
-      ? "opacity-50 cursor-not-allowed"
-      : variant === 'destructive'
-        ? "bg-red-500 text-white"
-        : "bg-blue-500 text-white"
-  }
->
-```
-
-## 🚫 금지사항
-
-### ❌ 피해야 할 패턴
+## 금지사항
 
 ```tsx
 // 인라인 스타일 사용
 <div style={{ backgroundColor: 'red' }}>
 
-// 긴 클래스명 하드코딩
-<div className="w-full h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-bold text-2xl shadow-2xl rounded-lg border-4 border-white">
-
-// 중복된 스타일 정의
-<div className="p-4 padding-4 pt-4 pb-4 pl-4 pr-4">
-
-// !important 남용
-<div className="!text-red-500 !bg-blue-500">
-
-// Tailwind와 CSS 모듈 혼재
-<div className={`${styles.customClass} flex items-center`}>
-```
-
-### ❌ 잘못된 색상 사용
-
-```tsx
-// 하드코딩된 색상
-<div className="bg-gray-100 text-gray-900">
-
-// 다크모드 미고려
+// 하드코딩된 색상 (다크모드 미고려)
 <div className="bg-white text-black">
 
-// 접근성 미고려
-<button className="bg-red-200 text-red-300">저대비 버튼</button>
+// !important 남용
+<div className="!text-red-500">
 ```
 
-## ✅ 스타일링 체크리스트
+## 스타일링 체크리스트
 
-새 컴포넌트 작성 시 확인사항:
-
-### 기본 사항
-
-- [ ] TailwindCSS 유틸리티 클래스 우선 사용
-- [ ] cn() 함수로 클래스 조합
-- [ ] 시맨틱 색상 변수 사용
-- [ ] 반응형 디자인 적용
-
-### 다크모드
-
-- [ ] 다크모드 대응 색상 사용
-- [ ] 하드코딩된 색상 없음
-- [ ] 테마 전환 시 깨짐 없음
-
-### 성능
-
-- [ ] 불필요한 애니메이션 없음
-- [ ] will-change 적절히 사용
-- [ ] 인라인 스타일 없음
-
-### 접근성
-
-- [ ] 충분한 색상 대비
-- [ ] 포커스 상태 스타일링
-- [ ] 스크린 리더 고려
-
-### 유지보수
-
-- [ ] 일관된 클래스 순서
-- [ ] 재사용 가능한 컴포넌트 활용
-- [ ] 의미있는 클래스 조합
-
-이 가이드를 따라 일관성 있고 아름다운 UI를 구현해보세요!
+- [ ] Tailwind 유틸리티 클래스 우선 사용, 인라인 스타일 없음
+- [ ] 시맨틱 색상 변수 사용, 하드코딩된 색상 없음
+- [ ] `prefers-color-scheme` 미디어쿼리로만 다크모드 전환(토글 UI·`class`·`next-themes` 없음)
+- [ ] 360px ~ 1920px 반응형 확인
+- [ ] 충분한 색상 대비, 포커스 상태 스타일링
