@@ -1,0 +1,65 @@
+# ==============================================================================
+# 루트 .gitignore (모노레포 최상위)
+#
+# 주의: todo-backend/ 와 todo-frontend/ 는 각각 독립된 git 저장소다.
+#       두 폴더의 내부 파일은 각자의 .gitignore 가 관리하므로
+#       이 파일에서 하위 경로를 지정해도 적용되지 않는다.
+#       루트 저장소는 문서(docs/)와 프로젝트 공통 설정만 추적한다.
+# ==============================================================================
+
+### 하위 독립 저장소 (루트에서는 추적하지 않는다) ###
+# gitlink(서브모듈 유사 참조)로 잘못 커밋되는 것을 막는다.
+/todo-backend/
+/todo-frontend/
+
+### 비밀 정보 (CLAUDE.md 절대 규칙 9) ###
+# 비밀번호·API 키가 들어가는 파일은 절대 커밋하지 않는다
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+
+### IDE / 에디터 ###
+# Eclipse 워크스페이스 로컬 상태
+/.metadata/
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+### OS 생성 파일 ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Claude Code ###
+# agents/, commands/, settings.json 은 팀 공유 자산이므로 추적한다.
+# 개인 로컬 설정과 일회성 작업 계획만 제외한다.
+.claude/settings.local.json
+# plans/ 는 특정 시점의 일회성 작업 계획이며 로컬 환경 정보가 섞이므로 추적하지 않는다
+.claude/plans/
+
+### 작업 도구 산출물 ###
+# shrimp-task-manager 가 생성하는 로컬 작업 상태
+/shrimp_data/tasks.json
+/shrimp_data/memory/
+/shrimp_data/*.bak
+# WebGUI.md 는 실행할 때마다 포트가 바뀌는 런타임 산출물이다
+/shrimp_data/WebGUI.md
+
+### 로그 / 임시 파일 ###
+*.log
+logs/
+tmp/
+temp/
