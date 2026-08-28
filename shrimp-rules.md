@@ -247,10 +247,13 @@ npm run format         # 포맷 자동 수정
 |---|---|---|
 | 백엔드 패키지가 `com.example` (`TodoBackendApplication.java`) | 새 클래스는 이동 후 구조(`com.example.todoapp.*`)를 전제로 만들지 말고, 이동 작업과 함께 처리한다 | ROADMAP Phase 0 |
 | `pom.xml`에 **Jsoup·SpringDoc 없음** | 서버 sanitize(F-26)·Swagger(F-35~F-37) 코드를 쓰기 전에 승인 및 의존성 추가가 선행돼야 한다 | ROADMAP Phase 0 |
-| DB 설정이 `postgres` DB의 `todolist_db` **스키마** 방식 | `todolist_db`를 별도 데이터베이스로 분리하는 작업이 예정돼 있다. 연결 문자열을 임의로 고치지 않는다 | ROADMAP Phase 0 |
-| `todo-frontend/.git` **중첩 저장소** 존재 | 프론트 파일을 커밋할 때 루트가 아닌 중첩 저장소에 들어갈 수 있다. 커밋 전 `git rev-parse --show-toplevel`로 확인한다 | ROADMAP Phase 0 |
-| 루트 `.gitignore` **없음** | 커밋 시 `.metadata/`, 비밀 파일이 딸려 들어갈 수 있다 | ROADMAP Phase 0 |
 | TanStack Query·Framer Motion·Tiptap·isomorphic-dompurify·next-themes **미설치** | 이 라이브러리를 `import`하는 코드를 쓰지 않는다. 설치는 승인 후 (`docs/ROADMAP.md` 3.2절) | Phase 6·8 |
-| `docs/CHECKLIST.md` **미작성** | ROADMAP 3장의 완료 판정 번호가 빈 참조다. 어떤 Phase도 "완료"로 표시하지 않는다 | ROADMAP Phase 0 |
 | `docs/SCHEMA.md`·`API.md`·`DESIGN.md` 미작성 | 각각 Phase 1·2·6의 산출물이다. 해당 Phase 작업 시 함께 만든다 | Phase 1·2·6 |
 | `PROMPTS.md` **미작성** | ROADMAP 머리말이 참조하나 존재하지 않는다. 이 파일을 찾지 말 것 | 작성 시 |
+
+### 최근 해소된 항목 (참고용, 더 이상 주의 불필요)
+
+- DB는 `todolist_db` **별도 데이터베이스**로 이미 분리됨 (`application.properties` 확인).
+- `todo-frontend/.git` 중첩 저장소 **없음**.
+- 루트 `.gitignore` **존재함**.
+- `docs/CHECKLIST.md` **작성 완료**(409줄). ROADMAP 3장 완료 판정 칼럼이 참조 가능.
