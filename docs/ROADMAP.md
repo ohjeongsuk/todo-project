@@ -14,7 +14,7 @@
 | 0     | 저장소 초기화              | 전체     | 🟡   |
 | 1     | 백엔드 스캐폴딩            | backend  | ✅   |
 | 2     | 도메인 & DB                | backend  | ⬜   |
-| 3     | 인증 (로컬) + 인증 테스트  | backend  | ⬜   |
+| 3     | 인증 (로컬) + 인증 테스트  | backend  | ✅   |
 | 4     | Todo API + Todo 테스트     | backend  | ⬜   |
 | 5     | 구글 OAuth2 + OAuth 테스트 | backend  | ⬜   |
 | 6     | 프론트 스캐폴딩            | frontend | 🟡   |
@@ -237,21 +237,28 @@
 
 **DoD**
 
-- [ ] **`POST /api/v1/auth/signup`이 403이 아니라 200/409로 응답** (CSRF 비활성화 확인 — 안 하면 여기서 전부 막힌다)
-- [ ] **응답에 `Set-Cookie: JSESSIONID`가 없음** (`STATELESS` 세션 정책 확인)
-- [ ] 회원가입 → 사용자 생성 + JWT 반환
-- [ ] **한글 25자 비밀번호로 가입 시 500이 아니라 400 `INVALID_INPUT`** (BCrypt 72바이트 한계 — `CLAUDE.md` 4장)
-- [ ] 중복 이메일 시 409 `EMAIL_DUPLICATED`
-- [ ] 로그인 성공 시 유효 JWT, 실패 시 401
-- [ ] **미가입 이메일로 로그인한 401과 비밀번호가 틀린 401의 `code`·`message`가 완전히 동일함** (계정 존재 여부를 구분 노출하지 않는다 — `PRD.md` 5.1)
-- [ ] 토큰 없이 `/api/v1/auth/me` 호출 시 401
-- [ ] `/api/v1/auth/me` 응답에 `nickname`과 `email`이 모두 포함됨 (AUTH-08 — 화면 표시 여부는 Phase 7에서 통제)
-- [ ] 비밀번호가 DB에 해시로 저장됨
-- [ ] **Security 도입 후에도 Swagger UI 접속 가능** (Phase 1 DoD 회귀 방지)
-- [ ] Swagger Authorize에 토큰을 넣고 `/auth/me` 호출이 200으로 성공
-- [ ] 모든 응답이 `{success, data, error}` 포맷을 따름
-- [ ] **토큰 없이 호출한 401 응답도** `{success:false, error:{code:"UNAUTHORIZED"}}` 포맷임
-- [ ] **인증 통합 테스트 3건 통과**
+- [x] **`POST /api/v1/auth/signup`이 403이 아니라 200/409로 응답** (CSRF 비활성화 확인 — 안 하면 여기서 전부 막힌다)
+- [x] **응답에 `Set-Cookie: JSESSIONID`가 없음** (`STATELESS` 세션 정책 확인)
+- [x] 회원가입 → 사용자 생성 + JWT 반환
+- [x] **한글 25자 비밀번호로 가입 시 500이 아니라 400 `INVALID_INPUT`** (BCrypt 72바이트 한계 — `CLAUDE.md` 4장)
+- [x] 중복 이메일 시 409 `EMAIL_DUPLICATED`
+- [x] 로그인 성공 시 유효 JWT, 실패 시 401
+- [x] **미가입 이메일로 로그인한 401과 비밀번호가 틀린 401의 `code`·`message`가 완전히 동일함** (계정 존재 여부를 구분 노출하지 않는다 — `PRD.md` 5.1)
+- [x] 토큰 없이 `/api/v1/auth/me` 호출 시 401
+- [x] `/api/v1/auth/me` 응답에 `nickname`과 `email`이 모두 포함됨 (AUTH-08 — 화면 표시 여부는 Phase 7에서 통제)
+- [x] 비밀번호가 DB에 해시로 저장됨
+- [x] **Security 도입 후에도 Swagger UI 접속 가능** (Phase 1 DoD 회귀 방지)
+- [x] Swagger Authorize에 토큰을 넣고 `/auth/me` 호출이 200으로 성공
+- [x] 모든 응답이 `{success, data, error}` 포맷을 따름
+- [x] **토큰 없이 호출한 401 응답도** `{success:false, error:{code:"UNAUTHORIZED"}}` 포맷임
+- [x] **인증 통합 테스트 3건 통과**
+
+> ### Phase 3 구현 기록 (2026-08-31)
+>
+> 착수 시점에 `AuthService`·`SecurityConfig`·`JwtTokenProvider`·`RefreshTokenCookieFactory`·`GlobalExceptionHandler` 등 서비스·보안 레이어는 이미 완성되어 있었으나(CLAUDE.md 5장 refresh token 회전 정책까지 반영), 이를 호출할 `AuthController`가 없어 인증 API를 전혀 쓸 수 없는 상태였다. 이번 Phase에서 `AuthController`(signup/login/refresh/me)와 `OpenApiConfig`(bearerAuth)를 신규 작성해 기존 자산을 그대로 배선했다.
+>
+> - `POST /api/auth/refresh`는 ROADMAP 작업 목록에 명시되어 있지 않았지만, `SecurityConfig`에 이미 permitAll 경로로 등록되어 있고 `AuthService.refresh()`·`RefreshTokenService.rotate()`도 이미 구현되어 있어 함께 작성했다(사용자 승인). curl로 토큰 회전과, 이미 폐기된 토큰 재사용 시 401로 거부되는 탈취 감지 로직까지 확인했다.
+> - `AuthControllerTest`는 `@SpringBootTest` + `@AutoConfigureMockMvc` + `@ActiveProfiles("test")` + `@Transactional`로 작성해 `todolist_db_test`를 사용했다(H2 미사용). Boot 4.1에서 `@AutoConfigureMockMvc`의 패키지가 `org.springframework.boot.webmvc.test.autoconfigure`로 이동한 것을 로컬 jar 직접 검색으로 확인했다.
 
 ---
 
