@@ -51,12 +51,11 @@ Desktop.ini
 .claude/plans/
 
 ### 작업 도구 산출물 ###
-# shrimp-task-manager 가 생성하는 로컬 작업 상태
-/shrimp_data/tasks.json
-/shrimp_data/memory/
-/shrimp_data/*.bak
-# WebGUI.md 는 실행할 때마다 포트가 바뀌는 런타임 산출물이다
-/shrimp_data/WebGUI.md
+# shrimp-task-manager 가 생성하는 로컬 작업 상태 디렉토리 전체를 무시한다.
+# shrimp-task-manager는 이 폴더에 자체 .git/을 초기화하므로(중첩 저장소),
+# 하위 파일 단위로만 무시하면 상위 저장소가 이를 gitlink로 잘못 커밋할 위험이 있다
+# (todo-backend/·todo-frontend/를 통째로 무시하는 것과 같은 이유).
+/shrimp_data/
 
 ### 로그 / 임시 파일 ###
 *.log
