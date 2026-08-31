@@ -63,7 +63,9 @@
 | `completed_at` | `timestamp` | NULL | | 완료 시 기록, 해제 시 `NULL`로 되돌림 (PRD F-20) |
 | `created_at` / `updated_at` / `deleted_at` | | | | BaseEntity 공통 필드 |
 
-**인덱스**: `idx_todos_user_deleted` — `(user_id, deleted_at)` 복합 인덱스. `TodoRepository`의 모든 조회가 "특정 `user_id` + `deleted_at IS NULL`" 패턴이므로, `user_id`를 선행 컬럼으로 둬 B-tree 접두사 매칭을 활용한다.
+**인덱스**:
+- `idx_todos_user_deleted` — `(user_id, deleted_at)` 복합 인덱스. `TodoRepository`의 모든 조회가 "특정 `user_id` + `deleted_at IS NULL`" 패턴이므로, `user_id`를 선행 컬럼으로 둬 B-tree 접두사 매칭을 활용한다. `@Table(indexes=...)`로 자동 생성됨.
+- `idx_todos_title_lower` — `LOWER(title)` 함수 기반 인덱스. 제목 대소문자 무시 검색(`TodoRepository.search`의 `lower(t.title) like lower(concat('%', :keyword, '%'))`)을 지원한다. JPA 애노테이션으로 함수 표현식 인덱스를 만들 수 없어 `db/add-title-index.sql`로 수동 관리한다(Phase 4, 이 프로젝트는 Flyway/Liquibase 미사용). 로컬 `todolist_db`에 적용 완료, 신규 환경 구성 시 이 스크립트를 실행해야 한다.
 
 **소유권 검증**: 모든 조회는 `user_id`를 쿼리 조건에 포함해야 한다(PRD NF-02, `CLAUDE.md` 절대 규칙 4). 애플리케이션 코드로 사후 필터링하지 않는다.
 

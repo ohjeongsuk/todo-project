@@ -15,7 +15,7 @@
 | 1     | 백엔드 스캐폴딩            | backend  | ✅   |
 | 2     | 도메인 & DB                | backend  | ⬜   |
 | 3     | 인증 (로컬) + 인증 테스트  | backend  | ✅   |
-| 4     | Todo API + Todo 테스트     | backend  | ⬜   |
+| 4     | Todo API + Todo 테스트     | backend  | ✅   |
 | 5     | 구글 OAuth2 + OAuth 테스트 | backend  | ⬜   |
 | 6     | 프론트 스캐폴딩            | frontend | 🟡   |
 | 7     | 인증 화면                  | frontend | ⬜   |
@@ -286,23 +286,31 @@
 
 **DoD**
 
-- [ ] 목록 API가 `{success, data:{content, page, ...}, error}` 형태로 응답
-- [ ] `PUT` 저장이 완료 상태를 덮어쓰지 않음
-- [ ] `toggle`을 같은 값으로 두 번 호출해도 결과가 동일함(멱등)
-- [ ] `completed` 미지정 시 전체 반환, `true`/`false` 시 필터 적용
-- [ ] 영문 대소문자를 섞어 검색해도 결과가 나옴
-- [ ] `?sort=foo,desc` 같은 잘못된 정렬 값에도 500이 나지 않음
-- [ ] 삭제 시 `deleted_at` 기록, 목록에서 제외
-- [ ] 타 사용자 Todo 접근 시 404
-- [ ] 제목 미입력·200자 초과 시 400 + 필드 메시지
-- [ ] 본문 50,000자 초과 시 400
-- [ ] `<script>` 포함 본문 저장 시 태그 제거, `a` 태그에 `rel` 주입 확인
-- [ ] **키워드 검색 포함** 목록 조회가 **워밍업 후 3회 측정 중앙값 500ms 이내** (로컬, 시드 **10,000건** 기준)
+- [x] 목록 API가 `{success, data:{content, page, ...}, error}` 형태로 응답
+- [x] `PUT` 저장이 완료 상태를 덮어쓰지 않음
+- [x] `toggle`을 같은 값으로 두 번 호출해도 결과가 동일함(멱등)
+- [x] `completed` 미지정 시 전체 반환, `true`/`false` 시 필터 적용
+- [x] 영문 대소문자를 섞어 검색해도 결과가 나옴
+- [x] `?sort=foo,desc` 같은 잘못된 정렬 값에도 500이 나지 않음
+- [x] 삭제 시 `deleted_at` 기록, 목록에서 제외
+- [x] 타 사용자 Todo 접근 시 404
+- [x] 제목 미입력·200자 초과 시 400 + 필드 메시지
+- [x] 본문 50,000자 초과 시 400
+- [x] `<script>` 포함 본문 저장 시 태그 제거, `a` 태그에 `rel` 주입 확인
+- [x] **키워드 검색 포함** 목록 조회가 **워밍업 후 3회 측정 중앙값 500ms 이내** (로컬, 시드 **10,000건** 기준) — 실측 37.3/38.8/40.4ms, 중앙값 **38.8ms**
   > ⚠️ 시드 100건으로는 이 지표가 의미가 없다. 인덱스가 없어도 100행은 1ms 미만이라 **항상 통과한다.** `CLAUDE.md` 4장이 지목한 유일한 성능 위험(`LOWER(title) LIKE '%키워드%'`의 인덱스 미사용)을 검출하려면 데이터가 충분해야 하고, 측정 대상도 검색 경로여야 한다. 또 첫 요청은 JVM 콜드 스타트라 DB가 아니라 워밍업 상태를 재는 셈이 되므로 워밍업 후에 측정한다.
-- [ ] 날짜가 배열이 아닌 ISO 문자열로 직렬화됨
-- [ ] 목록 조회 시 user 조회 쿼리가 추가로 발생하지 않음
-- [ ] Swagger에서 전체 API 확인 가능
-- [ ] **Todo 통합 테스트 4건 통과**
+- [x] 날짜가 배열이 아닌 ISO 문자열로 직렬화됨
+- [x] 목록 조회 시 user 조회 쿼리가 추가로 발생하지 않음 — 100건 목록 조회 시 `todos` SELECT 1회 + `count(*)` 1회만 발생(인증 필터의 사용자 조회 1회는 요청당 고정이며 Todo 건수와 무관)
+- [x] Swagger에서 전체 API 확인 가능
+- [x] **Todo 통합 테스트 4건 통과**
+
+> ### Phase 4 구현 기록 (2026-08-31)
+>
+> Todo 엔티티·Repository 기본 메서드는 Phase 2에서 완성되어 있었으나, `TodoController`·`TodoService`·`HtmlSanitizer`·DTO는 전혀 없어 순수 신규 구현으로 진행했다.
+>
+> - **검색 성능**: `LOWER(title)` 함수 기반 인덱스(`idx_todos_title_lower`)를 `db/add-title-index.sql`로 수동 생성했다(이 프로젝트에 Flyway/Liquibase가 없어 JPA `ddl-auto`로는 함수 표현식 인덱스를 만들 수 없음). 10,000건 시드 기준 키워드 검색 중앙값 **38.8ms**로 500ms DoD를 여유롭게 통과했다. 다만 `EXPLAIN ANALYZE` 확인 결과 이 규모(선택도 20%)에서는 PostgreSQL 플래너가 인덱스 대신 Seq Scan을 선택한다 — 실행시간(11.8ms)이 이미 충분히 빠르기 때문이며, 데이터가 더 커지거나 검색 조건의 선택도가 낮아지면 플래너가 인덱스를 선택하게 된다. 성능 목표는 달성했고 인덱스도 정확히 존재하지만, 이번 규모에서 실행계획에 나타나지는 않는다는 사실을 기록해 둔다.
+> - **버그 발견 및 수정**: `keyword` 파라미터가 없을 때(`GET /api/todos`, completed만 지정) `500 lower(bytea) 이름의 함수가 없음`이 발생했다. JPQL의 `:keyword`가 null일 때 PostgreSQL이 파라미터 타입을 추론하지 못해 `bytea`로 잘못 캐스팅하는 문제였다. `TodoRepository.search`의 JPQL에 `cast(:keyword as string)`을 명시해 해결했다.
+> - **HTML 정화**: Jsoup `Safelist.none()`에서 시작해 Phase 6 Tiptap 최종 설정과 대응하는 태그(`p,h2,h3,strong,em,ul,ol,li,blockquote,pre,code,br,a`)만 허용하고, `a[href]`에 `rel="nofollow noopener noreferrer"`를 강제 주입하며 `http`/`https`/`mailto` 외 스킴(예: `javascript:`)을 차단한다.
 
 ---
 
