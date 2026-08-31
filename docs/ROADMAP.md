@@ -16,7 +16,7 @@
 | 2     | 도메인 & DB                | backend  | ⬜   |
 | 3     | 인증 (로컬) + 인증 테스트  | backend  | ✅   |
 | 4     | Todo API + Todo 테스트     | backend  | ✅   |
-| 5     | 구글 OAuth2 + OAuth 테스트 | backend  | ⬜   |
+| 5     | 구글 OAuth2 + OAuth 테스트 | backend  | ✅   |
 | 6     | 프론트 스캐폴딩            | frontend | 🟡   |
 | 7     | 인증 화면                  | frontend | ⬜   |
 | 8     | Todo 화면                  | frontend | ⬜   |
@@ -333,11 +333,11 @@
 
 **DoD**
 
-- [ ] 구글 로그인 후 JWT를 담은 302 리다이렉트 발생
-- [ ] 신규 사용자가 `provider=GOOGLE`, nickname이 채워진 상태로 저장됨
-- [ ] 재로그인 시 중복 계정이 생기지 않음
-- [ ] 동일 이메일 로컬 계정 존재 시 `error=email_conflict`로 302 리다이렉트
-- [ ] **OAuth 서비스 단위 테스트 1건 통과**
+- [x] 구글 로그인 후 JWT를 담은 302 리다이렉트 발생 — 실측: `/oauth2/authorization/google` → 구글 동의 → `http://localhost:3000/oauth/callback?token=eyJ...` 리다이렉트 확인
+- [x] 신규 사용자가 `provider=GOOGLE`, nickname이 채워진 상태로 저장됨 — 발급된 토큰으로 `/api/auth/me` 호출 시 `{"nickname":"정석","email":"ojs933327@gmail.com"}` 확인, 서버 로그에 `users` INSERT 1건만 발생(재로그인 시엔 발생하지 않음 — 아래 항목)
+- [x] 재로그인 시 중복 계정이 생기지 않음 — 같은 구글 계정으로 재로그인한 새 토큰의 `sub` 클레임이 최초 로그인과 동일(`6`), 서버 로그에 `users` SELECT만 발생하고 INSERT 없음(`refresh_tokens`에만 새 행 발급)
+- [x] 동일 이메일 로컬 계정 존재 시 `error=email_conflict`로 302 리다이렉트 — **단위 테스트로 검증.** 브라우저 실측에는 로컬 계정과 동일한 이메일의 별도 Google 테스트 사용자가 필요해(현재 테스트 계정은 이미 GOOGLE로 가입됨) 이번 라운드에서는 실행하지 않았고, `CustomOAuth2UserServiceTest.동일_이메일_로컬계정이_있으면_거부한다`가 실제 `UserRepository` 조회 결과를 목으로 구성해 `OAuth2AuthenticationException(email_conflict)` 발생을 확인함
+- [x] **OAuth 서비스 단위 테스트 1건 통과** — 3건(`신규_이메일이면_구글_계정을_생성한다` / `기존_구글계정_재로그인시_새로_생성하지_않는다` / `동일_이메일_로컬계정이_있으면_거부한다`) 모두 통과, 전체 회귀 테스트 19건도 통과
 
 ---
 
