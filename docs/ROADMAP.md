@@ -12,7 +12,7 @@
 | Phase | 내용                       | 저장소   | 상태 |
 | ----- | -------------------------- | -------- | ---- |
 | 0     | 저장소 초기화              | 전체     | 🟡   |
-| 1     | 백엔드 스캐폴딩            | backend  | 🟡   |
+| 1     | 백엔드 스캐폴딩            | backend  | ✅   |
 | 2     | 도메인 & DB                | backend  | ⬜   |
 | 3     | 인증 (로컬) + 인증 테스트  | backend  | ⬜   |
 | 4     | Todo API + Todo 테스트     | backend  | ⬜   |
@@ -163,15 +163,25 @@
 
 **DoD**
 
-- [ ] `pom.xml`의 SpringDoc이 **현재 Boot 버전에 대응하는 정확한 3.x 버전으로 핀**되어 있음 (범위 지정 금지 — `CLAUDE.md` 3장)
-- [ ] `pom.xml`에 **`jsoup`이 포함**되어 있음 (Phase 4의 XSS 정화 전제)
-- [ ] `pom.xml`에 **jjwt 3종(`jjwt-api`/`jjwt-impl`/`jjwt-jackson`)이 동일 버전으로 핀**되어 있음 (Phase 3의 `JwtTokenProvider` 전제)
-- [ ] `./mvnw dependency:tree` 오류 없음
-- [ ] **`src/main/resources`에 `application.properties`가 없고 `application.yml`·`application-local.yml`·`application-prod.yml`이 있음**
-- [ ] `./mvnw spring-boot:run`이 옵션 없이 local 프로파일로 기동 성공
-- [ ] **기동 로그에 `The following 1 profile is active: "local"`이 찍힘**
-- [ ] `http://localhost:8080/swagger-ui/index.html`이 200으로 열리고 API 목록 화면이 렌더됨
-- [ ] `git check-ignore -v .env`가 규칙에 매칭되고 `.env.example`은 매칭되지 않음
+- [x] `pom.xml`의 SpringDoc이 **현재 Boot 버전에 대응하는 정확한 3.x 버전으로 핀**되어 있음 (범위 지정 금지 — `CLAUDE.md` 3장) — `springdoc-openapi-starter-webmvc-ui:3.1.0`
+- [x] `pom.xml`에 **`jsoup`이 포함**되어 있음 (Phase 4의 XSS 정화 전제) — `jsoup:1.23.2`
+- [x] `pom.xml`에 **jjwt 3종(`jjwt-api`/`jjwt-impl`/`jjwt-jackson`)이 동일 버전으로 핀**되어 있음 (Phase 3의 `JwtTokenProvider` 전제) — 모두 `0.12.6`
+- [x] `./mvnw dependency:tree` 오류 없음 (2026-08-31 재확인: `BUILD SUCCESS`)
+- [x] **`src/main/resources`에 `application.properties`가 없고 `application.yml`·`application-local.yml`·`application-prod.yml`이 있음**
+- [x] `./mvnw spring-boot:run`이 옵션 없이 local 프로파일로 기동 성공 (2026-08-31 재확인)
+- [x] **기동 로그에 `The following 1 profile is active: "local"`이 찍힘**
+- [x] `http://localhost:8080/swagger-ui/index.html`이 200으로 열리고 API 목록 화면이 렌더됨
+- [x] `git check-ignore -v .env`가 규칙에 매칭되고 `.env.example`은 매칭되지 않음
+
+> ### Phase 1 재검증 기록 (2026-08-31)
+>
+> DoD를 실제로 재실행해 검증하는 과정에서 **애플리케이션 기동 자체가 실패하는 회귀**를 발견하고 해결했다.
+>
+> | 항목 | 발견 당시 | 결과 |
+> | --- | --- | --- |
+> | Jackson 2→3 전환 미반영 | Spring Boot 4.1의 Jackson 자동설정 기본값이 `com.fasterxml.jackson.*`(2.x)에서 `tools.jackson.*`(3.x, `JsonMapper`)로 바뀌었는데, `JwtAuthenticationEntryPoint`·`JwtAccessDeniedHandler`가 여전히 `com.fasterxml.jackson.databind.ObjectMapper`(Jackson 2.x, `jjwt-jackson`의 전이 의존성으로 클래스패스엔 있으나 Spring이 빈으로 등록하지 않음)를 생성자로 요구해 `spring-boot:run` 기동이 `UnsatisfiedDependencyException`으로 전면 실패했다(컴파일은 항상 성공했으므로 발견이 늦어짐). | ✅ 두 클래스의 import를 `tools.jackson.databind.ObjectMapper`로 교체(다형성으로 `JsonMapper` 빈이 정상 주입됨). 재기동 후 Swagger UI·`/v3/api-docs` 200 확인 |
+>
+> ⚠️ Spring Boot 4.1 이후 Jackson 관련 코드를 새로 작성할 때는 `com.fasterxml.jackson.*`이 아니라 **`tools.jackson.*`**를 사용한다. `com.fasterxml.jackson`은 `spring-boot-jackson2`(deprecated) 모듈을 별도로 추가하지 않는 한 Spring이 자동으로 빈을 등록하지 않는다.
 
 > SpringDoc 버전은 `CLAUDE.md` 3장에서 3.x로 확정됐다. 다시 조사하거나 2.x로 되돌리지 않는다.
 
