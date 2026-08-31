@@ -13,7 +13,7 @@
 | ----- | -------------------------- | -------- | ---- |
 | 0     | 저장소 초기화              | 전체     | 🟡   |
 | 1     | 백엔드 스캐폴딩            | backend  | ✅   |
-| 2     | 도메인 & DB                | backend  | ⬜   |
+| 2     | 도메인 & DB                | backend  | ✅   |
 | 3     | 인증 (로컬) + 인증 테스트  | backend  | ✅   |
 | 4     | Todo API + Todo 테스트     | backend  | ✅   |
 | 5     | 구글 OAuth2 + OAuth 테스트 | backend  | ✅   |
@@ -207,12 +207,16 @@
 
 **DoD**
 
-- [ ] 애플리케이션 기동 시 `users`, `todos` 테이블 자동 생성
-- [ ] `created_at`, `updated_at` 자동 기록 확인
-- [ ] Repository 단위 테스트(`@DataJpaTest`) 통과 — **통합 테스트 번호 체계(1~8)와 별개**
-- [ ] 테스트가 `todolist_db_test`를 바라보고 실행됨 (H2 사용하지 않음)
-- [ ] `@DataJpaTest`에서 `created_at`이 null이 아님 (Auditing 정상 동작)
-- [ ] 저장된 `created_at`이 UTC 기준임 (KST로 9시간 밀리지 않음)
+- [x] 애플리케이션 기동 시 `users`, `todos` 테이블 자동 생성 — 실측: `POST /api/auth/signup` → `POST /api/todos` 호출이 각각 200으로 성공(신규 Todo id 10103), `todolist_db_test`는 `ddl-auto: create-drop`이라 Repository 테스트마다 빈 스키마에서 테이블을 새로 만들고 버리는 것으로 매번 검증됨
+- [x] `created_at`, `updated_at` 자동 기록 확인 — 실측: 방금 생성한 Todo 응답의 `createdAt`/`updatedAt`이 둘 다 null이 아니고 동일 시각(신규 생성이므로)으로 채워짐
+- [x] Repository 단위 테스트(`@DataJpaTest`) 통과 — **통합 테스트 번호 체계(1~8)와 별개** — `UserRepositoryTest` 4건 + `TodoRepositoryTest` 4건, 총 8건 통과
+- [x] 테스트가 `todolist_db_test`를 바라보고 실행됨 (H2 사용하지 않음) — 실측: 테스트 로그의 `Database JDBC URL`이 `jdbc:postgresql://localhost:5432/todolist_db_test`, H2 언급 없음
+- [x] `@DataJpaTest`에서 `created_at`이 null이 아님 (Auditing 정상 동작) — `UserRepositoryTest.createdAt이_자동으로_기록된다`/`TodoRepositoryTest` 동일 테스트로 확인
+- [x] 저장된 `created_at`이 UTC 기준임 (KST로 9시간 밀리지 않음) — `UserRepositoryTest.createdAt이_UTC_기준으로_저장된다` 통과. API 실측으로도 재확인: Todo 생성 응답 `createdAt`(`09:02:54`)이 `date -u`로 잰 실제 UTC 시각(`09:02:59`)과 5초 이내 일치, KST(9시간 차이)로 밀리지 않음
+
+> ⚠️ Phase 2와 무관하게 발견: 한글이 포함된 JSON 본문을 curl(Git Bash, 로컬 콘솔 인코딩)로 보내면 서버가 `HttpMessageNotReadableException`(잘못된 UTF-8)을 `GlobalExceptionHandler`에서 400이 아닌 500 `INTERNAL_ERROR`로 응답한다. 클라이언트 요청 자체가 깨진 경우이므로 서버 책임은 아니지만, 400으로 내려주는 편이 API 계약상 더 정확하다 — Phase 3~4 범위 밖이라 별도 이슈로만 기록해 둔다.
+
+전체 테스트 스위트(19건) 회귀 없음. 검증 중 로컬 DB에 남은 흔적: `phase2-check@example.com` 계정(로컬 전용), Todo id 10103 — 실제 서비스 데이터가 아니므로 정리하지 않음.
 
 ---
 
