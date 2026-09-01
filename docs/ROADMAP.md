@@ -18,7 +18,7 @@
 | 4     | Todo API + Todo 테스트     | backend  | ✅   |
 | 5     | 구글 OAuth2 + OAuth 테스트 | backend  | ✅   |
 | 6     | 프론트 스캐폴딩            | frontend | ✅   |
-| 7     | 인증 화면                  | frontend | ⬜   |
+| 7     | 인증 화면                  | frontend | ✅   |
 | 8     | Todo 화면                  | frontend | ⬜   |
 | 9     | 인터랙션 다듬기            | frontend | ⬜   |
 | 10    | 전체 검증                  | 전체     | ⬜   |
@@ -77,9 +77,9 @@
 | AUTH-01 회원가입                         | 3(API) · 7(화면)                                              | 3 · 7 · 10                                       |
 | AUTH-02 비밀번호 6자 이상 + 72바이트     | 3(바이트 validator) · 7(실시간 검증)                          | 3(한글 25자 → 400) · 7(제출 전 인라인 안내) · 10 |
 | AUTH-03 이메일 중복                      | 3(409) · 7(인라인 문구)                                       | 3 · 7                                            |
-| AUTH-04 로그인·JWT 24h                   | 3 · 7                                                         | 3 · 7 · 10                                       |
+| AUTH-04 로그인·JWT 30분                  | 3 · 7                                                         | 3 · 7 · 10                                       |
 | AUTH-05 구글 로그인                      | 5 · 7(`/oauth/callback`)                                      | 5 · 7 · 10                                       |
-| AUTH-06 로그아웃                         | 7 (프론트 전용, 서버 API 없음)                                | 7 · 10                                           |
+| AUTH-06 로그아웃                         | 7 (**서버 `POST /api/auth/logout` + 프론트**)                 | 7 · 10                                           |
 | AUTH-07 라우트 보호                      | 7 (`(main)` 클라이언트 레이아웃)                              | 7(만료 토큰 케이스) · 10                         |
 | AUTH-08 헤더 닉네임 / 이메일 미표시      | 3(`/auth/me` 응답) · 7(헤더)                                  | 3(응답 필드) · 7(DOM에 이메일 없음) · 10         |
 | AUTH-09 계정 충돌 거부                   | 5 · 7(안내 문구)                                              | 5 · 7 · 10                                       |
@@ -272,7 +272,7 @@
 - [x] 로그인 성공 시 유효 JWT, 실패 시 401
 - [x] **미가입 이메일로 로그인한 401과 비밀번호가 틀린 401의 `code`·`message`가 완전히 동일함** (계정 존재 여부를 구분 노출하지 않는다 — `PRD.md` 5.1)
 - [x] 토큰 없이 `/api/v1/auth/me` 호출 시 401
-- [x] `/api/v1/auth/me` 응답에 `nickname`과 `email`이 모두 포함됨 (AUTH-08 — 화면 표시 여부는 Phase 7에서 통제)
+- [x] `/api/auth/me` 응답에 `nickname`과 `email`이 모두 포함됨 (AUTH-08 — 화면 표시 여부는 Phase 7에서 통제)
 - [x] 비밀번호가 DB에 해시로 저장됨
 - [x] **Security 도입 후에도 Swagger UI 접속 가능** (Phase 1 DoD 회귀 방지)
 - [x] Swagger Authorize에 토큰을 넣고 `/auth/me` 호출이 200으로 성공
@@ -512,13 +512,26 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 
 ## Phase 7 — 인증 화면
 
+> ### Phase 7 착수 결정 (2026-09-01)
+>
+> | 항목 | 결정 | 근거 |
+> | --- | --- | --- |
+> | 브랜치 | `develop`을 `main`으로 ff 정렬한 뒤 **`feature/` → `develop` → `main`** 복귀 | Phase 1~6이 `main`에 직접 커밋됐고 `develop`이 08-28에 멈춰 있었다. `develop` 전용 커밋이 0이라 무손실 정렬이 가능했다 |
+> | 로그아웃 | **서버 `POST /api/auth/logout` 추가** | `CLAUDE.md` 5장(절대 규칙)·`PRD.md` F-08·7.4가 서버 로그아웃을 요구한다. `AuthService.logout()`이 이미 구현돼 있어 컨트롤러 메서드 1개 + `SecurityConfig` 1줄이면 된다 |
+> | 네트워크 문구 | **"연결에 실패했습니다."로 통일** | `lib/errorMessages.ts`의 값을 이 문구로 바꾼다. 재시도 버튼이 옆에 붙으므로 "잠시 후 다시 시도해 주세요"는 중복이다 |
+> | 구글 검증 | **백엔드를 8080에 띄워 실측** | 등록된 리다이렉트 URI가 `http://localhost:8080/login/oauth2/code/google`이고 `redirect-uri`를 따로 지정하지 않아 Spring이 baseUrl 기준으로 생성한다. 8081로 띄우면 `redirect_uri_mismatch`가 난다 |
+>
+> **참조 정정**: 이 Phase가 참조하던 `PRD.md` 5.1/5.3/5.4는 실제 문서와 달랐다(5.1=보안, 5.3=코드 품질, 5.4=접근성). 실제 내용은 7.1(가입 흐름)·7.2(구글 로그인)·7.3(토큰 갱신)·7.4(로그아웃)에 있어 그쪽으로 고쳤다. `CLAUDE.md` 9장 참조 2건은 해당 장이 없어 제거했다(`CLAUDE.md`는 6장까지). 추적표의 "JWT 24h"는 실제 30분(`access-token-expiration: 1800000`)이라 정정했다.
+>
+> ⚠️ **`UX-01`~`UX-07`은 `PRD.md`에 정의가 없다.** 위 추적표의 행 이름(UX-01 스켈레톤, UX-04 에러+재시도 버튼, UX-06 label·키보드)만이 유일한 근거다.
+
 **저장소**: `todo-frontend` · **관련 요구사항**: AUTH-01~09, UX-01, UX-06 · **선행 조건**: 백엔드 **Phase 3 완료**(가입·로그인·`/auth/me`), 구글 로그인 DoD는 **Phase 5 완료** 필요. 백엔드를 로컬에서 띄운 상태로 진행한다
 
 **작업**
 
 - `/login`, `/signup`, `/oauth/callback`
 - **`/oauth/callback`은 `useSearchParams`를 쓰므로 `<Suspense>`로 감싼다** (없으면 `npm run build` 실패)
-- **`/oauth/callback` 세부** (`PRD.md` 5.4)
+- **`/oauth/callback` 세부** (`PRD.md` 7.2 구글 로그인 흐름)
   - 토큰 저장 → **URL에서 토큰 제거**(히스토리·공유 링크에 남지 않도록) → `/todos` 이동
   - **`token` 파라미터가 없거나 빈 문자열이면 `/login`으로 보낸다**
   - 처리 중에는 스켈레톤만 보여주고 **사용자가 조작할 요소를 두지 않는다**
@@ -526,12 +539,12 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 - **`/todos` 플레이스홀더 페이지 생성** — 라우트 보호를 검증하려면 대상 페이지가 존재해야 한다 (내용은 Phase 8)
 - Phase 6에서 비워둔 **헤더의 닉네임·로그아웃을 `useAuth`에 연결**
   - **이메일은 화면에 표시하지 않는다.** `/auth/me` 응답에는 들어오지만 헤더에는 닉네임만 노출한다 (`AUTH-08`)
-- `useAuth` 훅 (로그인 / **로그아웃: 토큰 삭제 + 캐시 초기화** / 현재 사용자)
-- **라우트 보호는 `(main)` 클라이언트 레이아웃에서 처리한다. `middleware.ts`를 만들지 않는다** (localStorage는 middleware에서 읽을 수 없음 — `CLAUDE.md` 9장)
-  - **인증 판정이 끝나기 전에는 스켈레톤을 보여준다** (`UX-01`, `PRD.md` 5.1)
+- `useAuth` 훅 (로그인 / **로그아웃: `POST /api/auth/logout` + 토큰 삭제 + 캐시 초기화** / 현재 사용자)
+- **라우트 보호는 `(main)` 클라이언트 레이아웃에서 처리한다. `middleware.ts`를 만들지 않는다** (localStorage는 middleware에서 읽을 수 없다)
+  - **인증 판정이 끝나기 전에는 스켈레톤을 보여준다** (`UX-01`)
 - 401 응답 시 자동 로그아웃 처리
-- `?error=email_conflict` 안내 문구 표시
-- **`/signup` 실시간 검증** (`PRD.md` 5.3) — 이메일 형식, **비밀번호 6자 이상 + UTF-8 72바이트 이하**, 닉네임 1~50자. 안내 문구에 **한글 1자 = 3바이트**임을 밝힌다
+- **`?error=email_conflict`와 `?error=oauth_failed` 안내 문구 표시** — 백엔드 `OAuth2FailureHandler`가 두 값을 보낸다. 하나만 처리하면 사용자가 취소했을 때 아무 안내도 없이 로그인 화면만 뜬다
+- **`/signup` 실시간 검증** (`PRD.md` 7.1 — "검증 실패 시 해당 필드 아래 에러 표시") — 이메일 형식, **비밀번호 6자 이상 + UTF-8 72바이트 이하**, 닉네임 1~50자. 안내 문구에 **한글 1자 = 3바이트**임을 밝힌다
 - **에러 문구는 Phase 6의 `lib/errorMessages.ts`만 사용한다** (정본은 백엔드 `ErrorCode` enum)
   - `INVALID_INPUT` → 서버가 준 필드별 메시지를 해당 입력 아래 인라인
   - `UNAUTHORIZED`(로그인 시) → "이메일 또는 비밀번호가 올바르지 않습니다."를 폼 상단 인라인
@@ -541,24 +554,64 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 
 **DoD**
 
-- [ ] 이메일 가입·로그인 정상 동작
-- [ ] **가입 화면에서 한글 25자 비밀번호를 입력하면 제출 전에 바이트 초과 안내가 인라인으로 뜸** (서버 400에만 의존하지 않음 — `AUTH-02`)
-- [ ] **중복 이메일 가입 시 "이미 사용 중인 이메일입니다."가 이메일 입력 아래 인라인으로 뜸** (`AUTH-03`, `PRD.md` 5.1)
-- [ ] **미가입 이메일과 비밀번호 오류의 화면 문구가 동일함** ("이메일 또는 비밀번호가 올바르지 않습니다.") — 계정 존재 여부가 드러나지 않음
-- [ ] **백엔드를 내린 채 로그인을 시도하면 "연결에 실패했습니다." + 재시도 버튼이 나옴** (네트워크 실패 매핑 — `UX-04`)
-- [ ] 구글 로그인 → 콜백 → `/todos` 이동, URL에서 토큰 제거됨
-- [ ] **`/oauth/callback`에 `?token=` 없이 직접 접근하면 `/login`으로 이동함** (`PRD.md` 5.4)
-- [ ] **`/oauth/callback` 화면에 공통 헤더와 조작 가능한 요소가 없음**
-- [ ] **헤더에 닉네임이 보이고 이메일은 어디에도 렌더되지 않음** (DevTools에서 DOM 검색 — `AUTH-08`)
-- [ ] 계정 충돌 시 안내 문구 노출
-- [ ] 로그아웃 시 토큰·캐시 모두 제거되고 `/login`으로 이동
-- [ ] 새로고침해도 로그인 상태 유지
-- [ ] 미인증 상태로 `/todos` 접근 시 로그인으로 이동
-- [ ] **만료된 토큰을 localStorage에 직접 넣고 `/todos`에 접근했을 때, 보호 화면이 한 프레임도 노출되지 않고 곧바로 `/login`으로 이동**
-  > `useAuth`가 토큰 존재 여부만 보면 만료 토큰이 판정을 통과해, 401 왕복 동안 보호 화면이 노출된다. `exp`를 디코드해야 한다 (`CLAUDE.md` 9장). 검증용 만료 토큰은 `JWT_EXPIRATION`을 일시적으로 낮춰 발급받으면 된다
-- [ ] `middleware.ts` 파일이 존재하지 않음
-- [ ] `npm run build` 성공 (`useSearchParams` Suspense 경계 확인)
-- [ ] **모든 입력에 label 연결, Tab·Enter만으로 가입·로그인 완주 가능**
+- [x] 이메일 가입·로그인 정상 동작
+- [x] **가입 화면에서 한글 25자 비밀번호를 입력하면 제출 전에 바이트 초과 안내가 인라인으로 뜸** (서버 400에만 의존하지 않음 — `AUTH-02`)
+- [x] **중복 이메일 가입 시 "이미 사용 중인 이메일입니다."가 이메일 입력 아래 인라인으로 뜸** (`AUTH-03`)
+- [x] **미가입 이메일과 비밀번호 오류의 화면 문구가 동일함** ("이메일 또는 비밀번호가 올바르지 않습니다.") — 계정 존재 여부가 드러나지 않음
+- [x] **백엔드를 내린 채 로그인을 시도하면 "연결에 실패했습니다." + 재시도 버튼이 나옴** (네트워크 실패 매핑 — `UX-04`)
+- [x] 구글 로그인 → 콜백 → `/todos` 이동, URL에서 토큰 제거됨
+- [x] **`/oauth/callback`에 `?token=` 없이 직접 접근하면 `/login`으로 이동함** (`PRD.md` 7.2)
+- [x] **`/oauth/callback` 화면에 공통 헤더와 조작 가능한 요소가 없음**
+- [x] **헤더에 닉네임이 보이고 이메일은 어디에도 렌더되지 않음** (DevTools에서 DOM 검색 — `AUTH-08`)
+- [x] 계정 충돌 시 안내 문구 노출
+- [x] 로그아웃 시 토큰·캐시 모두 제거되고 `/login`으로 이동
+- [x] 새로고침해도 로그인 상태 유지
+- [x] 미인증 상태로 `/todos` 접근 시 로그인으로 이동
+- [x] **만료된 토큰을 localStorage에 직접 넣고 `/todos`에 접근했을 때, 보호 화면이 한 프레임도 노출되지 않고 곧바로 `/login`으로 이동**
+  > `useAuth`가 토큰 존재 여부만 보면 만료 토큰이 판정을 통과해, 401 왕복 동안 보호 화면이 노출된다. `exp`를 디코드해야 한다. 검증용 만료 토큰은 `jwt.access-token-expiration`을 일시적으로 낮춰 발급받으면 된다
+- [x] `middleware.ts` 파일이 존재하지 않음
+- [x] `npm run build` 성공 (`useSearchParams` Suspense 경계 확인)
+- [x] **모든 입력에 label 연결, Tab·Enter만으로 가입·로그인 완주 가능**
+
+### Phase 7 재검증 / 발견 기록 (2026-09-01)
+
+DoD 17개를 전부 실제 조작으로 확인했다. 최종 구성은 **백엔드 8080 · 프론트 3000**이다.
+
+**검증 방법과 결과**
+
+| 항목 | 확인 방법 | 결과 |
+| --- | --- | --- |
+| 빌드·정적검사 | `npm run check`, `npm run build` | 둘 다 종료코드 0 |
+| 이메일 가입·로그인 | 브라우저에서 폼 제출 | 가입 → 즉시 로그인 → `/todos` |
+| 한글 25자 비밀번호 | 입력 직후 DOM 조회 | `password-error`에 "현재 75바이트" 안내, **제출 버튼 `disabled`** |
+| 영문 72/73자, 5자 | 동일 | 72자 통과 · 73자 차단 · 5자 차단 |
+| 중복 이메일 | 기가입 이메일로 재가입 | `role=alert`가 **`email-error` 하나뿐**이고 문구는 "이미 사용 중인 이메일입니다." |
+| 미가입/오답 문구 동일 | 두 경우 문구 문자열 비교 | 완전 일치 — "이메일 또는 비밀번호가 올바르지 않습니다." |
+| 네트워크 실패 | 백엔드 종료 후 로그인 | "연결에 실패했습니다." + 재시도 버튼 |
+| **구글 로그인** | 실제 구글 계정으로 완주 | `/todos` 도달, 헤더에 구글 계정 이름, **URL에 `token=` 흔적 없음**, 백엔드 에러 로그 0건 |
+| 구글 `redirect_uri` | `curl -i /oauth2/authorization/google`의 Location 파싱 | `http://localhost:8080/login/oauth2/code/google` — 등록값과 일치 |
+| 콜백 파라미터 방어 | `?token=` 없이 / 빈 문자열로 접근 | 둘 다 `/login` 이동 |
+| 콜백 화면 구성 | 초기 HTML을 `fetch`로 받아 파싱 | header·button·a·input **전부 0개** (대조군 `/login`은 button 1·a 2) |
+| 헤더 이메일 미노출 | `innerText`·`innerHTML` 문자열 검색 | 0건 |
+| 로그아웃 | 버튼 클릭 후 Resource Timing 확인 | `/api/auth/logout` 요청 1건, 토큰 삭제, `/login` 이동 |
+| 새로고침 유지 | `location.reload()` | `/todos` 유지, 헤더 닉네임 유지 |
+| 미인증 `/todos` | 토큰 없이 접근 | `/login` 이동, 보호 화면 미렌더 |
+| **만료 토큰** | `exp`가 과거인 JWT 주입 후 접근 | `/login` 이동, **백엔드 요청 0건**, 보호 화면 미렌더 |
+| `middleware.ts` | `find` | 없음 |
+| 키보드 완주 | Tab·Enter만으로 가입 | `/todos` 도달 |
+
+> 만료 토큰 케이스가 핵심이다. Resource Timing에 **백엔드 요청이 0건**으로 찍혔다 — `useAuth`의 `enabled: isTokenValid(...)`가 `/auth/me` 호출 자체를 막아 401 왕복이 없다. 토큰 존재 여부만 봤다면 요청 1건이 찍히고 그 왕복 동안 화면이 노출됐을 것이다.
+
+**발견해 고친 것**
+
+1. **쿠키 없이 `POST /api/auth/refresh`가 500을 냈다.** `@CookieValue`가 `required=true`라 `MissingRequestCookieException`이 발생하는데 `GlobalExceptionHandler`가 그 타입을 처리하지 않아 generic 핸들러로 떨어졌다. 라우트 보호 동선에서 미인증 접근마다 발생하던 결함이다. 전용 핸들러를 추가해 **401**로 고쳤다.
+2. **로그아웃은 서비스 계층이 이미 완성돼 있었다.** `AuthService.logout()`·`RefreshTokenService.revoke()`·`RefreshTokenCookieFactory.expire()`가 전부 존재했고 컨트롤러 엔드포인트만 빠져 있었다. 컨트롤러 메서드 1개와 `SecurityConfig` 1줄로 해결했다. 쿠키는 `required=false`로 받아 **멱등**하게 만들었다 — 쿠키가 없다는 것은 이미 로그아웃된 상태이지 오류가 아니다.
+3. **`?error=oauth_failed` 처리가 누락돼 있었다.** ROADMAP 작업 목록이 `email_conflict`만 적었으나 `OAuth2FailureHandler`는 두 값을 보낸다. 하나만 처리하면 사용자가 구글 동의를 취소했을 때 아무 안내 없이 로그인 화면만 뜬다.
+
+**미해결로 남긴 것**
+
+- **잘못된 JSON 본문이 500을 낸다.** `HttpMessageNotReadableException`도 generic 핸들러로 떨어진다(검증 중 인코딩 문제로 우연히 확인했다). 400 `INVALID_INPUT`이 맞지만, 우리 프론트는 `JSON.stringify`로만 보내므로 Phase 7 동선에서는 발생하지 않아 손대지 않았다. 쿠키 결함과 같은 계열이다.
+- **`docs/DESIGN.md`가 여전히 없다.** `shrimp-rules.md`는 이 문서를 "Phase 6 산출물"로 규정하지만 Phase 6은 팔레트를 ROADMAP 「Phase 6 확정 값」에 기록하는 것으로 갈음했다.
 
 ---
 
