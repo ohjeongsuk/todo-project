@@ -17,7 +17,7 @@
 | 3     | 인증 (로컬) + 인증 테스트  | backend  | ✅   |
 | 4     | Todo API + Todo 테스트     | backend  | ✅   |
 | 5     | 구글 OAuth2 + OAuth 테스트 | backend  | ✅   |
-| 6     | 프론트 스캐폴딩            | frontend | 🟡   |
+| 6     | 프론트 스캐폴딩            | frontend | ✅   |
 | 7     | 인증 화면                  | frontend | ⬜   |
 | 8     | Todo 화면                  | frontend | ⬜   |
 | 9     | 인터랙션 다듬기            | frontend | ⬜   |
@@ -32,12 +32,12 @@
 >
 > | 항목                                   | 발견 당시                                                                       | 결과                                                                                                                                                                                         |
 > | -------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | `todo-frontend`가 Next.js 16.3.3       | Amplify SSR 지원 범위(12~15) 밖이라 Phase 11 배포 불가 상태였음                 | ✅ **15.5.24로 마이그레이션.** `next`·`eslint-config-next` 동시 적용, `npm run build`·`lint` 통과                                                                                            |
-> | 프론트에 `src/` 없음                   | `app/`·`components/`·`lib/`가 루트 직하                                         | ✅ **`src/` 아래로 이동.** `tsconfig` paths(`@/*` → `./src/*`), `components.json`의 css 경로 동시 수정                                                                                       |
-> | `layout.tsx`가 `LayoutProps<"/">` 사용 | Next 16 전역 타입이라 15에서 컴파일 실패                                        | ✅ 명시적 `{ children: React.ReactNode }`로 교체                                                                                                                                             |
-> | `eslint.config.mjs`가 16 방식          | 15의 `eslint-config-next`는 flat config를 직접 내보내지 않음                    | ✅ `FlatCompat` 방식으로 교체                                                                                                                                                                |
-> | `AGENTS.md`                            | Next 16의 `next dev`가 자동 생성한 파일. 15에서는 재생성되지 않고 내용도 부정확 | ✅ 삭제. 저장소용 `CLAUDE.md`를 `@../CLAUDE.md` 임포트 형태로 재작성                                                                                                                         |
-> | 워크스페이스 루트 오인                 | 부모 `todo-project`에도 `package-lock.json`이 있어 Next가 루트를 잘못 추론      | ✅ `next.config.ts`에 `outputFileTracingRoot` 지정. **원인이던 루트 npm 파일도 이후 삭제**했으나, 재발 시 조용히 어긋나므로 설정은 유지한다                                                  |
+> | `todo-frontend`가 Next.js 16.3.3       | Amplify SSR 지원 범위(12~15) 밖이라 Phase 11 배포 불가 상태였음                 | ❌ **기록 오류 — 마이그레이션되지 않았다.** 실제 `package.json`은 `next` 16.3.3 / `eslint-config-next` 16.3.3이다. 2026-09-01 **16.3.3 유지로 확정**(`CLAUDE.md` 3장 스택 표·`docs/guides` 5개 문서가 모두 16 기준). 배포 리스크는 Phase 11 항목으로 이관                                                                                            |
+> | 프론트에 `src/` 없음                   | `app/`·`components/`·`lib/`가 루트 직하                                         | ✅ **`src/` 아래로 이동 (2026-09-01 Phase 6에서 실제 수행).** 2026-08-28 시점의 완료 기록은 오류였다 — `git log` 커밋 3건 어디에도 없었다. `tsconfig` paths(`@/*` → `./src/*`), `components.json` css 경로 동시 수정                                                                                       |
+> | `layout.tsx`가 `LayoutProps<"/">` 사용 | Next 16 전역 타입이라 15에서 컴파일 실패                                        | ➖ **불필요해짐.** Next 16 유지 결정으로 `LayoutProps<"/">`가 정상 타입이 됐다. 실제로 교체된 적도 없었다(기록 오류)                                                                                                                                             |
+> | `eslint.config.mjs`가 16 방식          | 15의 `eslint-config-next`는 flat config를 직접 내보내지 않음                    | ➖ **불필요해짐.** Next 16 유지이므로 `eslint-config-next` 16의 flat config를 그대로 쓴다                                                                                                                                                                |
+> | `AGENTS.md`                            | Next 16의 `next dev`가 자동 생성한 파일. 15에서는 재생성되지 않고 내용도 부정확 | ⚠️ **삭제로는 해결되지 않는다.** 파일 본문이 밝히듯 `next dev`가 재생성한다(`node_modules/next/dist/server/lib/generate-agent-files.js`). Next 16 유지이므로 생성물로 인정해 커밋하고, 저장소용 `CLAUDE.md`를 `@AGENTS.md` → `@../CLAUDE.md` 임포트로 교체했다                                                                                                                         |
+> | 워크스페이스 루트 오인                 | 부모 `todo-project`에도 `package-lock.json`이 있어 Next가 루트를 잘못 추론      | ✅ **2026-09-01 Phase 6에서 실제 지정.** 2026-08-28 완료 기록은 오류였다 — `next.config.ts`는 빈 객체였다. **원인이던 루트 npm 파일도 삭제**됐으나, 재발 시 조용히 어긋나므로 설정은 유지한다                                                  |
 > | `pom.xml`에 `springdoc` 없음           | Phase 1 DoD "Swagger UI 접속" 불가                                              | ✅ **3.1.0 핀.** 이 버전의 부모가 `spring-boot-starter-parent` 4.1.0이라 Boot 4.1.x에 대응                                                                                                   |
 > | `pom.xml`에 `jsoup` 없음               | Phase 4 XSS 정화 불가                                                           | ✅ **1.23.2 핀**                                                                                                                                                                             |
 > | JWT 라이브러리 미선정                  | `CLAUDE.md` 3장 표에 JWT 라이브러리가 명시되어 있지 않음                        | ✅ **jjwt 0.12.6**(`jjwt-api`/`jjwt-impl`/`jjwt-jackson`)이 `pom.xml`에 핀되어 있고, **`CLAUDE.md` 3장 스택 표와 「버전 관련 확정 사항」에 등재됐다**(v1.8). Phase 3은 이 버전을 그대로 쓴다 |
@@ -59,7 +59,7 @@
 > | ~~폼 라이브러리 미결정~~ | ✅ **해소.** `CLAUDE.md` 3장에 **"라이브러리를 쓰지 않는다 — `useState` + 수동 검증"**으로 확정. `npx shadcn add form` 금지(=`react-hook-form` 유입 경로)와 Tiptap dirty 판정 주의를 함께 명시                                                                                                                                    | —          |
 > | 백엔드 설정 파일         | `src/main/resources/application.properties` 하나뿐. `application.yml` + `-local` + `-prod` 분리 미완                                                                                                                                                                                                                              | Phase 1    |
 > | 백엔드 문서·예시         | `.env.example`, 저장소용 `CLAUDE.md` 없음                                                                                                                                                                                                                                                                                         | Phase 1    |
-> | 프론트 마감 작업         | 디자인 토큰이 shadcn 기본 neutral, 다크 모드가 `@custom-variant dark (&:is(.dark *))`(= `class` 전략), `components.json` 스타일이 `radix-nova`, `.env.example` 없음, Tiptap·motion·sonner·date-fns·DOMPurify 미설치                                                                                                               | Phase 6    |
+> | ~~프론트 마감 작업~~     | ✅ **해소 (2026-09-01 Phase 6).** 디자인 토큰·다크 전략·`new-york` 스타일·`.env.example`·패키지 7종 전부 처리하고 실측 검증했다                                                                                                                                                                                              | —          |
 
 > **테스트는 마지막에 몰아 쓰지 않는다.** 기능을 만든 Phase에서 함께 작성해 그 Phase의 DoD로 삼는다. Phase 10은 새 테스트를 쓰는 단계가 아니라 전체를 확인하는 단계다.
 
@@ -351,19 +351,20 @@
 
 **작업**
 
-- **Node 20 이상** 확인 후 `create-next-app` (**Next.js 15**, App Router, TypeScript)
+- **Node 20 이상** 확인 후 `create-next-app` (**Next.js 16.3.3 유지**, App Router, TypeScript)
 - Tailwind CSS 4 설정 — `globals.css`의 `@theme`에 디자인 토큰 정의 (**v3 방식 금지**)
 - **디자인 토큰은 라이트/다크 양쪽 정의 + `@media (prefers-color-scheme: dark)`** (`class` 전략 금지 — 토글이 없어 FOUC만 생김)
 - shadcn/ui 초기화 (**npm 사용 시 `--legacy-peer-deps`**, 스타일 `new-york`), lucide-react 설치
 - **`npm install motion`** (`framer-motion` 아님), sonner, date-fns, DOMPurify 설치
 - **Tiptap 설치**: `@tiptap/react`, `@tiptap/starter-kit` **두 개만.** `@tiptap/extension-link`는 **설치하지 않는다** — v3 StarterKit에 `Link`가 포함되어 있어 중복 등록이 된다 (`CLAUDE.md` 8장)
 - **Pretendard 폰트** — Google Fonts에 없으므로 `.woff2` 파일을 `src/app/fonts/`에 넣고 **`next/font/local`**로 로드 (`next/font/google` 사용 불가)
-- React Query Provider, **쿼리 키 규약 상수화** (`CLAUDE.md` 9장), `apiClient` (토큰 주입 + **`ApiResponse` 언래핑** + 에러 정규화 + 401 처리)
-- **`lib/errorMessages.ts` — `PRD.md` 5.1 「에러 문구 매핑」 표를 코드로 옮긴다.** `error.code`(`INVALID_INPUT` / `UNAUTHORIZED` / `EMAIL_DUPLICATED` / `TODO_NOT_FOUND` / `INTERNAL_ERROR`)와 **네트워크 실패**를 화면 문구로 변환하는 단일 함수를 둔다
+- React Query Provider, **쿼리 키 규약 상수화** (아래 「Phase 6 확정 값」), `apiClient` (토큰 주입 + **`ApiResponse` 언래핑** + 에러 정규화 + 401 처리)
+- **`lib/errorMessages.ts` — 백엔드 `ErrorCode` enum을 코드로 옮긴다.** `error.code` **7종**(`INVALID_INPUT` / `EMAIL_DUPLICATED` / `UNAUTHORIZED` / `RESET_TOKEN_INVALID` / `FORBIDDEN` / `NOT_FOUND` / `INTERNAL_ERROR`)과 **네트워크 실패**를 화면 문구로 변환하는 단일 함수를 둔다
+  > ⚠️ **`TODO_NOT_FOUND`라는 코드는 백엔드에 존재하지 않는다.** 실제 이름은 `NOT_FOUND`다. 정본은 `todo-backend/.../exception/ErrorCode.java`이며, 이 enum이 이미 한국어 `defaultMessage`를 갖고 있다(`PRD.md`에 「에러 문구 매핑」 표는 없다 — 이 참조는 오류였다).
   > ⚠️ 화면마다 문구를 직접 쓰면 Phase 7·8에서 서로 다른 문구가 생겨 매핑 표가 사문화된다. `apiClient`가 던지는 에러를 이 함수 하나로만 문구화한다. 네트워크 실패는 `error.code`가 없으므로 **정규화 단계에서 별도 구분자를 남겨야** 한다.
-- **`lib/validation.ts` — `CLAUDE.md` 4장 「입력값 제약」 표를 코드로 옮긴다.** 폼 라이브러리를 쓰지 않기로 확정했으므로(`CLAUDE.md` 3장) 검증이 화면에 흩어지기 쉽다. 이메일 형식·닉네임 1~50자·제목 200자·본문 50,000자와 **비밀번호 6자 이상 + UTF-8 72바이트 이하**를 한곳에 둔다
+- **`lib/validation.ts` — 아래 「Phase 6 확정 값」 입력값 제약을 코드로 옮긴다.** (`CLAUDE.md` 4장은 「코딩 컨벤션」이고 제약 표는 없다 — 이 참조는 오류였다.) 폼 라이브러리를 쓰지 않기로 확정했으므로(`CLAUDE.md` 3장) 검증이 화면에 흩어지기 쉽다. 이메일 형식·닉네임 1~50자·제목 200자·본문 50,000자와 **비밀번호 6자 이상 + UTF-8 72바이트 이하**를 한곳에 둔다
   > ⚠️ **비밀번호 상한은 문자 수가 아니라 바이트다.** `maxLength={64}` 같은 문자 수 제한만 걸면 한글 25자(=75바이트)가 통과해 서버 BCrypt 단계에서 터진다. `new TextEncoder().encode(v).length`로 센다.
-- `lib/sanitize.ts` (DOMPurify 래퍼) — **`ALLOWED_TAGS`·`ALLOWED_ATTR`을 명시한다.** 기본값은 Jsoup 화이트리스트보다 넓고, `ALLOWED_ATTR`에서 `rel`·`target`을 빠뜨리면 서버가 주입한 tabnabbing 방어가 렌더 단계에서 지워진다 (`CLAUDE.md` 6장)
+- `lib/sanitize.ts` (DOMPurify 래퍼) — **`ALLOWED_TAGS`·`ALLOWED_ATTR`을 명시한다.** 기본값은 Jsoup 화이트리스트보다 넓고, `ALLOWED_ATTR`에서 `rel`·`target`을 빠뜨리면 서버가 주입한 tabnabbing 방어가 렌더 단계에서 지워진다. 허용 태그의 정본은 `todo-backend/.../service/HtmlSanitizer.java`의 `Safelist`다
 - 공용 컴포넌트: `Pagination`, `EmptyState`, `ErrorState`, `Skeleton`
   - **`ErrorState`는 `onRetry`를 필수 prop으로 받고 재시도 버튼을 항상 렌더한다** (`UX-04`). 선택 prop으로 두면 호출부에서 빠뜨려도 타입 검사가 통과한다
 - 루트 레이아웃 + Provider 분리 (루트는 서버 컴포넌트, Provider는 클라이언트 컴포넌트)
@@ -374,21 +375,113 @@
 
 **DoD**
 
-- [ ] **`package.json`의 `next`와 `eslint-config-next`가 모두 15.x임 (16 아님)** — 둘 중 하나만 확인하면 놓친다
-- [ ] **소스가 `src/` 아래에 있음** (`src/app/`, `src/components/`, `src/lib/`, `src/types/`)
-- [ ] **`package.json`에 `@tiptap/extension-link`가 없음** (v3 StarterKit 내장)
-- [ ] Node 20 이상에서 빌드됨
-- [ ] `npm run build` 성공, 출력 디렉토리가 `.next`
-- [ ] `package.json`에 `motion`이 있고 `framer-motion`이 없음
-- [ ] 디자인 토큰이 OS 다크 설정에 따라 전환됨 (`class` 조작 없이 CSS만으로)
-- [ ] 페이지 `page.tsx`에 `"use client"`가 붙어 있음
-- [ ] **`components.json`의 `style`이 `new-york`임** (현재 `radix-nova`)
-- [ ] **`globals.css`에 `.dark` 클래스 셀렉터나 `@custom-variant dark (&:is(.dark *))`가 없고, 다크 토큰이 `@media (prefers-color-scheme: dark)` 안에 정의되어 있음** (현재 shadcn 기본값이 `class` 전략이라 반드시 걷어내야 한다)
-- [ ] 디자인 토큰 값이 `CLAUDE.md` 8장 팔레트와 일치함 (배경 `#FAFAFA`/`#0A0A0A`, 액센트 `#4F46E5`, 우선순위 3색) — shadcn 기본 neutral이 남아 있지 않음
-- [ ] Pagination 컴포넌트 단독 동작 확인 (더미 데이터). **페이지 수 1 이하일 때 아무것도 렌더하지 않음**
-- [ ] `ErrorState`가 재시도 버튼과 함께 렌더되고, 버튼 클릭이 `onRetry`를 호출함
-- [ ] `apiClient`가 `data` 언래핑과 401 처리를 수행함
-- [ ] **`apiClient`가 던진 에러를 `lib/errorMessages.ts`에 넣으면 `PRD.md` 5.1 표의 문구가 그대로 나옴** (네트워크 실패 케이스 포함 — 서버를 내리고 확인)
+- [x] **`package.json`의 `next`와 `eslint-config-next` 버전이 서로 같음 (둘 다 16.3.3)** — 둘 중 하나만 확인하면 놓친다. 15.x 다운그레이드는 2026-09-01에 **철회**됐다(위 정합성 점검 표 참조)
+- [x] **소스가 `src/` 아래에 있음** (`src/app/`, `src/components/`, `src/lib/`, `src/types/`)
+- [x] **`package.json`에 `@tiptap/extension-link`가 없음** (v3 StarterKit 내장)
+- [x] Node 20 이상에서 빌드됨
+- [x] `npm run build` 성공, 출력 디렉토리가 `.next`
+- [x] `package.json`에 `motion`이 있고 `framer-motion`이 없음
+- [x] 디자인 토큰이 OS 다크 설정에 따라 전환됨 (`class` 조작 없이 CSS만으로)
+- [x] 페이지 `page.tsx`에 `"use client"`가 붙어 있음
+- [x] **`components.json`의 `style`이 `new-york`임** (현재 `radix-nova`)
+- [x] **`globals.css`에 `.dark` 클래스 셀렉터나 `@custom-variant dark (&:is(.dark *))`가 없고, 다크 토큰이 `@media (prefers-color-scheme: dark)` 안에 정의되어 있음** (현재 shadcn 기본값이 `class` 전략이라 반드시 걷어내야 한다)
+- [x] 디자인 토큰 값이 아래 「Phase 6 확정 값」 팔레트와 일치함 (배경 `#FAFAFA`/`#0A0A0A`, 브랜드색 `#4F46E5`, 우선순위 3색) — shadcn 기본 neutral이 남아 있지 않음
+  > ⚠️ `CLAUDE.md`에 8장은 없다(6장까지). 팔레트 정본은 `src/app/globals.css`의 `@theme` 토큰이며(`docs/guides/styling-guide.md` 86줄 규정), 확정 값은 아래 표에 기록한다.
+  > ⚠️ **브랜드색 `#4F46E5`를 shadcn `--accent` 토큰에 넣지 않는다.** shadcn 규약에서 `accent`는 호버 시 깔리는 옅은 표면색이다. 브랜드색은 `--primary`·`--ring`에 넣는다.
+- [x] Pagination 컴포넌트 단독 동작 확인 (더미 데이터). **페이지 수 1 이하일 때 아무것도 렌더하지 않음**
+- [x] `ErrorState`가 재시도 버튼과 함께 렌더되고, 버튼 클릭이 `onRetry`를 호출함
+- [x] `apiClient`가 `data` 언래핑과 401 처리를 수행함
+- [x] **`apiClient`가 던진 에러를 `lib/errorMessages.ts`에 넣으면 백엔드 `ErrorCode`의 문구가 그대로 나옴** (네트워크 실패 케이스 포함 — 서버를 내리고 확인)
+
+### Phase 6 재검증 / 발견 기록 (2026-09-01)
+
+DoD 15개 항목을 전부 실제 명령으로 확인했다. 확인 방법과, 그 과정에서 문서에 없던 문제를 잡아낸 내역이다.
+
+**검증에 쓴 명령·결과**
+
+| 항목 | 확인 방법 | 결과 |
+| --- | --- | --- |
+| 빌드·정적검사 | `npm run check`(type-check+lint+format:check), `npm run build` | 둘 다 종료코드 0, `.next` 생성 |
+| Node | `node -v` | v24.18.0 (20 이상) |
+| 버전·패키지 | `package.json` 직접 조회 | `next`/`eslint-config-next` 모두 16.3.3, `motion` 있음, `framer-motion`·`@tiptap/extension-link`·`react-hook-form`·`zod` 없음 |
+| 다크 전환 | Playwright `emulateMedia({colorScheme})`로 라이트↔다크 전환 후 computed style 측정 | 배경 `rgb(250,250,250)`↔`rgb(10,10,10)`, `--primary` `#4f46e5`↔`#818cf8`. `html`의 class는 두 상태에서 동일하고 `.dark`도 없다 — **CSS만으로 전환됨** |
+| Pretendard | computed `font-family` | `pretendard` (fallback 아님) |
+| Pagination | `totalPages=1`과 `5`를 함께 렌더 | 1일 때 컨테이너 `innerHTML`이 빈 문자열, `nav` 0개 |
+| ErrorState | 재시도 버튼 2회 클릭 | 카운터 `0` → `2` (`onRetry` 실제 호출) |
+| 터치 타겟 | 버튼 `getBoundingClientRect()` | 44×44px |
+| `apiClient`·`errorMessages` | 백엔드를 **8081**에 띄우고 Node로 모듈을 직접 임포트해 실행 | 아래 참조 |
+
+**`apiClient` 실측 (살아있는 백엔드 대상)**
+
+- 인증 없이 `GET /api/todos` → 401 → refresh 1회 시도 → 실패 → `{kind:'api', code:'UNAUTHORIZED', status:401}`로 정규화
+- 회원가입 → 반환값이 `{accessToken}` 하나뿐. **`refreshToken`이 본문에 없다**(`PRD.md` NF-26 준수)
+- 목록 조회 → 반환값 키가 `content,page,size,totalElements,totalPages`이고 `success`가 없다 — **`ApiResponse` 봉투가 벗겨졌다**
+- 없는 리소스 → `NOT_FOUND` → "요청한 리소스를 찾을 수 없습니다."
+- 잘못된 입력 → `INVALID_INPUT` → "입력값이 올바르지 않습니다."
+- **죽은 포트 → `{kind:'network'}` → "네트워크 연결을 확인해 주세요. 잠시 후 다시 시도해 주세요."**
+
+**문서에 없던 문제 6건 (실측으로 발견)**
+
+1. **`TODO_NOT_FOUND`는 존재하지 않는 코드다.** 백엔드 `ErrorCode` enum의 실제 값은 7종이고 이름은 `NOT_FOUND`다. ROADMAP대로 만들었으면 프론트가 서버 코드와 매칭되지 않아 전부 fallback 문구로 떨어졌을 것이다. 관련 표기를 모두 정정했다.
+2. **날짜가 9시간 어긋난다.** `TodoResponse`의 `createdAt` 등이 `LocalDateTime`이고 Jackson 날짜 설정이 없어 `Z` 없이 직렬화된다. `lib/datetime.ts`의 `parseServerDateTime`이 흡수한다. `"2026-09-01T12:00:00.123456"` → `2026-09-01T12:00:00.123Z` → KST 표시 21:00으로 실측 확인했다.
+3. **`prettier-plugin-tailwindcss`도 `src/` 이동에 걸린다.** `.prettierrc.json`의 `tailwindStylesheet`가 옛 `app/globals.css`를 가리켜 `npm run format`이 26개 파일에서 전부 실패했다. `tsconfig`·`components.json`과 **함께 고쳐야 하는 네 번째 설정 위치**다.
+4. **포커스 링이 그려지지 않았다.** shadcn 컴포넌트의 `outline-none`이 `--tw-outline-style: none`을 고정시키고, `@layer base`의 `@apply outline-2`가 그 변수를 참조하므로 `outline-style`이 계속 `none`이었다. `:focus-visible` 규칙을 **`@layer` 밖**으로 빼서 해결했다(레이어 없는 선언이 모든 레이어보다 우선). 수정 후 `solid 3px`로 실제 렌더됨을 확인했다.
+5. **브랜드색을 `--accent`에 넣으면 안 된다.** shadcn 규약에서 `accent`는 호버 표면색이다. `--primary`·`--ring`에 넣고 `--accent`는 옅은 인디고로 따로 뒀다.
+6. **`AGENTS.md`는 삭제해도 되돌아온다.** `next dev`가 재생성한다(파일 본문에 명시). Next 16 유지이므로 생성물로 인정해 커밋하고, `todo-frontend/CLAUDE.md`를 `@AGENTS.md` → `@../CLAUDE.md`로 교체했다.
+
+**남은 사항**
+
+- **Pretendard Variable이 2,009KB다.** dynamic subset은 90여 개 파일에 `unicode-range` CSS가 필요해 `next/font/local`과 맞지 않아 전체 파일을 썼다. **Phase 9 최적화 항목**으로 남긴다.
+- **로컬 8080을 다른 앱이 점유 중이다.** `C:\SpringBootProject\zulu17`의 별개 Spring Boot 프로세스다. 이번 검증은 백엔드를 8081에 띄워 진행했다. Phase 7 개발 전에 정리가 필요하다.
+- **백엔드에 로그아웃 엔드포인트가 없다.** `controller/`·`SecurityConfig.java` 어디에도 `logout`이 없는데 `CLAUDE.md` 5장은 "클라이언트 토큰 삭제만으로 끝내지 않는다"를 절대 규칙으로 둔다. Phase 7이 헤더 로그아웃을 연결하는 단계이므로 **그 전에 결론이 필요하다.**
+
+### Phase 6 확정 값 (2026-09-01)
+
+`CLAUDE.md`·`PRD.md`에 해당 표가 존재하지 않아 이 Phase에서 확정했다. **이 표가 정본이며 코드는 이것을 옮긴 것이다.**
+
+#### 팔레트
+
+| 토큰 | 라이트 | 다크 | 비고 |
+| --- | --- | --- | --- |
+| `--background` | `#FAFAFA` | `#0A0A0A` | |
+| `--foreground` | `#0A0A0A` | `#FAFAFA` | |
+| `--primary` / `--ring` | `#4F46E5` | `#818CF8` | **브랜드색.** shadcn `--accent`가 아니다 |
+| `--priority-low` | `#047857` | `#34D399` | 대비 5.25:1 / 10.30:1 |
+| `--priority-medium` | `#B45309` | `#FBBF24` | 대비 4.81:1 / 11.86:1 |
+| `--priority-high` | `#DC2626` | `#F87171` | 대비 4.63:1 / 7.16:1 |
+
+대비비는 각 테마 배경(`#FAFAFA`/`#0A0A0A`) 기준 WCAG 상대휘도로 계산했고 전부 **4.5:1 이상**이다(`PRD.md` NF-23).
+우선순위는 색만으로 구분하지 않고 **뱃지 텍스트 라벨을 항상 동반**한다(`PRD.md` NF-24).
+
+#### React Query 쿼리 키 규약
+
+```ts
+authKeys.all          = ['auth'] as const
+authKeys.me           = ['auth', 'me'] as const
+todoKeys.all          = ['todos'] as const
+todoKeys.lists        = ['todos', 'list'] as const
+todoKeys.list(params) = ['todos', 'list', params] as const
+todoKeys.details      = ['todos', 'detail'] as const
+todoKeys.detail(id)   = ['todos', 'detail', id] as const
+```
+
+접두사가 계층을 이루므로 `todoKeys.all`로 무효화하면 목록·상세가 모두 걸린다. 생성/수정/삭제 후에는 `todoKeys.lists`를, 단건 수정 후에는 `todoKeys.detail(id)`를 무효화한다.
+
+#### 입력값 제약
+
+| 대상 | 제약 | 근거 |
+| --- | --- | --- |
+| 이메일 | 형식 검증, 소문자 정규화는 서버 담당 | `PRD.md` NF-12 |
+| 비밀번호 | **6자 이상 AND UTF-8 72바이트 이하** | BCrypt 72바이트 한계 |
+| 닉네임 | 1~50자 | `SignupRequest` `@Size(min=1,max=50)` |
+| 제목 | 1~200자 | `TodoCreateRequest` `@Size(max=200)` |
+| 본문 | 50,000자 이하 | `TodoCreateRequest` `@Size(max=50000)` |
+
+> ⚠️ 비밀번호 상한은 **문자 수가 아니라 바이트**다. `maxLength={64}` 같은 문자 수 제한만 걸면 한글 25자(=75바이트)가 통과해 서버 BCrypt 단계에서 터진다. `new TextEncoder().encode(v).length`로 센다.
+
+#### 날짜 직렬화 (실측 발견 — 문서에 없던 함정)
+
+백엔드 `TodoResponse`의 `createdAt`·`updatedAt`·`completedAt`은 `LocalDateTime`이고 `application.yml`에 Jackson 날짜 설정이 없어 **`Z` 접미사 없이** `"2026-09-01T12:00:00.123456"` 형태로 직렬화된다. JS `new Date()`는 오프셋 없는 ISO 문자열을 **로컬 시각으로 해석**하므로 KST 브라우저에서 9시간 어긋난다. 백엔드를 고치지 않고 프론트 `lib/datetime.ts`의 `parseServerDateTime` 단일 진입점에서 `Z`를 붙여 흡수한다. `dueDate`는 `LocalDate`(`"2026-09-01"`)이므로 **`Z`를 붙이면 안 되며** 별도 함수로 분리한다.
 
 > 버전·설치 방법은 `CLAUDE.md` 3장에서 모두 확정됐다. 이 Phase에서 재조사하지 않는다.
 
@@ -416,7 +509,7 @@
 - 401 응답 시 자동 로그아웃 처리
 - `?error=email_conflict` 안내 문구 표시
 - **`/signup` 실시간 검증** (`PRD.md` 5.3) — 이메일 형식, **비밀번호 6자 이상 + UTF-8 72바이트 이하**, 닉네임 1~50자. 안내 문구에 **한글 1자 = 3바이트**임을 밝힌다
-- **에러 문구는 Phase 6의 `lib/errorMessages.ts`만 사용한다** (`PRD.md` 5.1 매핑 표)
+- **에러 문구는 Phase 6의 `lib/errorMessages.ts`만 사용한다** (정본은 백엔드 `ErrorCode` enum)
   - `INVALID_INPUT` → 서버가 준 필드별 메시지를 해당 입력 아래 인라인
   - `UNAUTHORIZED`(로그인 시) → "이메일 또는 비밀번호가 올바르지 않습니다."를 폼 상단 인라인
   - `UNAUTHORIZED`(그 외) → 문구 없이 `/login` 이동
@@ -464,7 +557,7 @@
 - **`/todos/[id]` 저장 실패 처리** — 폼 내용을 유지한 채 에러를 표시한다. 입력을 날리거나 목록으로 튕기지 않는다 (`TODO-13`, `UX-04`, `PRD.md` 5.6)
   > ⚠️ `TODO-13`은 Phase 9의 토글·삭제 롤백만으로 충족되지 않는다. **저장(PUT) 실패 경로는 낙관적 업데이트를 쓰지 않으므로 Phase 9가 손대지 않는다.** 이 Phase에서 별도로 처리한다.
 - **`/todos/[id]` 삭제 성공 시 `/todos`로 이동**한다 (`TODO-12`, `PRD.md` 5.6)
-- **에러 문구는 Phase 6의 `lib/errorMessages.ts`만 사용한다.** `TODO_NOT_FOUND`는 전체 화면 상태, `INTERNAL_ERROR`는 토스트 또는 에러 카드, 네트워크 실패는 재시도 버튼이 있는 에러 카드 (`PRD.md` 5.1)
+- **에러 문구는 Phase 6의 `lib/errorMessages.ts`만 사용한다.** `NOT_FOUND`는 전체 화면 상태, `INTERNAL_ERROR`는 토스트 또는 에러 카드, 네트워크 실패는 재시도 버튼이 있는 에러 카드 (백엔드 `ErrorCode` enum)
 - **이탈 확인 대화상자 — 3계층으로 구현** (`beforeunload` + 버튼 핸들러 + `popstate` 가드). App Router에 공식 차단 API가 없어 한 줄로 끝나지 않는다. **별도 공수 4~8시간을 잡는다** (`CLAUDE.md` 9장)
 - **`dirty` 판정을 직접 구현한다.** 폼 라이브러리를 쓰지 않으므로 `formState.isDirty`가 없다. 제목·우선순위·마감일은 단순 비교로 끝나지만 **본문은 그렇지 않다** — Tiptap이 HTML을 자기 스키마로 정규화하므로 서버 원본과 `editor.getHTML()`을 직접 비교하면 사용자가 아무것도 고치지 않아도 dirty로 판정된다. **초기 스냅샷은 `setContent()` 직후의 `editor.getHTML()`로 잡는다**(정규화를 거친 값끼리 비교)
 - **삭제 실패 시 페이지 이동까지 되돌린다** — 페이지 이동은 `onMutate`가 아니라 `onSuccess`에서 수행 (`CLAUDE.md` 9장)
@@ -599,6 +692,19 @@
 ## Phase 11 — AWS 배포
 
 **저장소**: 전체 · **Docker 사용하지 않음**
+
+> ### ⚠️ 미해결 리스크 — Amplify의 Next.js 16 지원 (2026-09-01 확인)
+>
+> AWS 공식 문서는 이 시점에도 Amplify Hosting의 Next.js 지원 범위를 **12~15**로 명시하고 있고 **16은 목록에 없다.**
+> 출처: [SSR supported features](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-supported-features.html) · [Amplify support for Next.js](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-amplify-support.html)
+>
+> 프로젝트는 2026-09-01에 **Next.js 16.3.3 유지**를 확정했다(실제 코드·`CLAUDE.md` 3장·`docs/guides` 5개 문서가 모두 16 기준이라 15 다운그레이드 비용이 더 컸다). 따라서 이 Phase 착수 시 **다음 중 하나를 먼저 결정해야 한다**:
+>
+> 1. 실제로 Amplify에 배포해 동작 여부를 확인한다 (미지원 목록이 곧 실패를 뜻하지는 않는다)
+> 2. 배포 시점에 15.x로 다운그레이드한다
+> 3. 호스팅을 바꾼다 (OpenNext + SST, Vercel, EC2 자체 호스팅 등)
+>
+> **이 결정 전에는 Phase 11을 시작하지 않는다.**
 
 ### 11-0. 사전 준비
 
