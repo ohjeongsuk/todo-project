@@ -10,18 +10,27 @@
 로컬 개발 후 AWS로 배포하는 풀스택 Todo List 서비스.
 
 ```
-todo-project/
-├── CLAUDE.md
+todo-project/          # 문서 저장소 (독립 git)
+├── CLAUDE.md          # 이 파일. 모든 문서에 우선한다
+├── shrimp-rules.md
 ├── docs/
-│   ├── API.md         # 엔드포인트 계약
+│   ├── PRD.md         # 제품 요구사항
+│   ├── ROADMAP.md     # Phase 순서와 완료 판정의 정본
 │   ├── SCHEMA.md      # DB 스키마 / 엔티티
-│   ├── DESIGN.md      # UI 디자인 토큰 및 규칙
-│   └── CHECKLIST.md   # 최종 검증 체크리스트
-├── todo-backend/      # Spring Boot
-└── todo-frontend/     # Next.js
+│   ├── CHECKLIST.md   # 최종 검증 체크리스트
+│   ├── DEV_TOOLS.md   # 개발 도구 설정
+│   ├── guides/        # 참고 자료 (README + 5개). CLAUDE.md가 우선한다
+│   ├── API.md         # 엔드포인트 계약 — 미작성
+│   └── DESIGN.md      # UI 디자인 토큰 및 규칙 — 미작성
+├── todo-backend/      # Spring Boot (독립 git, 루트에서 추적하지 않음)
+└── todo-frontend/     # Next.js (독립 git, 루트에서 추적하지 않음)
 ```
 
-**저장소는 하나(모노레포)이며, 백엔드와 프론트엔드를 위 두 폴더로 분리한다.**
+**세 폴더는 각각 독립된 git 저장소다(폴리레포).** `todo-backend/`·`todo-frontend/`는
+루트 `.gitignore`가 통째로 제외하므로 부모 저장소는 문서와 공통 설정만 추적한다.
+따라서 세 저장소는 **각자 커밋·푸시하며, 하나의 커밋으로 묶이지 않는다.**
+
+`docs/API.md`와 `docs/DESIGN.md`는 아직 없다. 참조하기 전에 존재를 먼저 확인한다.
 
 ---
 

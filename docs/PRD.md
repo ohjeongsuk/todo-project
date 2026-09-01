@@ -374,7 +374,7 @@ API 요청 → 401 TOKEN_EXPIRED
 |---|---|
 | 개발 환경 | 로컬 PostgreSQL 직접 설치. **Docker 사용 금지** |
 | 테스트 | Testcontainers 불가 → 로컬 `todolist_db_test` 사용 |
-| 저장소 | 모노레포. `todo-project/todo-backend`, `todo-project/todo-frontend` |
+| 저장소 | **폴리레포.** `todo-project`(문서)·`todo-backend`·`todo-frontend`가 각각 독립 git 저장소다. 하나의 커밋으로 묶이지 않는다 |
 | DB명 | `todolist_db` (소문자) |
 | 패키지명 | `com.example.todoapp` |
 | 메일 | 로컬은 콘솔 로그 출력, 운영은 SMTP/SES. **로컬에 메일 서버를 띄우지 않는다** |

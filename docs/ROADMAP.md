@@ -26,6 +26,8 @@
 
 ⬜ 대기 · 🟡 진행중 · ✅ 완료
 
+> **Phase 0이 🟡인 이유 (2026-09-01):** DoD 9개 중 8개가 통과했고 **원격 푸시 하나만 남았다.** 세 저장소 모두 GitHub 원격이 연결돼 있으나 `main`·`develop`이 push되지 않았다. 푸시하면 Phase 0은 ✅가 된다.
+
 > ### 스캐폴딩 정합성 점검 (2026-08-28)
 >
 > 스캐폴딩이 스펙과 어긋난 채 진행되어 아래를 바로잡았다. **해결됨** 항목은 재발 방지 DoD가 각 Phase에 들어가 있다.
@@ -48,14 +50,14 @@
 >
 > | 항목                     | 현재 상태                                                                                                                                                                                                                                                                                                                         | 처리 Phase |
 > | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-> | 커밋·원격                | `todo-project` 커밋 0건, `todo-backend` 커밋 0건, `todo-frontend` 커밋 1건(`Initial commit from Create Next App`). 세 저장소 모두 원격 미연결                                                                                                                                                                                     | Phase 0    |
-> | 브랜치명                 | 세 저장소 모두 `master` (루트·백엔드는 커밋이 없어 unborn `master`). `CLAUDE.md` 2장 Git 전략은 `main` ← `develop` ← `feature/{작업명}`                                                                                                                                                                                           | Phase 0    |
-> | 루트 `.gitignore`        | `todo-backend/`, `todo-frontend/`, `.DS_Store`, `*.log`뿐. `node_modules/` 규칙이 없다. **유입원(루트 npm 파일)은 제거됐으므로 재발 방지용 한 줄만 남았다**                                                                                                                                                                       | Phase 0    |
-> | 백엔드 `.gitignore`      | Spring Initializr 기본값 그대로라 **`.env*` 규칙 자체가 없다.** `.env`를 만들면 그대로 커밋된다                                                                                                                                                                                                                                   | Phase 0    |
-> | 프론트 `.gitignore`      | `.env*`는 있으나 **`!.env.example` 예외 줄이 없다.** 예시 파일까지 무시된다                                                                                                                                                                                                                                                       | Phase 0    |
+> | 커밋·원격                | ✅ **부분 해소 (2026-09-01 확인).** 세 저장소 모두 커밋이 쌓였고 GitHub 원격(`ohjeongsuk/todo-{project,backend,frontend}`)이 연결됐다. **다만 `main`·`develop` 어느 것도 아직 푸시되지 않았다** — 원격에 브랜치가 없다(`todo-frontend`에만 낡은 `origin/master` 참조가 남아 있다)                                            | Phase 0    |
+> | ~~브랜치명~~             | ✅ **해소.** 세 저장소 모두 현재 브랜치가 `main`이고 `develop`이 존재하며 로컬 `master`는 없다                                                                                                                                                                                                                                    | —          |
+> | ~~루트 `.gitignore`~~    | ✅ **해소.** `node_modules/` 재발 방지 규칙을 추가했다                                                                                                                                                                                                                                                                            | —          |
+> | ~~백엔드 `.gitignore`~~  | ✅ **해소.** `.env` / `.env.*` / `!.env.example` 3줄이 있고 `git check-ignore` 종료코드로 확인했다(`.env`=0, `.env.example`=1)                                                                                                                                                                                                     | —          |
+> | ~~프론트 `.gitignore`~~  | ✅ **해소.** `!.env.example` 예외를 추가했고 종료코드로 확인했다                                                                                                                                                                                                                                                                  | —          |
 > | ~~문서 경로~~            | ✅ **해소.** `docs/`를 정본으로 확정하고 `CLAUDE.md` 2장 구조도와 상단 참조 경로를 정정했다 (v1.8)                                                                                                                                                                                                                                | —          |
 > | ~~루트 npm 파일~~        | ✅ **해소.** 루트 `package.json`·`package-lock.json`·`node_modules/`를 삭제했다. `shadcn`은 `todo-frontend/package.json`에 이미 있어 기능 손실이 없고, `.mcp.json`의 shadcn 서버는 `npx shadcn@latest mcp`라 루트 설치에 의존하지 않는다                                                                                          | —          |
-> | ~~`docs/guides/`~~       | ✅ **해소.** 5개 전부 다른 프로젝트에서 넘어온 문서였고(존재하지 않는 "PRD 1.3 기술 스택" 참조, 모노레포·Next 16·없는 npm 스크립트 전제), **이 프로젝트 기준으로 전부 재작성**했다. `nextjs-16.md`→`nextjs-15.md`, `forms-react-hook-form.md`→`forms.md`로 개명. `README.md`를 추가해 "참고 자료이며 `CLAUDE.md`가 우선"임을 명시 | —          |
+> | ~~`docs/guides/`~~       | ✅ **해소.** 5개 전부 다른 프로젝트에서 넘어온 문서였고(존재하지 않는 "PRD 1.3 기술 스택" 참조, 모노레포·Next 16·없는 npm 스크립트 전제), **이 프로젝트 기준으로 전부 재작성**했다. `nextjs-16.md`→`nextjs-app-router.md`, `forms-react-hook-form.md`→`forms.md`로 개명. `README.md`를 추가해 "참고 자료이며 `CLAUDE.md`가 우선"임을 명시 | —          |
 > | ~~폼 라이브러리 미결정~~ | ✅ **해소.** `CLAUDE.md` 3장에 **"라이브러리를 쓰지 않는다 — `useState` + 수동 검증"**으로 확정. `npx shadcn add form` 금지(=`react-hook-form` 유입 경로)와 Tiptap dirty 판정 주의를 함께 명시                                                                                                                                    | —          |
 > | 백엔드 설정 파일         | `src/main/resources/application.properties` 하나뿐. `application.yml` + `-local` + `-prod` 분리 미완                                                                                                                                                                                                                              | Phase 1    |
 > | 백엔드 문서·예시         | `.env.example`, 저장소용 `CLAUDE.md` 없음                                                                                                                                                                                                                                                                                         | Phase 1    |
@@ -114,6 +116,8 @@
 
 **목표**: 폴리레포 3개 저장소를 만들고 문서를 자리잡게 한다.
 
+> ⚠️ **폴리레포다.** `todo-project`(문서)·`todo-backend`·`todo-frontend`가 각각 독립 git 저장소이며 하나의 커밋으로 묶이지 않는다. 2026-09-01에 `CLAUDE.md` 1장이 "저장소는 하나(모노레포)"라고 적고 있던 것을 실제 구조에 맞게 정정했고, `PRD.md` 8장·`CHECKLIST.md` 1.6·`shrimp-rules.md`·에이전트 정의 2건도 함께 고쳤다. 특히 `CHECKLIST.md` 1.6은 **`todo-frontend/.git`이 없어야 한다**는 반대 기준이라 Phase 10에서 무조건 실패했을 항목이다.
+
 **작업**
 
 - `todo-project/` 생성 후 `git init`
@@ -126,22 +130,23 @@
   > 현재 백엔드는 `.env*` 규칙 자체가 없고, 프론트는 `.env*`만 있고 `!.env.example` 예외가 없다. **양쪽 모두 손봐야 한다.**
 - **브랜치 정리** — 세 저장소 모두 `master`다. 첫 커밋 시 `git branch -m main`(또는 `git init -b main`)으로 `main`을 만들고, `main`에서 `develop`을 분기한다. 이후 작업은 `feature/{작업명}` → `develop` → `main` (`CLAUDE.md` 2장)
 - ~~문서 경로 확정~~ — ✅ **완료(v1.8).** `docs/`를 정본으로 확정했다. `CLAUDE.md`만 루트에 두는데, Claude Code가 상위 디렉토리를 거슬러 올라가며 자동 로드하는 대상이 `CLAUDE.md`이기 때문이다. 2장 구조도와 상단 참조 경로를 정정했다
-- ~~`nextjs-16.md` 처리~~ — ✅ **완료.** 삭제하고 **`docs/guides/nextjs-15.md`로 재작성**했다. 단순 버전 치환이 아니라 이 프로젝트 기준으로 다시 썼다: "Server Components 우선"을 **"클라이언트 컴포넌트 우선"**으로 뒤집고(토큰이 localStorage에 있어 서버 페칭이 불가능), Next 16 전용 내용(`proxy.ts`, `cacheComponents`, 최상위 `typedRoutes`)을 걷어내고, 쓰지 않는 기능(Server Actions·Route Handlers·Parallel/Intercepting Routes·ISR·`notFound()`)을 **금지 표로 명시**했다
+- ~~`nextjs-16.md` 처리~~ — ✅ **완료.** 삭제하고 **`docs/guides/nextjs-app-router.md`로 재작성**했다(ROADMAP이 `nextjs-15.md`라 적고 있던 것을 실제 파일명으로 정정. `.claude/agents/dev/nextjs-app-developer.md`가 없는 `nextjs-15.md`를 임포트하고 있던 것도 함께 고쳤다). 단순 버전 치환이 아니라 이 프로젝트 기준으로 다시 썼다: "Server Components 우선"을 **"클라이언트 컴포넌트 우선"**으로 뒤집고(토큰이 localStorage에 있어 서버 페칭이 불가능), Next 16 전용 내용(`proxy.ts`, `cacheComponents`, 최상위 `typedRoutes`)을 걷어내고, 쓰지 않는 기능(Server Actions·Route Handlers·Parallel/Intercepting Routes·ISR·`notFound()`)을 **금지 표로 명시**했다
 - ~~나머지 가이드 4개 처리~~ — ✅ **완료.** 넷 다 이 프로젝트 기준으로 재작성했다. `component-patterns`(서버 우선 → **클라이언트 우선**), `styling-guide`(`next-themes` 토글 → **미디어쿼리 다크 모드**), `project-structure`(모노레포 → **폴리레포**), `forms-react-hook-form.md` → **`forms.md`**(라이브러리 없는 폼). `guides/README.md`를 추가해 지위(참고 자료, `CLAUDE.md` 우선)와 교체 이력을 남겼다
   > ⚠️ 옛 `forms-react-hook-form.md`는 `react-hook-form`·`zod`가 **"이미 설치되어 있다"고 서술**했고, 비밀번호 규칙을 **"6자 이상이 전부"**로 적어 UTF-8 72바이트 한계를 누락하고 있었다. 그대로 뒀다면 Phase 7에서 `AUTH-02`가 조용히 깨졌을 문서다.
 - GitHub에 원격 저장소 3개 생성 및 연결
 
 **DoD**
 
-- [ ] 부모 저장소에서 `git status` 시 하위 폴더가 나타나지 않음
-- [ ] **부모 저장소에서 `git status` 시 `node_modules/`가 나타나지 않음**
-- [ ] **세 저장소 각각에서 `git check-ignore -v .env.example`이 아무것도 반환하지 않고, `git check-ignore -v .env`는 규칙에 매칭됨** (백엔드·프론트 양쪽에서 확인)
-- [ ] 세 저장소 모두 현재 브랜치가 `main`이고 `develop`이 존재함 (`master` 없음)
-- [ ] 세 저장소 모두 첫 커밋 및 원격 푸시 완료
-- [ ] 첫 커밋의 파일 수가 예상 범위 안임 (`git show --stat HEAD | tail -1`로 확인 — 문서 저장소가 수천 건이면 무시 규칙이 빠진 것)
-- [ ] `CLAUDE.md` 2장 구조도의 문서 경로가 실제 파일 위치(`docs/`)와 일치함
-- [ ] `docs/guides/`가 `README.md` + 재작성된 5개 문서로만 구성됨 (`nextjs-16.md`·`forms-react-hook-form.md` 없음)
-- [ ] **`todo-frontend/package.json`에 `react-hook-form`·`zod`·`@hookform/resolvers`·`next-themes`가 없음** (스펙 밖 라이브러리 유입 확인)
+- [x] 부모 저장소에서 `git status` 시 하위 폴더가 나타나지 않음 — `git status --porcelain -uall`이 빈 출력
+- [x] **부모 저장소에서 `git status` 시 `node_modules/`가 나타나지 않음** — 루트 `.gitignore`에 규칙 존재
+- [x] **세 저장소 각각에서 `.env`는 무시되고 `.env.example`은 무시되지 않음** — 세 저장소 모두 `git check-ignore -q .env`가 종료코드 `0`, `.env.example`이 `1`
+  > ⚠️ **`-v` 출력만 보고 판정하지 않는다.** 부정 규칙(`!.env.example`)에 매칭되면 `-v`는 그 규칙을 출력하지만 종료코드는 `1`(무시되지 않음)이다. 출력 유무가 아니라 **종료코드**로 판정한다.
+- [x] 세 저장소 모두 현재 브랜치가 `main`이고 `develop`이 존재함 (로컬 `master` 없음)
+- [ ] 세 저장소 모두 첫 커밋 및 원격 푸시 완료 — **커밋은 완료, 푸시는 미완료.** GitHub 원격은 세 저장소 모두 연결됐으나 `main`·`develop` 어느 것도 push되지 않아 원격에 브랜치가 없다. `todo-frontend`에만 낡은 `origin/master` 참조가 남아 있어 정리가 필요하다
+- [x] 첫 커밋의 파일 수가 예상 범위 안임 — `todo-project` 10개 / `todo-backend` 11개 / `todo-frontend` 19개
+- [x] `CLAUDE.md` **1장** 구조도의 문서 경로가 실제 파일 위치와 일치함 — 2026-09-01 정정. `PRD.md`·`ROADMAP.md`·`DEV_TOOLS.md`·`guides/`가 빠져 있었고, 없는 `API.md`·`DESIGN.md`가 있는 것처럼 적혀 있었다(둘은 미작성 표시로 남겼다). 구조도가 2장이 아니라 1장에 있다는 점도 함께 정정했다
+- [x] `docs/guides/`가 `README.md` + 재작성된 5개 문서로만 구성됨 — `component-patterns.md`, `forms.md`, `nextjs-app-router.md`, `project-structure.md`, `styling-guide.md`. 금지 파일 2종 없음
+- [x] **`todo-frontend/package.json`에 `react-hook-form`·`zod`·`@hookform/resolvers`·`next-themes`가 없음** — 4종 전부 부재 확인
 
 ---
 

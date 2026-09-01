@@ -41,7 +41,8 @@
 | 1.3 | ☐ 연결 문자열에 `currentSchema`가 없다 | `grep currentSchema todo-backend/src/main/resources/*.properties` → 결과 없음 | 규칙 2 |
 | 1.4 | ☐ DB 비밀번호가 소스에 평문으로 없다 | `grep -rn "password=" todo-backend/src/main/resources/application.properties` → 값이 `${...}` 형태 | NF-05 |
 | 1.5 | ☐ 루트 `.gitignore`가 `.metadata/`, `.env`를 제외한다 | `git check-ignore -v .metadata/ .env` | NF-05 |
-| 1.6 | ☐ `todo-frontend/.git`이 없다 (모노레포 단일 저장소) | `test ! -d todo-frontend/.git && git ls-files todo-frontend \| head` | PRD 8장 |
+| 1.6 | ☐ `todo-backend/.git`과 `todo-frontend/.git`이 **각각 존재한다** (폴리레포) | `test -d todo-backend/.git && test -d todo-frontend/.git` | PRD 8장 |
+| 1.6b | ☐ 부모 저장소가 하위 두 폴더를 추적하지 않는다 | `git ls-files todo-backend todo-frontend` → 결과 없음 | PRD 8장 |
 | 1.7 | ☐ 백엔드 패키지가 `com.example.todoapp`이다 | `grep -r "^package com.example.todoapp" todo-backend/src/main/java \| wc -l` > 0 | 규칙 1 |
 | 1.8 | ☐ `users` 테이블에 `deleted_at` 컬럼이 있다 | `\d users` | NF-10 |
 | 1.9 | ☐ `todos` 테이블에 `deleted_at`, `completed_at`, `user_id` 컬럼이 있다 | `\d todos` | NF-10 |

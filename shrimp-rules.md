@@ -1,6 +1,6 @@
 # Development Guidelines
 
-Todo List 서비스(모노레포: Spring Boot 4 백엔드 + Next.js 16 프론트엔드)에서 **AI Agent가 코드를 수정할 때 지켜야 하는 규칙**이다.
+Todo List 서비스(폴리레포: Spring Boot 4 백엔드 + Next.js 16 프론트엔드, 각각 독립 git 저장소)에서 **AI Agent가 코드를 수정할 때 지켜야 하는 규칙**이다.
 기능 설명은 이 문서의 역할이 아니다. "무엇을 만드는가"는 `docs/PRD.md`, "언제 만드는가"는 `docs/ROADMAP.md`를 읽는다.
 
 ---

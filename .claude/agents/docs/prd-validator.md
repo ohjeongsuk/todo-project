@@ -17,7 +17,7 @@ color: red
 - 인증: Access Token(JWT, **30분**, localStorage) + Refresh Token(불투명, **14일**, **회전**, httpOnly 쿠키) + OAuth2(**Google 전용**)
 - DB: PostgreSQL (DB명 `todolist_db`, 테스트 `todolist_db_test` — 모두 소문자)
 - 배포: AWS Amplify(FE) · EC2(BE) · RDS(DB) — **S3 미사용**(파일 업로드 없음)
-- 구조: 모노레포 `todo-project/{todo-backend, todo-frontend}`
+- 구조: 폴리레포 — `todo-project`(문서)·`todo-backend`·`todo-frontend`가 각각 독립 git 저장소
 
 **불변 규칙 (INVARIANTS)**
 1. 로그인 ID는 **이메일만** (username 없음)

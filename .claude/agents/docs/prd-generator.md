@@ -21,7 +21,7 @@ BaaS(Supabase 등)나 프론트 단독 전제를 사용하지 않으며, **자�
 - **인증**: Access Token(JWT, 30분) + Refresh Token(불투명 문자열, 14일, 회전) + Google OAuth2
 - **DB**: PostgreSQL (DB명 `todolist_db`, 테스트 DB `todolist_db_test` — 모두 소문자)
 - **배포**: AWS Amplify(FE) · EC2(BE) · RDS(DB) — **S3 미사용**(파일 업로드 기능 없음)
-- **구조**: 모노레포 `todo-project/{todo-backend, todo-frontend}`
+- **구조**: 폴리레포 — `todo-project`(문서)·`todo-backend`·`todo-frontend`가 각각 독립 git 저장소
 
 ## 반드시 준수할 프로젝트 규칙 (IMPORTANT)
 
