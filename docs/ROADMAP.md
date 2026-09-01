@@ -143,6 +143,24 @@
   > ⚠️ **`-v` 출력만 보고 판정하지 않는다.** 부정 규칙(`!.env.example`)에 매칭되면 `-v`는 그 규칙을 출력하지만 종료코드는 `1`(무시되지 않음)이다. 출력 유무가 아니라 **종료코드**로 판정한다.
 - [x] 세 저장소 모두 현재 브랜치가 `main`이고 `develop`이 존재함 (로컬 `master` 없음)
 - [ ] 세 저장소 모두 첫 커밋 및 원격 푸시 완료 — **커밋은 완료, 푸시는 미완료.** GitHub 원격은 세 저장소 모두 연결됐으나 `main`·`develop` 어느 것도 push되지 않아 원격에 브랜치가 없다. `todo-frontend`에만 낡은 `origin/master` 참조가 남아 있어 정리가 필요하다
+
+  > **푸시 절차 (2026-09-01 기준, 아직 실행하지 않음).** 로컬에 쌓인 커밋은 `todo-project` main 14 / develop 4, `todo-backend` main 10 / develop 2, `todo-frontend` main 8 / develop 3건이다.
+  >
+  > ```bash
+  > # 세 저장소 각각에서
+  > git push -u origin main
+  > git push -u origin develop
+  > ```
+  >
+  > ⚠️ **`todo-frontend`는 순서가 중요하다.** 원격에 낡은 `master`(`f1a0384`, 현재 `main`의 조상)가 있고 GitHub 기본 브랜치가 거기에 잡혀 있을 가능성이 크다. **기본 브랜치인 채로는 삭제가 거부되므로** 다음 순서를 지킨다:
+  >
+  > 1. `git push -u origin main`
+  > 2. GitHub → Settings → General → Default branch를 **`main`으로 변경**
+  > 3. 그 다음에야 `git push origin --delete master`
+  >
+  > 순서를 거꾸로 하면 3에서 막힌다. 2는 웹 UI 설정 변경이라 사용자가 직접 한다.
+  >
+  > 푸시 전 확인: `gh` CLI가 설치돼 있지 않아 세 저장소가 public인지 private인지 확인하지 못했다. **public이면 푸시 즉시 코드가 공개된다.** `.env`·`application-local.yml`은 무시 규칙에 걸려 있음을 종료코드로 확인했으나, 이미 커밋된 파일에 비밀값이 없는지는 푸시 직전에 한 번 더 본다.
 - [x] 첫 커밋의 파일 수가 예상 범위 안임 — `todo-project` 10개 / `todo-backend` 11개 / `todo-frontend` 19개
 - [x] `CLAUDE.md` **1장** 구조도의 문서 경로가 실제 파일 위치와 일치함 — 2026-09-01 정정. `PRD.md`·`ROADMAP.md`·`DEV_TOOLS.md`·`guides/`가 빠져 있었고, 없는 `API.md`·`DESIGN.md`가 있는 것처럼 적혀 있었다(둘은 미작성 표시로 남겼다). 구조도가 2장이 아니라 1장에 있다는 점도 함께 정정했다
 - [x] `docs/guides/`가 `README.md` + 재작성된 5개 문서로만 구성됨 — `component-patterns.md`, `forms.md`, `nextjs-app-router.md`, `project-structure.md`, `styling-guide.md`. 금지 파일 2종 없음
