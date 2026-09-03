@@ -105,7 +105,7 @@
 | UX-04 에러 + 재시도 버튼                 | 6(`ErrorState.onRetry` 필수) · 7 · 8                          | 6 · 7 · 8(재요청 확인) · 10                      |
 | UX-05 반응형 360~1920                    | 6(토큰·컨테이너) · 8                                          | 8(360px) · 10(1920px)                            |
 | UX-06 label·키보드                       | 7 · 8                                                         | 7 · 8 · 10                                       |
-| UX-07 다크 토큰 (`prefers-color-scheme`) | 6                                                             | 6 · 10                                           |
+| UX-07 다크 토큰 (`html[data-theme]` + 토글)  | 6 · 후속(2026-09-03)                                          | 6 · 10 · 후속                                    |
 
 > **에러 문구 매핑**은 `PRD.md`에 표로 존재하지 않는다(`PRD.md` 5.1은 보안 비기능요구사항 NF-01~NF-31일 뿐이다). 정본은 백엔드 `ErrorCode` enum(7종)을 그대로 옮긴 `lib/errorMessages.ts`이며, Phase 6에서 단일화하고 Phase 7·8에서 화면별로 적용, Phase 10에서 7종 전부를 대조한다.
 > `PRD.md` **5장** 비기능 요구사항의 검증 위치(응답 속도 4 · 체감 반응 9 · 브라우저 10 · 반응형 8·10 · 인증 보안 3·4 · 시크릿 관리 10·11 · XSS 4·8 · 문서화 4 · 접근성 7·8)는 위 표 및 각 Phase DoD와 일치한다.
@@ -376,7 +376,8 @@
 
 - **Node 20 이상** 확인 후 `create-next-app` (**Next.js 16.3.3 유지**, App Router, TypeScript)
 - Tailwind CSS 4 설정 — `globals.css`의 `@theme`에 디자인 토큰 정의 (**v3 방식 금지**)
-- **디자인 토큰은 라이트/다크 양쪽 정의 + `@media (prefers-color-scheme: dark)`** (`class` 전략 금지 — 토글이 없어 FOUC만 생김)
+- ~~**디자인 토큰은 라이트/다크 양쪽 정의 + `@media (prefers-color-scheme: dark)`** (`class` 전략 금지 — 토글이 없어 FOUC만 생김)~~
+  → **번복됨 (2026-09-03).** 이 지침은 `PRD.md` F-33("라이트 기본 + 다크 **토글**. 선택은 유지되고 첫 로드 시 색이 번쩍이지 않는다")과 어긋난다. "토글이 없어서 미디어쿼리로 간다"는 근거가 순환 논리였다 — 토글이 없는 이유가 토글을 만들지 않았기 때문이다. 토글을 구현하면서 전환 신호를 `html[data-theme]`으로 바꿨다. 자세한 내용은 아래 「Phase 6 이후 변경」 참고
 - shadcn/ui 초기화 (**npm 사용 시 `--legacy-peer-deps`**, 스타일 `new-york`), lucide-react 설치
 - **`npm install motion`** (`framer-motion` 아님), sonner, date-fns, DOMPurify 설치
 - **Tiptap 설치**: `@tiptap/react`, `@tiptap/starter-kit` **두 개만.** `@tiptap/extension-link`는 **설치하지 않는다** — v3 StarterKit에 `Link`가 포함되어 있어 중복 등록이 된다 (`CLAUDE.md` 8장)
@@ -404,10 +405,11 @@
 - [x] Node 20 이상에서 빌드됨
 - [x] `npm run build` 성공, 출력 디렉토리가 `.next`
 - [x] `package.json`에 `motion`이 있고 `framer-motion`이 없음
-- [x] 디자인 토큰이 OS 다크 설정에 따라 전환됨 (`class` 조작 없이 CSS만으로)
+- [x] 디자인 토큰이 OS 다크 설정에 따라 전환됨 ~~(`class` 조작 없이 CSS만으로)~~ — 2026-09-03에 `html[data-theme]` 방식으로 바뀌었다. OS 연동은 "시스템"이 기본값이라 그대로 동작한다
 - [x] 페이지 `page.tsx`에 `"use client"`가 붙어 있음
 - [x] **`components.json`의 `style`이 `new-york`임** (현재 `radix-nova`)
-- [x] **`globals.css`에 `.dark` 클래스 셀렉터나 `@custom-variant dark (&:is(.dark *))`가 없고, 다크 토큰이 `@media (prefers-color-scheme: dark)` 안에 정의되어 있음** (현재 shadcn 기본값이 `class` 전략이라 반드시 걷어내야 한다)
+- [x] ~~**`globals.css`에 `.dark` 클래스 셀렉터나 `@custom-variant dark (&:is(.dark *))`가 없고, 다크 토큰이 `@media (prefers-color-scheme: dark)` 안에 정의되어 있음**~~ (당시 판정 기준. shadcn 기본값인 `class` 전략을 걷어내는 것이 목적이었다)
+  → **무효 (2026-09-03).** 토글 구현으로 이 조건이 뒤집혔다. 현재는 `@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *))`가 **있어야** 정상이다 — 없으면 토큰만 바뀌고 shadcn 컴포넌트의 `dark:` 유틸리티가 따라오지 않는다. 다만 shadcn 기본값인 `.dark` **클래스** 전략을 쓰지 않는다는 원래 취지는 유지된다(클래스가 아니라 `data-theme` 속성이다)
 - [x] 디자인 토큰 값이 아래 「Phase 6 확정 값」 팔레트와 일치함 (배경 `#FAFAFA`/`#0A0A0A`, 브랜드색 `#4F46E5`, 우선순위 3색) — shadcn 기본 neutral이 남아 있지 않음
   > ⚠️ `CLAUDE.md`에 8장은 없다(6장까지). 팔레트 정본은 `src/app/globals.css`의 `@theme` 토큰이며(`docs/guides/styling-guide.md` 86줄 규정), 확정 값은 아래 표에 기록한다.
   > ⚠️ **브랜드색 `#4F46E5`를 shadcn `--accent` 토큰에 넣지 않는다.** shadcn 규약에서 `accent`는 호버 시 깔리는 옅은 표면색이다. 브랜드색은 `--primary`·`--ring`에 넣는다.
@@ -427,7 +429,7 @@ DoD 15개 항목을 전부 실제 명령으로 확인했다. 확인 방법과, �
 | 빌드·정적검사 | `npm run check`(type-check+lint+format:check), `npm run build` | 둘 다 종료코드 0, `.next` 생성 |
 | Node | `node -v` | v24.18.0 (20 이상) |
 | 버전·패키지 | `package.json` 직접 조회 | `next`/`eslint-config-next` 모두 16.3.3, `motion` 있음, `framer-motion`·`@tiptap/extension-link`·`react-hook-form`·`zod` 없음 |
-| 다크 전환 | Playwright `emulateMedia({colorScheme})`로 라이트↔다크 전환 후 computed style 측정 | 배경 `rgb(250,250,250)`↔`rgb(10,10,10)`, `--primary` `#4f46e5`↔`#818cf8`. `html`의 class는 두 상태에서 동일하고 `.dark`도 없다 — **CSS만으로 전환됨** |
+| 다크 전환 | Playwright `emulateMedia({colorScheme})`로 라이트↔다크 전환 후 computed style 측정 | 배경 `rgb(250,250,250)`↔`rgb(10,10,10)`, `--primary` `#4f46e5`↔`#818cf8`. `html`의 class는 두 상태에서 동일하고 `.dark`도 없다 — **CSS만으로 전환됨** <br>※ 2026-09-03 이후로는 `html[data-theme]`이 바뀌며 전환된다. 색값 자체는 그대로다 |
 | Pretendard | computed `font-family` | `pretendard` (fallback 아님) |
 | Pagination | `totalPages=1`과 `5`를 함께 렌더 | 1일 때 컨테이너 `innerHTML`이 빈 문자열, `nav` 0개 |
 | ErrorState | 재시도 버튼 2회 클릭 | 카운터 `0` → `2` (`onRetry` 실제 호출) |
@@ -836,7 +838,7 @@ DoD 17개를 전부 실제 조작으로 확인했다. 최종 구성은 **백엔�
 - [x] 로그인 실패 문구가 계정 존재 여부를 구분하지 않음
 - [x] 360px ~ 1920px 반응형 정상 — 360px는 Phase 8, 1920px는 이번에 확인(넘침 없음, 콘텐츠 폭 적절히 제한)
 - [ ] **Chromium 계열 1종 + 사용 가능한 다른 엔진 1종에서 확인** (Mac은 Chrome+Safari, Windows는 Chrome+Edge/Firefox) — Chrome은 확인 완료. Edge는 자동화 도구로 조작할 수 없어 사용자에게 직접 확인을 요청한 상태(응답 대기)
-- [x] OS 다크 설정에 따라 테마 전환 — Windows 레지스트리를 임시 전환해 배경색이 실제로 바뀌는 것을 실측 후 원복
+- [x] OS 다크 설정에 따라 테마 전환 — Windows 레지스트리를 임시 전환해 배경색이 실제로 바뀌는 것을 실측 후 원복 (2026-09-03 토글 도입 후 재실측: "시스템" 상태에서 OS 다크 + 새로고침 시 `data-theme="dark"`, 배경 `rgb(10,10,10)` 확인)
 - [x] 폼 label 연결 및 키보드 조작 가능
 
 → 전 항목 통과 시 세 저장소에 `v1.0.0` 태그. **37개 중 35개 통과, 2개는 아래 사유로 미확정** — 태그는 이 두 항목이 해소된 뒤 별도로 승인받는다.
@@ -873,6 +875,59 @@ DoD 17개를 전부 실제 조작으로 확인했다. 최종 구성은 **백엔�
 > **대기 중**: 두 번째 브라우저 엔진(Edge) 확인 — PowerShell로 Edge를 열어 사용자에게 직접 확인을 요청했고 응답 대기 중이다.
 >
 > **자동화 아티팩트로 확정, 앱 결함 아님**: `computer.type`으로 회원가입 폼을 채워 제출했을 때 요청이 아예 안 나가고 폼이 리셋되는 것처럼 보이는 현상이 있었으나, JS로 React controlled input에 네이티브 값을 직접 주입해 재현하니 완전히 정상 동작(EMAIL_DUPLICATED 인라인 에러 정확 표시, 폼 상태 보존)했다. 이 세션의 입력 방식 문제였다.
+
+---
+
+## Phase 6 이후 변경 — UX 개선 3건 (2026-09-03)
+
+Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 기존 Phase의 결정을 고친 것이므로 여기에 기록한다.
+
+### 1. 마감일 하한
+
+`<input type="date">`에 `min`을 걸어 지난 날짜를 고를 수 없게 했다. `form`에 `noValidate`가 있어 브라우저 검증이 꺼져 있으므로 `validateDueDate`로 제출 경로도 막았다.
+
+**단, 하한은 상황에 따라 내려간다.** 서버(`Todo.java`)에는 날짜 제약이 없어 이미 지난 마감일을 가진 데이터가 실제로 존재할 수 있고, 그것을 수정하는 것까지 막으면 제목만 고치려 해도 걸린다. 기존 값이 오늘보다 이전이면 하한을 그 값까지 내린다.
+
+- 실측: 오늘(`2026-09-03`)이 `min`으로 걸림 / `2020-01-01` 주입 후 제출 → **POST 요청 발생하지 않음**, "마감일은 오늘 이후로 정해 주세요." 표시, `aria-invalid="true"`
+- 실측(엣지): `dueDate=2020-01-01`인 항목의 수정 화면 → `min`이 `2020-01-01`로 내려가고, 제목만 고쳐 저장 시 에러 없이 성공
+
+### 2. 할 일 추가 후 이동 경로
+
+`/todos/{id}` → `/todos`. 수정 화면은 종전대로 상세에 남는다.
+
+### 3. 다크 모드 토글 — **Phase 6 결정 번복**
+
+`PRD.md` F-33은 원래 다크 **토글**을 요구했다. Phase 6에서 "토글이 없어 FOUC만 생긴다"는 이유로 `prefers-color-scheme` 전용으로 축소했는데, 이는 순환 논리였다(토글이 없는 이유가 토글을 만들지 않았기 때문). Phase 10 검증이 이를 놓친 이유도 명확하다 — 체크리스트가 ROADMAP 기준("OS 다크 설정에 따라 전환")이었지 PRD F-33 기준이 아니었다.
+
+| 항목 | 내용 |
+|---|---|
+| 전환 신호 | `@media (prefers-color-scheme: dark)` → `html[data-theme="light\|dark"]` |
+| 토글 단계 | 3단 (시스템 / 라이트 / 다크). **기본값 "시스템"이라 기존 OS 연동 동작이 보존된다** |
+| 저장 | `localStorage["todo_theme"]`. "system"은 저장하지 않는다(값 없음 = 시스템) |
+| FOUC 방지 | `app/layout.tsx` `<head>`의 동기 스크립트가 첫 페인트 전에 `data-theme` 확정 |
+| 라이브러리 | 없음. `next-themes`를 쓰지 않는다(절대 규칙 11) |
+
+**`data-theme`에는 선택이 아니라 해석된 결과만 들어간다.** "시스템"은 스크립트가 `matchMedia`로 읽어 `light`/`dark` 중 하나로 확정한다. 그래서 CSS는 상태가 둘뿐이고 같은 다크 토큰을 두 벌 유지하지 않아도 된다.
+
+**`@custom-variant dark`가 반드시 필요하다.** shadcn의 `button`·`input`·`select`·`checkbox`가 `dark:` 유틸리티를 쓰는데, Tailwind 4 기본 `dark:`는 `prefers-color-scheme`이라 토큰만 바꾸면 그쪽이 따라오지 않는다.
+
+`useTheme`은 `localStorage`를 `useState`로 복제하지 않고 **`useSyncExternalStore`로 구독**한다. ESLint `react-hooks/set-state-in-effect`가 effect 내 동기 `setState`를 막아 처음 작성한 방식이 거부됐고, 그것이 올바른 신호였다 — `getServerSnapshot`이 분리돼 hydration 불일치가 구조적으로 생기지 않고 다른 탭의 변경도 `storage` 이벤트로 따라온다.
+
+`sonner`는 자기 DOM에 색을 직접 칠해 `data-theme`을 따르지 않으므로 선택값을 넘기는 `ThemeToaster`로 감쌌다.
+
+**실측 결과**
+
+| 확인 | 결과 |
+|---|---|
+| 3단 순환 | 다크 → 시스템(저장값 `null`) → 라이트 → 다크. 라벨·`data-theme`·저장값 모두 일치 |
+| 새로고침 유지 | `dark` 선택 후 새로고침 → `dark` 유지, 배경 `rgb(10,10,10)` |
+| FOUC | 서버 HTML에서 인라인 스크립트가 `<body>`보다 **앞**에 위치함을 확인 |
+| OS 연동 보존 | "시스템" 상태 + OS 다크 + 새로고침 → `data-theme="dark"`, 배경 `rgb(10,10,10)` |
+| 명시적 선택 우선 | OS 다크 + "라이트" 선택 → 새로고침해도 `light` 유지 |
+| shadcn 컴포넌트 | 다크에서 input·button 배경이 함께 어두워짐 (`@custom-variant` 동작 확인) |
+| hydration 경고 | 콘솔에 없음 |
+
+> **실측하지 못한 것**: 앱 실행 **중** OS 테마를 바꿨을 때의 실시간 반영. 이 자동화 환경의 Chrome이 `prefers-color-scheme`의 `change` 이벤트를 아예 발생시키지 않았다(훅과 동일한 방식으로 단 관측용 리스너에도 오지 않았고, `matches` 값만 바뀌었다). 코드 경로 자체는 표준 `matchMedia` 구독이며, 페이지 로드 시 OS 반영은 위 표대로 실측됐다.
 
 ---
 
