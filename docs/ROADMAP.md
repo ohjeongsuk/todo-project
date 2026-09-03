@@ -21,7 +21,7 @@
 | 7     | 인증 화면                  | frontend | ✅   |
 | 8     | Todo 화면                  | frontend | ✅   |
 | 9     | 인터랙션 다듬기            | frontend | ✅   |
-| 10    | 전체 검증                  | 전체     | ⬜   |
+| 10    | 전체 검증                  | 전체     | 🟡   |
 | 11    | AWS 배포                   | 전체     | ⬜   |
 
 ⬜ 대기 · 🟡 진행중 · ✅ 완료
@@ -107,8 +107,8 @@
 | UX-06 label·키보드                       | 7 · 8                                                         | 7 · 8 · 10                                       |
 | UX-07 다크 토큰 (`prefers-color-scheme`) | 6                                                             | 6 · 10                                           |
 
-> `PRD.md` 5.1의 **에러 문구 매핑 표**는 Phase 6에서 `lib/errorMessages.ts`로 단일화하고, Phase 7·8에서 화면별로 적용, Phase 10에서 6종 전부를 대조한다.
-> `PRD.md` 7장 비기능 요구사항의 검증 위치(응답 속도 4 · 체감 반응 9 · 브라우저 10 · 반응형 8·10 · 인증 보안 3·4 · 시크릿 관리 10·11 · XSS 4·8 · 문서화 4 · 접근성 7·8)는 위 표 및 각 Phase DoD와 일치한다.
+> **에러 문구 매핑**은 `PRD.md`에 표로 존재하지 않는다(`PRD.md` 5.1은 보안 비기능요구사항 NF-01~NF-31일 뿐이다). 정본은 백엔드 `ErrorCode` enum(7종)을 그대로 옮긴 `lib/errorMessages.ts`이며, Phase 6에서 단일화하고 Phase 7·8에서 화면별로 적용, Phase 10에서 7종 전부를 대조한다.
+> `PRD.md` **5장** 비기능 요구사항의 검증 위치(응답 속도 4 · 체감 반응 9 · 브라우저 10 · 반응형 8·10 · 인증 보안 3·4 · 시크릿 관리 10·11 · XSS 4·8 · 문서화 4 · 접근성 7·8)는 위 표 및 각 Phase DoD와 일치한다.
 
 ---
 
@@ -250,7 +250,7 @@
 **작업**
 
 - `SecurityConfig` (SecurityFilterChain, CORS, 경로별 인가)
-  - **`permitAll` 경로에 Swagger(`/swagger-ui/**`, `/v3/api-docs/**`)를 반드시 포함** (`CLAUDE.md` 6장 목록 그대로)
+  - **`permitAll` 경로에 Swagger(`/swagger-ui/**`, `/v3/api-docs/**`)를 반드시 포함**
   - CORS 허용 헤더에 `Authorization`, `Content-Type` 명시
 - `JwtTokenProvider` (생성/검증, 24시간 만료, **`sub = user.id`**)
 - `JwtAuthenticationFilter` (`sub` → id 조회, `deleted_at IS NULL` 확인)
@@ -299,7 +299,7 @@
 - **`PUT`은 전체 교체이며 `TodoUpdateRequest`에 `completed`를 넣지 않는다**
 - **`PATCH /toggle`은 바디로 `{"completed": true}`를 받는다** (서버가 뒤집지 않음)
 - `TodoService`: 소유권 검증, Soft Delete, **HTML 정화**
-- **HtmlSanitizer**: Jsoup Safelist, 허용 태그·`rel` 주입·스킴 제한 (`CLAUDE.md` 6장)
+- **HtmlSanitizer**: Jsoup Safelist, 허용 태그·`rel` 주입·스킴 제한 (`CLAUDE.md` 3장 절대 규칙 8)
 - 페이지네이션 + `completed`(미지정 시 전체) + `keyword`(대소문자 무시) 필터
 - 정렬은 `createdAt,desc` 고정. **허용 필드 화이트리스트(`createdAt`, `dueDate`) 밖의 값은 기본값으로 대체** (없는 프로퍼티로 500 방지)
 - `PageResponse<T>` DTO → **`ApiResponse.data` 안에 담아 반환**
@@ -789,57 +789,90 @@ DoD 17개를 전부 실제 조작으로 확인했다. 최종 구성은 **백엔�
 
 **환경**
 
-- [ ] `todolist_db`, `todolist_db_test`와 함께 PostgreSQL 실행
-- [ ] `./mvnw spring-boot:run` 오류 없이 기동
-- [ ] `./mvnw test` 전체 통과 (통합 테스트 8건 + Repository 단위 테스트)
-- [ ] `npm run build` 성공
-- [ ] Swagger UI에서 전체 API 확인
-- [ ] 세 저장소의 브랜치가 `main`/`develop` 체계이고 `master`가 남아 있지 않음
-- [ ] `CLAUDE.md`·`PRD.md`·`ROADMAP.md`가 서로를 참조하는 경로가 실제 파일 위치와 일치함
+- [x] `todolist_db`, `todolist_db_test`와 함께 PostgreSQL 실행
+- [x] `./mvnw spring-boot:run` 오류 없이 기동
+- [x] `./mvnw test` 전체 통과 (통합 테스트 8건 + Repository 단위 테스트) — 실측 결과 19건: 통합 8(Auth 3·Todo 4·스모크 1) + Repository 8(Todo 4·User 4) + 서비스 3(OAuth2). 원래 "8건" 표현은 정확했다
+- [x] `npm run build` 성공
+- [x] Swagger UI에서 전체 API 확인 — 실측 중 `/swagger-ui.html`이 401로 막혀 있는 결함을 발견해 즉시 수정(아래 발견 기록 참고)
+- [x] 세 저장소의 브랜치가 `main`/`develop` 체계이고 `master`가 남아 있지 않음
+- [x] `CLAUDE.md`·`PRD.md`·`ROADMAP.md`가 서로를 참조하는 경로가 실제 파일 위치와 일치함 — 이 과정에서 이 문서 자체의 오기 5건(PRD 5.1 에러 문구 매핑 오기 2건, CLAUDE.md 6장 오인용 3건)을 추가로 발견해 정정했다
 
 **인증**
 
-- [ ] 회원가입 시 사용자 생성 및 JWT 반환
-- [ ] 로그인 시 유효한 JWT 반환 (`sub`에 user id)
-- [ ] 보호된 엔드포인트에 유효 토큰 필요
-- [ ] 구글 소셜 로그인 정상 동작, nickname 채워짐
-- [ ] 동일 이메일 로컬 계정 존재 시 구글 로그인 거부 및 안내
-- [ ] 로그아웃 시 토큰·캐시 제거
-- [ ] 헤더에 닉네임만 표시되고 이메일은 화면 어디에도 노출되지 않음 (`AUTH-08`)
-- [ ] 만료 토큰으로 보호 화면 접근 시 화면 노출 없이 `/login`으로 이동 (`AUTH-07`)
+- [x] 회원가입 시 사용자 생성 및 JWT 반환
+- [x] 로그인 시 유효한 JWT 반환 (`sub`에 user id)
+- [x] 보호된 엔드포인트에 유효 토큰 필요
+- [x] 구글 소셜 로그인 정상 동작, nickname 채워짐 — 실제 구글 계정 로그인은 자격증명 대리 입력 정책상 자동화 불가. `/oauth2/authorization/google` 리다이렉트 배선과 `CustomOAuth2UserServiceTest`(신규 계정 생성 시 nickname이 구글 name으로 채워짐을 검증하는 단위 테스트, Task 2에서 통과 확인)로 대체 확인
+- [x] 동일 이메일 로컬 계정 존재 시 구글 로그인 거부 및 안내 — 위와 동일한 이유로 `CustomOAuth2UserServiceTest`의 이메일 충돌 거부 테스트(OAuth2AuthenticationException + EMAIL_CONFLICT_ERROR_CODE)로 대체 확인
+- [x] 로그아웃 시 토큰·캐시 제거
+- [x] 헤더에 닉네임만 표시되고 이메일은 화면 어디에도 노출되지 않음 (`AUTH-08`)
+- [x] 만료 토큰으로 보호 화면 접근 시 화면 노출 없이 `/login`으로 이동 (`AUTH-07`)
 
 **기능**
 
-- [ ] Todo CRUD가 페이지네이션과 함께 작동
-- [ ] 모든 응답이 `{success, data, error}` 포맷 (목록 포함)
-- [ ] 완료 필터(미지정 시 전체)·제목 검색(대소문자 무시) 동작
-- [ ] 수정 저장이 완료 상태를 덮어쓰지 않음
-- [ ] 토글 연타 후에도 서버 상태와 UI 일치
-- [ ] Soft Delete 시 `deleted_at` 갱신 및 목록 제외
-- [ ] 타 사용자 리소스 접근 시 404
-- [ ] Tiptap 저장/렌더링 정상, 우선순위·마감일 반영
-- [ ] 낙관적 업데이트 및 실패 롤백 동작
+- [x] Todo CRUD가 페이지네이션과 함께 작동
+- [x] 모든 응답이 `{success, data, error}` 포맷 (목록 포함)
+- [x] 완료 필터(미지정 시 전체)·제목 검색(대소문자 무시) 동작
+- [x] 수정 저장이 완료 상태를 덮어쓰지 않음 — 토글로 완료 처리 후 PUT으로 나머지 필드를 전부 바꿔도 completed·completedAt이 그대로 유지됨을 확인
+- [x] 토글 연타 후에도 서버 상태와 UI 일치
+- [x] Soft Delete 시 `deleted_at` 갱신 및 목록 제외 — DB에 행은 남고 목록에서만 제외됨(물리 삭제 아님)까지 확인
+- [x] 타 사용자 리소스 접근 시 404 — GET·PUT·DELETE 세 메서드 전부 404(403 아님) 확인
+- [x] Tiptap 저장/렌더링 정상, 우선순위·마감일 반영
+- [x] 낙관적 업데이트 및 실패 롤백 동작
 
 **보안**
 
-- [ ] `<script>` 포함 본문이 저장 시 정화됨
-- [ ] 링크에 `rel="noopener noreferrer"` 주입됨 — **저장 시(Jsoup)뿐 아니라 렌더 후 DOM에서도 남아 있는지 확인.** DOMPurify의 `ALLOWED_ATTR`에 `rel`·`target`이 없으면 렌더 단계에서 지워진다
-- [ ] **`setContent()` 직전에 DOMPurify가 적용됨** (이 앱에는 `dangerouslySetInnerHTML`이 없으므로 여기가 유일한 렌더 방어 지점 — `CLAUDE.md` 6장)
-- [ ] **툴바 · Tiptap 확장 · Jsoup 화이트리스트 · DOMPurify `ALLOWED_TAGS` 네 곳의 태그 집합이 일치**
-- [ ] 입력값 상한(비밀번호 **UTF-8 72바이트**, 제목 200자, 본문 50,000자) 검증 동작 — **한글 비밀번호로도 시험한다**
-- [ ] 시크릿이 저장소에 커밋되지 않음
+- [x] `<script>` 포함 본문이 저장 시 정화됨 — Jsoup을 우회해 DB에 직접 삽입 후 렌더 화면에서도 DOMPurify가 실행을 막음을 확인(이중 방어 양쪽 다 실측)
+- [x] 링크에 `rel="noopener noreferrer"` 주입됨 — **저장 시(Jsoup)뿐 아니라 렌더 후 DOM에서도 남아 있는지 확인.** DOMPurify의 `ALLOWED_ATTR`에 `rel`·`target`이 없으면 렌더 단계에서 지워진다
+- [x] **`setContent()` 직전에 DOMPurify가 적용됨** (이 앱에는 `dangerouslySetInnerHTML`이 없으므로 여기가 유일한 렌더 방어 지점 — `CLAUDE.md` 3장 절대 규칙 8)
+- [x] **툴바 · Tiptap 확장 · Jsoup 화이트리스트 · DOMPurify `ALLOWED_TAGS` 네 곳의 태그 집합이 일치** — `@tiptap/starter-kit`의 실제 번들 확장 목록을 `.d.ts`로 직접 확인해 4곳 모두 `p h2 h3 strong em ul ol li blockquote pre code br a` 13종으로 완전히 일치함을 확정(아래 비교표 참고)
+- [x] 입력값 상한(비밀번호 **UTF-8 72바이트**, 제목 200자, 본문 50,000자) 검증 동작 — **한글 비밀번호로도 시험한다** — 한글 25자(75바이트)로 72바이트 초과 거부, 제목 201자·본문 50001자도 각각 정확히 거부됨을 확인
+- [x] 시크릿이 저장소에 커밋되지 않음 — 세 저장소 `git log --all` 전체 이력에서 시크릿 파일·값 커밋 이력 0건
 
 **UX**
 
-- [ ] 로딩/빈 상태/검색 결과 없음/에러 상태 모두 확인 (**에러 상태의 재시도 버튼이 실제로 재요청을 보냄** — `UX-04`)
-- [ ] `PRD.md` 5.1 에러 문구 매핑 6종이 화면에서 표 그대로 나옴 (`INVALID_INPUT` / `UNAUTHORIZED` 2경우 / `EMAIL_DUPLICATED` / `TODO_NOT_FOUND` / `INTERNAL_ERROR` / 네트워크 실패)
-- [ ] 로그인 실패 문구가 계정 존재 여부를 구분하지 않음
-- [ ] 360px ~ 1920px 반응형 정상
-- [ ] **Chromium 계열 1종 + 사용 가능한 다른 엔진 1종에서 확인** (Mac은 Chrome+Safari, Windows는 Chrome+Edge/Firefox)
-- [ ] OS 다크 설정에 따라 테마 전환
-- [ ] 폼 label 연결 및 키보드 조작 가능
+- [x] 로딩/빈 상태/검색 결과 없음/에러 상태 모두 확인 (**에러 상태의 재시도 버튼이 실제로 재요청을 보냄** — `UX-04`)
+- [ ] `lib/errorMessages.ts`의 에러 문구 매핑이 화면에서 표 그대로 나옴 — **5/7종만 확인.** `INVALID_INPUT`·`EMAIL_DUPLICATED`·`UNAUTHORIZED`·`NOT_FOUND`·네트워크 실패는 실측 확인. `FORBIDDEN`은 이 앱에 역할 기반 인가가 없어(소유권 위반은 전부 404) 정상 흐름에서 도달하는 경로를 찾지 못했다. `INTERNAL_ERROR`는 서버를 살려둔 채 500을 강제로 내야 해 이번 세션에서 재현하지 않았다. `RESET_TOKEN_INVALID`는 **애초에 던지는 코드가 없다 — 비밀번호 재설정 API가 백엔드에 미구현**(아래 발견 기록 참고). 추측으로 체크하지 않는다
+- [x] 로그인 실패 문구가 계정 존재 여부를 구분하지 않음
+- [x] 360px ~ 1920px 반응형 정상 — 360px는 Phase 8, 1920px는 이번에 확인(넘침 없음, 콘텐츠 폭 적절히 제한)
+- [ ] **Chromium 계열 1종 + 사용 가능한 다른 엔진 1종에서 확인** (Mac은 Chrome+Safari, Windows는 Chrome+Edge/Firefox) — Chrome은 확인 완료. Edge는 자동화 도구로 조작할 수 없어 사용자에게 직접 확인을 요청한 상태(응답 대기)
+- [x] OS 다크 설정에 따라 테마 전환 — Windows 레지스트리를 임시 전환해 배경색이 실제로 바뀌는 것을 실측 후 원복
+- [x] 폼 label 연결 및 키보드 조작 가능
 
-→ 전 항목 통과 시 세 저장소에 `v1.0.0` 태그
+→ 전 항목 통과 시 세 저장소에 `v1.0.0` 태그. **37개 중 35개 통과, 2개는 아래 사유로 미확정** — 태그는 이 두 항목이 해소된 뒤 별도로 승인받는다.
+
+> ### Phase 10 재검증 / 발견 기록 (2026-09-03)
+>
+> 계획 단계에서 "39개"로 셌던 체크리스트는 실제로 **37개**다(환경 7 · 인증 8 · 기능 9 · 보안 6 · UX 7). ROADMAP 원문 자체는 정확했고 계획 당시 집계가 틀렸다.
+>
+> **4곳 태그 집합 비교표** (보안 그룹에서 가장 결함 가능성이 높다고 판단한 항목 — 결과: 완전 일치)
+>
+> | 소스 | 태그 |
+> |---|---|
+> | Jsoup Safelist | `p h2 h3 strong em ul ol li blockquote pre code br a` |
+> | DOMPurify `ALLOWED_TAGS` | `p h2 h3 strong em ul ol li blockquote pre code br a` |
+> | Tiptap 실제 활성 확장 (`@tiptap/starter-kit`의 `.d.ts`로 직접 확인, strike·underline·horizontalRule 비활성화 반영) | 동일 13종 |
+> | 툴바 버튼 | 위 13종 중 `p`(기본값)·`li`(목록의 암시적 자식)·`br`(Shift+Enter)를 제외한 나머지에 버튼 존재 — 3개는 버튼이 없는 게 정상(암시적/키보드 접근) |
+>
+> **백엔드 테스트 실측 개수**: `./mvnw test` 19건 전부 통과. Surefire 리포트에 구 패키지(`com.example.*`, 8/28 잔존) 3건이 섞여 있어 타임스탬프로 걸러냈다. 현재 패키지 6개 클래스: `AuthControllerTest` 3 · `TodoControllerTest` 4 · `TodoRepositoryTest` 4 · `UserRepositoryTest` 4 · `CustomOAuth2UserServiceTest` 3 · `TodoBackendApplicationTests`(스모크) 1. 원래 "통합 테스트 8건" 표현(Auth 3+Todo 4+스모크 1)은 정확했다.
+>
+> **실측 중 발견해 즉시 수정한 결함 3건**
+>
+> 1. **Swagger UI 진입점이 401로 막혀 있었다.** `SecurityConfig`의 `PERMIT_ALL_PATHS`에 `/swagger-ui/**`만 있고 SpringDoc의 실제 진입점 `/swagger-ui.html`(→ `/swagger-ui/index.html` 리다이렉트)이 빠져 있었다. 경로 하나를 추가해 재기동 후 정상 렌더(2개 태그, 11개 오퍼레이션) 확인.
+> 2. **`CustomOAuth2UserServiceTest`의 주석이 실재하지 않는 「`CLAUDE.md` 14장」을 인용**하고 있었다(`CLAUDE.md`는 6장까지). 코드베이스 전체(백엔드·프론트엔드)를 grep해 이 1건 외에는 3~5장(유효 범위)만 있음을 확인 후 제거.
+> 3. **`TodoForm.tsx`가 "Cannot update a component while rendering a different component" 경고를 내고 있었다**(사용자가 실사용 중 발견해 보고). 렌더 중 상태 조정 패턴을 자기 자신이 아니라 부모(`NewTodoPage`/`[id]/page.tsx`)의 `setIsDirty`에 적용한 것이 원인 — `useEffect`로 옮겨 수정. `reportedDirty` 보조 state도 함께 제거됐다.
+>
+> **문서 오류 추가 발견 5건**: `docs/ROADMAP.md` 110·111번째 줄이 "PRD.md 5.1의 에러 문구 매핑 표"(존재하지 않음)와 "PRD.md 7장 비기능요구사항"(실제로는 5장)이라는, 이 문서 전체에서 가장 이른 지점의 오기였다. 253·302·827번째 줄의 "CLAUDE.md 6장" 3건도 실제 근거인 3장 절대 규칙 8로 정정했다. 이미 완료·병합된 Phase 3·7·8 절까지 포함해 함께 고쳤다(Phase 9에서도 같은 패턴을 발견해 과거 Phase 절까지 정정한 전례를 따름).
+>
+> **미해결 — 범위가 큰 결함 (사용자 보고 완료, 기록만 남기고 넘어가기로 결정, 2026-09-03)**
+>
+> `RESET_TOKEN_INVALID` 에러 코드가 enum에만 정의되어 있고 실제로 던지는 코드가 없다. 조사 결과 **비밀번호 재설정 기능이 백엔드·프론트엔드 양쪽 다 미구현**이다 — `PasswordResetToken` 엔티티·Repository·DTO·`LocalPasswordResetMailSender`는 만들어져 있지만 이를 연결하는 서비스·컨트롤러가 없고(`AuthController`는 signup/login/refresh/logout/me 5개뿐), 프론트엔드에도 관련 화면이 없다. `PRD.md` NF-30·NF-31, 이 문서의 `/api/auth/password/**` permitAll 설정 등 여러 문서가 이 기능의 존재를 전제하고 있다. 새 API+서비스+화면을 구현해야 하는 범위라 이번 Phase에서 만들지 않는다.
+>
+> **미확인 — 정상 흐름에서 도달 어려움**: `FORBIDDEN`(역할 기반 인가가 없어 트리거 경로 없음), `INTERNAL_ERROR`(서버를 살려둔 채 500을 강제해야 함, 재현 안 함).
+>
+> **대기 중**: 두 번째 브라우저 엔진(Edge) 확인 — PowerShell로 Edge를 열어 사용자에게 직접 확인을 요청했고 응답 대기 중이다.
+>
+> **자동화 아티팩트로 확정, 앱 결함 아님**: `computer.type`으로 회원가입 폼을 채워 제출했을 때 요청이 아예 안 나가고 폼이 리셋되는 것처럼 보이는 현상이 있었으나, JS로 React controlled input에 네이티브 값을 직접 주입해 재현하니 완전히 정상 동작(EMAIL_DUPLICATED 인라인 에러 정확 표시, 폼 상태 보존)했다. 이 세션의 입력 방식 문제였다.
 
 ---
 
