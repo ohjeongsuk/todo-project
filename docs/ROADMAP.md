@@ -25,7 +25,7 @@
 | 11    | AWS 배포                   | 전체     | ⬜   |
 | 12    | 로컬 이미지 첨부           | 전체     | ✅   |
 | 13    | S3 전환                    | backend  | ✅   |
-| 14    | 비밀번호 재설정            | 전체     | ⬜   |
+| 14    | 비밀번호 재설정            | 전체     | ✅   |
 
 ⬜ 대기 · 🟡 진행중 · ✅ 완료
 
@@ -1224,13 +1224,30 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
 
 **DoD**
 
-- [ ] `./mvnw spotless:apply` 후 `./mvnw verify` 종료 코드 0 — 기존 38건 + 신규 13번 통과
-- [ ] `npm run check && npm run build` 종료 코드 0
-- [ ] `docs/CHECKLIST.md` 17장 시나리오 전수 통과
-- [ ] 없는 계정·소셜 전용 계정·정상 계정의 응답과 화면 문구가 **완전히 동일**하다 (NF-31, F-45)
-- [ ] 같은 링크를 두 번 쓰면 두 번째가 400 `RESET_TOKEN_INVALID`다 (F-43)
-- [ ] 재설정 후 기존 세션이 전부 끊기고 **자동 로그인되지 않는다** (F-44)
-- [ ] 10분 내 4번째 요청이 429로 막힌다 (NF-30)
+- [x] `./mvnw spotless:apply` 후 `./mvnw verify` 종료 코드 0 — 기존 38건 + 신규 13번 통과
+  > 실측 44건 통과 (`BUILD SUCCESS`, 2026-09-07)
+- [x] `npm run check && npm run build` 종료 코드 0 (2026-09-07)
+- [x] `docs/CHECKLIST.md` 17장 시나리오 전수 통과 — 14개 항목 전부 ☑ (2026-09-07)
+- [x] 없는 계정·소셜 전용 계정·정상 계정의 응답과 화면 문구가 **완전히 동일**하다 (NF-31, F-45)
+- [x] 같은 링크를 두 번 쓰면 두 번째가 400 `RESET_TOKEN_INVALID`다 (F-43)
+- [x] 재설정 후 기존 세션이 전부 끊기고 **자동 로그인되지 않는다** (F-44)
+- [x] 10분 내 4번째 요청이 429로 막힌다 (NF-30)
+
+> ### Phase 14 검증 기록 (2026-09-07)
+>
+> **발견해 수정한 결함 1건 — 유효한 링크가 만료 안내로 표시됐다.** `GET .../verify`는 유효하면
+> 204(본문 없음)를 주는데, `queryFn`이 그대로 `undefined`를 반환하면 React Query가 이를 오류로
+> 취급한다(`Query data cannot be undefined`). 서버·네트워크는 정상이고 `npm run check`·`build`도
+> 통과해서, **브라우저로 실제 링크를 열어보지 않았으면 놓쳤을 결함**이다. Phase 12에서 Tiptap 이미지
+> 노드가 조용히 사라졌던 것과 같은 부류다 — 타입 검사와 빌드가 잡지 못하는 런타임 계약 문제.
+>
+> **테스트 격리 주의**: rate limiter는 메모리에 상태를 들고 있어 `@Transactional` 롤백으로 되돌아가지
+> 않는다. MockMvc 기본 IP가 모든 요청에서 같으므로, 테스트마다 다른 클라이언트 IP를 주입해야 네 번째
+> 요청부터 429가 나며 순서에 따라 깨지는 일이 없다.
+>
+> **`LocalPasswordResetMailSender`의 프로파일을 `local` → `!prod`로 바꿨다.** `local`로 한정하면
+> 테스트 프로파일에 빈이 없어 `PasswordResetService` 주입이 실패하고 **모든 `@SpringBootTest`가**
+> 컨텍스트 로딩 단계에서 무너진다.
 
 > **운영 SMTP 발송은 이 Phase의 범위가 아니다.** 로컬은 `LocalPasswordResetMailSender`가 콘솔에
 > 링크를 출력하는 방식으로 기능 전체를 완성·검증한다. 실제 메일 발송은 Phase 11로 이관했다.
