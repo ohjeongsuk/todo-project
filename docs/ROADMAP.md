@@ -1151,11 +1151,13 @@ Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 
 
 **DoD**
 
-- [ ] `app.storage.type=s3`로 기동해 Phase 12의 16개 시나리오가 동일하게 통과한다
-  > ⚠️ 실제 AWS 계정·버킷이 없는 환경에서는 검증 불가. 코드·빈 배선만 확인했다 (`docs/CHECKLIST.md` 16-1 참고).
-- [ ] **`todo-frontend`에 커밋이 발생하지 않는다** (git status 클린) — F-50의 최종 수용 기준
-  > Phase 13 작업 자체는 프론트 파일을 0건 수정했다. 다만 Phase 12(이미지 첨부 프론트 구현)의 미커밋 변경이
-  > 남아 있어 `git status`가 문자 그대로 클린하지는 않다 — 그 커밋 완료 후 재확인한다.
+- [x] `app.storage.type=s3`로 기동해 Phase 12의 16개 시나리오가 동일하게 통과한다
+  > 실제 버킷(`todolist-dev-ojs933327`, ap-northeast-2)으로 presign → PUT → complete → GET 전체 흐름을
+  > 라이브로 확인했다. 바이트 완전 일치, Content-Type 서명 일치, 소유권 404까지 정상 (2026-09-07).
+  > 단 **버킷 퍼블릭 액세스 차단이 꺼져 있는 것을 발견**했다 — 코드 결함이 아니라 AWS 콘솔 설정 문제다.
+  > `docs/CHECKLIST.md` 16-1.6 참고. 이 설정을 고친 뒤에는 재검증이 필요 없다(코드는 이미 정상 동작 확인됨).
+- [x] **`todo-frontend`에 커밋이 발생하지 않는다** (git status 클린) — F-50의 최종 수용 기준
+  > Phase 12·13 커밋 완료 후 세 저장소 모두 git status 클린 확인 (2026-09-07)
 - [x] `app.storage.type=local`로 되돌리면 다시 로컬 스토리지로 동작한다
   > `StorageProfileSwitchTest` + 로컬 테스트 스위트 38건이 `app.storage.type=local`로 통과 (2026-09-07)
 - [x] AWS 키가 소스 어디에도 없다 (NF-05) — `grep -rn "AKIA"` 0건 확인 (2026-09-07)
