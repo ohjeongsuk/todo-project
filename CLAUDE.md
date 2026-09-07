@@ -67,7 +67,9 @@ todo-project/          # 문서 저장소 (독립 git)
 - 로컬: 직접 설치한 PostgreSQL
 - 배포(후순위): 프론트 = AWS Amplify, 백엔드 = EC2, DB = RDS
 - **Docker는 사용하지 않는다.** Dockerfile, docker-compose.yml, Testcontainers 모두 금지.
-- **Amazon S3는 이번 범위에서 사용하지 않는다.** (파일 업로드 기능 없음)
+- **Amazon S3는 본문 이미지 첨부 저장소로만 사용한다.** 로컬 개발은 `todo-project/upload` 디렉터리를
+  쓰고, 운영에서만 S3로 전환한다. 전환은 `app.storage.type` 설정 변경만으로 이뤄지며
+  프론트엔드 코드는 바뀌지 않는다. 버킷은 퍼블릭으로 열지 않는다.
 
 ---
 
@@ -81,7 +83,8 @@ todo-project/          # 문서 저장소 (독립 git)
 6. 예외 응답은 **`GlobalExceptionHandler` 한 곳**에서만 만든다. 컨트롤러에서 개별 try-catch로 응답을 조립하지 않는다.
 7. 비밀번호는 **BCrypt**로만 저장한다. 평문/단방향 해시 직접 구현 금지.
 8. Tiptap 본문 HTML은 **저장 전 서버에서 Jsoup으로 sanitize**하고, **렌더링 시 클라이언트에서 DOMPurify로 한 번 더** 거른다. 둘 중 하나만 하는 것은 금지.
-9. **비밀/키를 코드에 하드코딩하지 않는다.** 모두 환경변수로 뺀다. `.env`, `application-local.yml`은 `.gitignore`에 넣는다.
+   이미지는 `img[alt, data-attachment-id]`만 허용하고 **`src`는 저장하지 않는다.** 조회 URL은 만료되므로 렌더 시점에 주입한다. 두 허용 목록은 항상 같은 집합이어야 한다.
+9. **비밀/키를 코드에 하드코딩하지 않는다.** 모두 환경변수로 뺀다. `.env`, `application-local.properties`는 `.gitignore`에 넣는다.
 10. **주석은 한글로 작성한다.** 단, 코드 식별자(클래스/변수/함수명)는 영문이다.
 11. 임의로 라이브러리를 추가하지 않는다. 필요하면 먼저 이유와 함께 제안하고 승인을 받는다.
 
@@ -96,7 +99,7 @@ todo-project/          # 문서 저장소 (독립 git)
 
 ### Java
 - 계층: `controller` → `service` → `repository`. 컨트롤러가 리포지토리를 직접 호출하지 않는다.
-- 패키지 구조는 **기능별(package-by-feature)**로 나눈다: `auth`, `user`, `todo`, `global`.
+- 패키지 구조는 **계층형**이다: `config`, `controller`, `domain`, `dto`, `exception`, `security`, `service`. 새 클래스도 이 구조에 맞춰 넣는다.
 - DTO는 **record**로 만든다. 엔티티는 클래스.
 - 엔티티에 `@Setter`를 열지 않는다. 상태 변경은 의미 있는 메서드로 표현한다 (`complete()`, `updateContent()`).
 - 생성자 주입만 사용한다. 필드 주입(`@Autowired` 필드) 금지.

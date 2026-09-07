@@ -23,6 +23,8 @@
 | 9     | 인터랙션 다듬기            | frontend | ✅   |
 | 10    | 전체 검증                  | 전체     | 🟡   |
 | 11    | AWS 배포                   | 전체     | ⬜   |
+| 12    | 로컬 이미지 첨부           | 전체     | ⬜   |
+| 13    | S3 전환                    | backend  | ⬜   |
 
 ⬜ 대기 · 🟡 진행중 · ✅ 완료
 
@@ -106,6 +108,14 @@
 | UX-05 반응형 360~1920                    | 6(토큰·컨테이너) · 8                                          | 8(360px) · 10(1920px)                            |
 | UX-06 label·키보드                       | 7 · 8                                                         | 7 · 8 · 10                                       |
 | UX-07 다크 토큰 (`html[data-theme]` + 토글)  | 6 · 후속(2026-09-03)                                          | 6 · 10 · 후속                                    |
+| IMG-01 이미지 첨부 (F-46)                | 12(백엔드 API · Tiptap 노드)                                  | 12                                               |
+| IMG-02 업로드 제한 (F-47, NF-34)         | 12(타입 화이트리스트 · 크기 이중 방어)                        | 12(테스트 11번)                                  |
+| IMG-03 첨부 소유권 (F-48)                | 12(쿼리 단계 강제, 404)                                       | 12(테스트 10번)                                  |
+| IMG-04 본문 참조 방식 (F-49)             | 12(Jsoup · DOMPurify 양쪽 `img` 허용, `src` 미저장)           | 12(테스트 12번 · 수동 11·12·16)                  |
+| IMG-05 스토리지 추상화 (F-50)            | 12(`StorageService` + 로컬 구현) · 13(S3 구현)                | 12 · 13(프론트 무변경 확인)                      |
+| IMG-06 고아 파일 정리 (F-51)             | 12(`@Scheduled` 배치, 상태별 정책)                            | 12                                               |
+| IMG-07 서명 URL (NF-32)                  | 12(jjwt 재사용, 용도·만료 서명)                               | 12(테스트 10번)                                  |
+| IMG-08 경로 조작 방어 (NF-33)            | 12(`Path.normalize()` + base 하위 검증)                       | 12(단위 테스트)                                  |
 
 > **에러 문구 매핑**은 `PRD.md`에 표로 존재하지 않는다(`PRD.md` 5.1은 보안 비기능요구사항 NF-01~NF-31일 뿐이다). 정본은 백엔드 `ErrorCode` enum(7종)을 그대로 옮긴 `lib/errorMessages.ts`이며, Phase 6에서 단일화하고 Phase 7·8에서 화면별로 적용, Phase 10에서 7종 전부를 대조한다.
 > `PRD.md` **5장** 비기능 요구사항의 검증 위치(응답 속도 4 · 체감 반응 9 · 브라우저 10 · 반응형 8·10 · 인증 보안 3·4 · 시크릿 관리 10·11 · XSS 4·8 · 문서화 4 · 접근성 7·8)는 위 표 및 각 Phase DoD와 일치한다.
@@ -160,7 +170,7 @@
   >
   > 순서를 거꾸로 하면 3에서 막힌다. 2는 웹 UI 설정 변경이라 사용자가 직접 한다.
   >
-  > 푸시 전 확인: `gh` CLI가 설치돼 있지 않아 세 저장소가 public인지 private인지 확인하지 못했다. **public이면 푸시 즉시 코드가 공개된다.** `.env`·`application-local.yml`은 무시 규칙에 걸려 있음을 종료코드로 확인했으나, 이미 커밋된 파일에 비밀값이 없는지는 푸시 직전에 한 번 더 본다.
+  > 푸시 전 확인: `gh` CLI가 설치돼 있지 않아 세 저장소가 public인지 private인지 확인하지 못했다. **public이면 푸시 즉시 코드가 공개된다.** `.env`·`application-local.properties`(당시 `application-local.yml`)는 무시 규칙에 걸려 있음을 종료코드로 확인했으나, 이미 커밋된 파일에 비밀값이 없는지는 푸시 직전에 한 번 더 본다.
 - [x] 첫 커밋의 파일 수가 예상 범위 안임 — `todo-project` 10개 / `todo-backend` 11개 / `todo-frontend` 19개
 - [x] `CLAUDE.md` **1장** 구조도의 문서 경로가 실제 파일 위치와 일치함 — 2026-09-01 정정. `PRD.md`·`ROADMAP.md`·`DEV_TOOLS.md`·`guides/`가 빠져 있었고, 없는 `API.md`·`DESIGN.md`가 있는 것처럼 적혀 있었다(둘은 미작성 표시로 남겼다). 구조도가 2장이 아니라 1장에 있다는 점도 함께 정정했다
 - [x] `docs/guides/`가 `README.md` + 재작성된 5개 문서로만 구성됨 — `component-patterns.md`, `forms.md`, `nextjs-app-router.md`, `project-structure.md`, `styling-guide.md`. 금지 파일 2종 없음
@@ -191,6 +201,7 @@
 - [x] `pom.xml`에 **jjwt 3종(`jjwt-api`/`jjwt-impl`/`jjwt-jackson`)이 동일 버전으로 핀**되어 있음 (Phase 3의 `JwtTokenProvider` 전제) — 모두 `0.12.6`
 - [x] `./mvnw dependency:tree` 오류 없음 (2026-08-31 재확인: `BUILD SUCCESS`)
 - [x] **`src/main/resources`에 `application.properties`가 없고 `application.yml`·`application-local.yml`·`application-prod.yml`이 있음**
+  > ⚠️ **Phase 12에서 뒤집혔다.** 설정 파일은 다시 `.properties`로 전환됐고 `.yml`은 하나도 남아 있지 않다. 위 항목은 Phase 1 시점의 기록이다.
 - [x] `./mvnw spring-boot:run`이 옵션 없이 local 프로파일로 기동 성공 (2026-08-31 재확인)
 - [x] **기동 로그에 `The following 1 profile is active: "local"`이 찍힘**
 - [x] `http://localhost:8080/swagger-ui/index.html`이 200으로 열리고 API 목록 화면이 렌더됨
@@ -224,7 +235,8 @@
 - 입력값 제약을 스키마와 일치시킨다 (`CLAUDE.md` 4장 제약 표)
 - `UserRepository`, `TodoRepository` (`deleted_at IS NULL` 조건 포함 쿼리)
 - 인덱스 `idx_todos_user_deleted`
-- `src/test/resources/application-test.yml` (todolist_db_test, `ddl-auto: create-drop`)
+- `src/test/resources/application-test.properties` (todolist_db_test, `ddl-auto: create-drop`)
+  > Phase 2 당시에는 `application-test.yml`이었다. Phase 12에서 `.properties`로 전환됐다.
 - **`@EnableJpaAuditing`은 메인 애플리케이션 클래스에 붙인다** (`@Configuration`에 두면 `@DataJpaTest`가 로드하지 않아 `created_at`이 null이 됨)
 - Repository 테스트에 **`@AutoConfigureTestDatabase(replace = NONE)` + `@ActiveProfiles("test")`** 필수 (없으면 임베디드 DB로 교체 시도)
 
@@ -337,7 +349,7 @@
 >
 > - **검색 성능**: `LOWER(title)` 함수 기반 인덱스(`idx_todos_title_lower`)를 `db/add-title-index.sql`로 수동 생성했다(이 프로젝트에 Flyway/Liquibase가 없어 JPA `ddl-auto`로는 함수 표현식 인덱스를 만들 수 없음). 10,000건 시드 기준 키워드 검색 중앙값 **38.8ms**로 500ms DoD를 여유롭게 통과했다. 다만 `EXPLAIN ANALYZE` 확인 결과 이 규모(선택도 20%)에서는 PostgreSQL 플래너가 인덱스 대신 Seq Scan을 선택한다 — 실행시간(11.8ms)이 이미 충분히 빠르기 때문이며, 데이터가 더 커지거나 검색 조건의 선택도가 낮아지면 플래너가 인덱스를 선택하게 된다. 성능 목표는 달성했고 인덱스도 정확히 존재하지만, 이번 규모에서 실행계획에 나타나지는 않는다는 사실을 기록해 둔다.
 > - **버그 발견 및 수정**: `keyword` 파라미터가 없을 때(`GET /api/todos`, completed만 지정) `500 lower(bytea) 이름의 함수가 없음`이 발생했다. JPQL의 `:keyword`가 null일 때 PostgreSQL이 파라미터 타입을 추론하지 못해 `bytea`로 잘못 캐스팅하는 문제였다. `TodoRepository.search`의 JPQL에 `cast(:keyword as string)`을 명시해 해결했다.
-> - **HTML 정화**: Jsoup `Safelist.none()`에서 시작해 Phase 6 Tiptap 최종 설정과 대응하는 태그(`p,h2,h3,strong,em,ul,ol,li,blockquote,pre,code,br,a`)만 허용하고, `a[href]`에 `rel="nofollow noopener noreferrer"`를 강제 주입하며 `http`/`https`/`mailto` 외 스킴(예: `javascript:`)을 차단한다.
+> - **HTML 정화**: Jsoup `Safelist.none()`에서 시작해 Phase 6 Tiptap 최종 설정과 대응하는 태그(`p,strong,em,ul,ol,li,br,a`)만 허용하고, `a[href]`에 `rel="nofollow noopener noreferrer"`를 강제 주입하며 `http`/`https`/`mailto` 외 스킴(예: `javascript:`)을 차단한다.
 
 ---
 
@@ -506,7 +518,7 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 
 #### 날짜 직렬화 (실측 발견 — 문서에 없던 함정)
 
-백엔드 `TodoResponse`의 `createdAt`·`updatedAt`·`completedAt`은 `LocalDateTime`이고 `application.yml`에 Jackson 날짜 설정이 없어 **`Z` 접미사 없이** `"2026-09-01T12:00:00.123456"` 형태로 직렬화된다. JS `new Date()`는 오프셋 없는 ISO 문자열을 **로컬 시각으로 해석**하므로 KST 브라우저에서 9시간 어긋난다. 백엔드를 고치지 않고 프론트 `lib/datetime.ts`의 `parseServerDateTime` 단일 진입점에서 `Z`를 붙여 흡수한다. `dueDate`는 `LocalDate`(`"2026-09-01"`)이므로 **`Z`를 붙이면 안 되며** 별도 함수로 분리한다.
+백엔드 `TodoResponse`의 `createdAt`·`updatedAt`·`completedAt`은 `LocalDateTime`이고 `application.properties`에 Jackson 날짜 설정이 없어 **`Z` 접미사 없이** `"2026-09-01T12:00:00.123456"` 형태로 직렬화된다. JS `new Date()`는 오프셋 없는 ISO 문자열을 **로컬 시각으로 해석**하므로 KST 브라우저에서 9시간 어긋난다. 백엔드를 고치지 않고 프론트 `lib/datetime.ts`의 `parseServerDateTime` 단일 진입점에서 `Z`를 붙여 흡수한다. `dueDate`는 `LocalDate`(`"2026-09-01"`)이므로 **`Z`를 붙이면 안 되며** 별도 함수로 분리한다.
 
 > 버전·설치 방법은 `CLAUDE.md` 3장에서 모두 확정됐다. 이 Phase에서 재조사하지 않는다.
 
@@ -1068,3 +1080,82 @@ Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 
 ### 11-3. HTTPS (방식 확정: nginx + certbot)
 
 개인 프로젝트 규모이므로 **EC2 한 대에 nginx 리버스 프록시 + Let's Encrypt**로 간다. ALB + ACM은 관리가 편하지만 상시 비용... (12KB 남음)
+
+---
+
+## Phase 12 — 로컬 이미지 첨부
+
+**저장소**: backend + frontend + 문서 (F-46 ~ F-51, NF-32 ~ NF-34)
+
+> 설계 정본은 `docs/appendFileImage.md`다. 이 Phase의 작업 항목은 그 문서의 요약이며,
+> 충돌 시 `CLAUDE.md` > `PRD.md` > 이 문서 > `appendFileImage.md` 순으로 우선한다.
+
+**작업**
+
+- `application.yml` → `application.properties` 전환 (6개 파일 + `.gitignore` 11줄 + 문서 참조)
+  > `.properties`는 **ISO-8859-1로 로딩**된다. 값에는 ASCII만 쓰고 한글은 주석에만 둔다.
+  > Spring Boot 4.1 문서: *"By default, properties files are imported using the ISO-8859-1 charset."*
+- `attachments` 테이블 + `Attachment` 엔티티 + `AttachmentRepository` (`docs/SCHEMA.md` 5장)
+  > Flyway를 도입하지 않는다. local은 `ddl-auto: update`, prod는 `db/add-attachments.sql` 수동 실행.
+- `StorageService` 인터페이스 + `LocalStorageService` + `StorageSignature`
+  > 서명 토큰은 **`pom.xml`에 이미 있는 jjwt를 재사용**한다. `javax.crypto.Mac`으로 새로 짜지 않는다.
+  > 단 `STORAGE_SIGNING_SECRET`은 `JWT_SECRET`과 **반드시 분리**한다.
+- `AttachmentService` + `AttachmentController` + `SecurityConfig` permitAll 2경로
+  > 로컬 업로드 URL에도 **서명 토큰을 붙인다.** 로컬이 JWT를 요구하면 프론트가 로컬/S3를 분기해야 하고,
+  > S3 presigned PUT은 `Authorization` 헤더가 붙으면 서명 검증에 실패한다. 이 지점이 F-50의 성립 조건이다.
+- **`HtmlSanitizer` Safelist에 `img` 추가** + `TodoService` 연결 로직 + 고아 정리 배치
+  > 첨부 수집은 **반드시 `sanitize()` 이후의 HTML**을 대상으로 한다. 순서가 뒤바뀌면
+  > sanitize가 제거할 태그의 첨부까지 `LINKED`로 승격되어 본문에 없는 파일이 영구 보존된다.
+- **통합 테스트 9~12번 작성** (기존 1~8번 체계를 잇는다)
+- 프론트: `types/attachment.ts` · `lib/attachments.ts` · `hooks/useAttachments.ts` ·
+  Tiptap 이미지 노드 · **`lib/sanitize.ts`의 `ALLOWED_TAGS`에 `img` 추가** · `globals.css`
+  > `uploadFile`만 **`apiClient`를 우회**해 순수 `fetch`를 쓴다. `apiClient`는 모든 요청에
+  > `Authorization` 헤더와 `credentials: "include"`를 강제하는데, 그대로 S3에 보내면 서명이 깨진다.
+  > 진행률은 포기하고 불확정 스피너로 간다. `fetch`는 업로드 진행률을 제공하지 않는다.
+
+**DoD**
+
+- [ ] `./mvnw spotless:apply` 후 `./mvnw verify` 종료 코드 0 — 기존 19건 + 신규 9~12번 전부 통과
+- [ ] `npm run check && npm run build` 종료 코드 0
+- [ ] `docs/CHECKLIST.md` 16장 16개 시나리오 전수 통과
+- [ ] 저장된 본문 HTML에 `src`가 없고 `data-attachment-id`만 있다 (F-49)
+- [ ] 타인 `attachmentId` 접근이 **404**다 (F-48, NF-03)
+- [ ] `upload/` 폴더가 `todo-project` git status에 잡히지 않는다
+- [ ] `image/svg+xml` 업로드가 거부된다 (F-47)
+
+---
+
+## Phase 13 — S3 전환
+
+**저장소**: backend (F-50)
+
+> **Phase 11(AWS 배포) 완료를 전제로 한다.** 버킷·IAM이 없으면 진행할 수 없다.
+
+**작업**
+
+- AWS SDK v2 `s3` 의존성 추가 — BOM으로 버전 관리 (승인됨)
+  > `s3-presigner`는 **별도 아티팩트가 아니다.** `S3Presigner` 클래스는 `s3` 모듈 안에 포함돼 있다.
+  > 별도로 추가하면 Maven이 "`version`이 missing"이라는 에러를 낸다 — BOM의 `dependencyManagement`에
+  > 그런 아티팩트 자체가 없기 때문이다. `./mvnw dependency:tree`로 실제 해석 결과를 확인하고 알아냈다.
+- `config/S3Config` (`S3Client`, `S3Presigner` 조건부 빈) + `service/storage/S3StorageService`
+  > 자격증명은 `DefaultCredentialsProvider`가 자동 처리한다. **코드에 분기를 두지 않는다.**
+  > 로컬 시험은 환경변수, EC2는 IAM Role.
+  > `S3Client.builder()...build()`와 `S3Presigner.builder()...build()`는 생성 시점에 네트워크 호출을
+  > 하지 않는다(지연 연결). 그래서 실제 버킷 없이도 `@SpringBootTest`로 빈 배선만 검증할 수 있다
+  > (`StorageProfileSwitchTest`).
+- `application-prod.properties`에 `app.storage.type=s3` + 버킷·리전
+- AWS 콘솔: 버킷 CORS(`PUT`/`GET`/`HEAD`, `AllowedHeader`에 **`Content-Type` 필수**),
+  퍼블릭 액세스 차단 유지, IAM은 해당 버킷의 `PutObject`/`GetObject`/`DeleteObject`만
+  > presigned PUT은 **`Content-Type`이 서명에 포함**된다. presign 시 보낸 값과 PUT 헤더 값이
+  > 한 글자라도 다르면 403이다. 로컬 테스트에서는 재현되지 않고 이 Phase에서만 터진다.
+
+**DoD**
+
+- [ ] `app.storage.type=s3`로 기동해 Phase 12의 16개 시나리오가 동일하게 통과한다
+  > ⚠️ 실제 AWS 계정·버킷이 없는 환경에서는 검증 불가. 코드·빈 배선만 확인했다 (`docs/CHECKLIST.md` 16-1 참고).
+- [ ] **`todo-frontend`에 커밋이 발생하지 않는다** (git status 클린) — F-50의 최종 수용 기준
+  > Phase 13 작업 자체는 프론트 파일을 0건 수정했다. 다만 Phase 12(이미지 첨부 프론트 구현)의 미커밋 변경이
+  > 남아 있어 `git status`가 문자 그대로 클린하지는 않다 — 그 커밋 완료 후 재확인한다.
+- [x] `app.storage.type=local`로 되돌리면 다시 로컬 스토리지로 동작한다
+  > `StorageProfileSwitchTest` + 로컬 테스트 스위트 38건이 `app.storage.type=local`로 통과 (2026-09-07)
+- [x] AWS 키가 소스 어디에도 없다 (NF-05) — `grep -rn "AKIA"` 0건 확인 (2026-09-07)
