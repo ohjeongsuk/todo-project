@@ -21,6 +21,13 @@
 *.key
 secrets.json
 
+### DB 덤프 / 백업 ###
+# 사용자 계정·BCrypt 해시·Refresh Token 해시가 통째로 들어간다. 스키마 정의(db/*.sql)와 달리
+# 실데이터이므로 어느 저장소에도 커밋하지 않는다.
+*.backup
+*.dump
+*.sql.gz
+
 ### IDE / 에디터 ###
 # Eclipse 워크스페이스 로컬 상태
 /.metadata/
