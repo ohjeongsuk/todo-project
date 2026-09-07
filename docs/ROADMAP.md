@@ -23,8 +23,9 @@
 | 9     | 인터랙션 다듬기            | frontend | ✅   |
 | 10    | 전체 검증                  | 전체     | 🟡   |
 | 11    | AWS 배포                   | 전체     | ⬜   |
-| 12    | 로컬 이미지 첨부           | 전체     | ⬜   |
-| 13    | S3 전환                    | backend  | ⬜   |
+| 12    | 로컬 이미지 첨부           | 전체     | ✅   |
+| 13    | S3 전환                    | backend  | ✅   |
+| 14    | 비밀번호 재설정            | 전체     | ⬜   |
 
 ⬜ 대기 · 🟡 진행중 · ✅ 완료
 
@@ -116,6 +117,13 @@
 | IMG-06 고아 파일 정리 (F-51)             | 12(`@Scheduled` 배치, 상태별 정책)                            | 12                                               |
 | IMG-07 서명 URL (NF-32)                  | 12(jjwt 재사용, 용도·만료 서명)                               | 12(테스트 10번)                                  |
 | IMG-08 경로 조작 방어 (NF-33)            | 12(`Path.normalize()` + base 하위 검증)                       | 12(단위 테스트)                                  |
+| PWD-01 재설정 요청 (F-41)                | 14(`POST /api/auth/password/forgot`) · 14(`/forgot-password`) | 14                                               |
+| PWD-02 재설정 링크 처리 (F-42)           | 14(`GET .../verify` + `POST .../reset`) · 14(`/reset-password`) | 14                                             |
+| PWD-03 토큰 정책 1회용·30분 (F-43)       | 14(발급 시 기존 미사용 토큰 무효화)                           | 14                                               |
+| PWD-04 재설정 후 전체 로그아웃 (F-44)    | 14(`revokeAllForUser` 재사용, 자동 로그인 안 함)              | 14                                               |
+| PWD-05 소셜 전용 계정 차단 (F-45)        | 14(`hasPassword()` false면 발송 안 함, 응답 동일)             | 14                                               |
+| PWD-06 rate limit (NF-30)                | 14(이메일·IP 10분 3회, 초과 시 429)                           | 14                                               |
+| PWD-07 계정 존재 미노출 (NF-31)          | 14(없는 계정·소셜 계정·정상 계정 응답 동일)                   | 14                                               |
 
 > **에러 문구 매핑**은 `PRD.md`에 표로 존재하지 않는다(`PRD.md` 5.1은 보안 비기능요구사항 NF-01~NF-31일 뿐이다). 정본은 백엔드 `ErrorCode` enum(7종)을 그대로 옮긴 `lib/errorMessages.ts`이며, Phase 6에서 단일화하고 Phase 7·8에서 화면별로 적용, Phase 10에서 7종 전부를 대조한다.
 > `PRD.md` **5장** 비기능 요구사항의 검증 위치(응답 속도 4 · 체감 반응 9 · 브라우저 10 · 반응형 8·10 · 인증 보안 3·4 · 시크릿 관리 10·11 · XSS 4·8 · 문서화 4 · 접근성 7·8)는 위 표 및 각 Phase DoD와 일치한다.
@@ -152,7 +160,8 @@
 - [x] **세 저장소 각각에서 `.env`는 무시되고 `.env.example`은 무시되지 않음** — 세 저장소 모두 `git check-ignore -q .env`가 종료코드 `0`, `.env.example`이 `1`
   > ⚠️ **`-v` 출력만 보고 판정하지 않는다.** 부정 규칙(`!.env.example`)에 매칭되면 `-v`는 그 규칙을 출력하지만 종료코드는 `1`(무시되지 않음)이다. 출력 유무가 아니라 **종료코드**로 판정한다.
 - [x] 세 저장소 모두 현재 브랜치가 `main`이고 `develop`이 존재함 (로컬 `master` 없음)
-- [ ] 세 저장소 모두 첫 커밋 및 원격 푸시 완료 — **커밋은 완료, 푸시는 미완료.** GitHub 원격은 세 저장소 모두 연결됐으나 `main`·`develop` 어느 것도 push되지 않아 원격에 브랜치가 없다. `todo-frontend`에만 낡은 `origin/master` 참조가 남아 있어 정리가 필요하다
+- [x] 세 저장소 모두 첫 커밋 및 원격 푸시 완료 — **해소 (2026-09-07 재확인).** 세 저장소 모두 `origin/main`·`origin/develop`이 원격에 존재한다. 아래 2026-09-01 절차 기록은 그 시점 상태이며, 이후 실제로 푸시됐다.
+  > **다만 로컬이 원격보다 앞선 상태가 반복된다.** 2026-09-07 기준 `develop`이 origin보다 `todo-project` 4·`todo-backend` 1·`todo-frontend` 1 커밋 앞서 있었고, `main`은 Phase 3~8 수준에 멈춰 `develop`을 한참 못 따라가고 있었다(Phase 12·13 결과물이 `main`에 하나도 없었다). `CLAUDE.md`가 정한 `feature → develop → main` 흐름이 유지되지 않은 것으로, Phase 14 착수 전에 세 저장소 모두 푸시·병합해 정리했다.
 
   > **푸시 절차 (2026-09-01 기준, 아직 실행하지 않음).** 로컬에 쌓인 커밋은 `todo-project` main 14 / develop 4, `todo-backend` main 10 / develop 2, `todo-frontend` main 8 / develop 3건이다.
   >
@@ -1068,6 +1077,18 @@ Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 
      > EC2에 `postgresql-client` 설치 → `scp`로 DDL 파일을 EC2에 전송 → **EC2에서 `psql -h <rds-endpoint> -U <user> -d todolist_db -f schema.sql`** 실행.
      > 이 경로를 준비하지 않으면 11-1 중반에 막힌다. EC2를 먼저 띄운 뒤 RDS 스키마를 적용하는 순서가 된다.
 
+### 11-1-1. 비밀번호 재설정 메일 발송 (Phase 14에서 이관)
+
+Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profile("local")`)으로 기능을 완성했다.
+**운영 프로파일용 구현체는 아직 없다.** `PasswordResetMailSender` 구현 빈이 하나도 없으면
+`PasswordResetService` 주입이 실패해 **운영 프로파일 기동 자체가 안 된다** — 배포 전 반드시 처리한다.
+
+- `@Profile("prod")` SMTP 구현체 작성 (AWS SES 또는 외부 SMTP)
+- `spring-boot-starter-mail` 의존성 추가 — **`CLAUDE.md` 절대 규칙 11에 따라 착수 시 승인을 받는다**
+- 운영 프로파일에 SMTP 설정 추가 (자격증명은 전부 환경변수)
+- 발신 도메인 확보·검증(SES는 도메인 또는 발신 주소 검증이 선행 조건이다).
+  `frontend.url`은 이미 있으므로 링크 조립에 그대로 재사용한다
+
 ### 11-2. 백엔드 (EC2)
 
 - EC2에 JDK 21 설치
@@ -1115,13 +1136,15 @@ Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 
 
 **DoD**
 
-- [ ] `./mvnw spotless:apply` 후 `./mvnw verify` 종료 코드 0 — 기존 19건 + 신규 9~12번 전부 통과
-- [ ] `npm run check && npm run build` 종료 코드 0
-- [ ] `docs/CHECKLIST.md` 16장 16개 시나리오 전수 통과
-- [ ] 저장된 본문 HTML에 `src`가 없고 `data-attachment-id`만 있다 (F-49)
-- [ ] 타인 `attachmentId` 접근이 **404**다 (F-48, NF-03)
-- [ ] `upload/` 폴더가 `todo-project` git status에 잡히지 않는다
-- [ ] `image/svg+xml` 업로드가 거부된다 (F-47)
+- [x] `./mvnw spotless:apply` 후 `./mvnw verify` 종료 코드 0 — 기존 19건 + 신규 9~12번 전부 통과
+  > 최종 38건 통과(`BUILD SUCCESS`). 신규분은 `AttachmentControllerTest`(9~12번) + `StorageSignatureTest` +
+  > `LocalStorageServiceTest` + `StorageProfileSwitchTest`다 (2026-09-07)
+- [x] `npm run check && npm run build` 종료 코드 0 — 커밋 `72a7050` 시점에 확인 (2026-09-07)
+- [x] `docs/CHECKLIST.md` 16장 16개 시나리오 전수 통과 — 16.1~16.16 전부 ☑ (2026-09-07)
+- [x] 저장된 본문 HTML에 `src`가 없고 `data-attachment-id`만 있다 (F-49) — CHECKLIST 16.16
+- [x] 타인 `attachmentId` 접근이 **404**다 (F-48, NF-03) — CHECKLIST 16.9 + 통합 테스트 10번
+- [x] `upload/` 폴더가 `todo-project` git status에 잡히지 않는다 — CHECKLIST 16.10
+- [x] `image/svg+xml` 업로드가 거부된다 (F-47) — CHECKLIST 16.13 + 통합 테스트 11번
 
 ---
 
@@ -1163,3 +1186,51 @@ Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 
 - [x] `app.storage.type=local`로 되돌리면 다시 로컬 스토리지로 동작한다
   > `StorageProfileSwitchTest` + 로컬 테스트 스위트 38건이 `app.storage.type=local`로 통과 (2026-09-07)
 - [x] AWS 키가 소스 어디에도 없다 (NF-05) — `grep -rn "AKIA"` 0건 확인 (2026-09-07)
+
+---
+
+## Phase 14 — 비밀번호 재설정
+
+**저장소**: backend + frontend + 문서 · **관련 요구사항**: F-41 ~ F-45, NF-30, NF-31
+
+> ### 이 Phase가 뒤늦게 생긴 이유 (2026-09-07)
+>
+> 비밀번호 재설정은 `PRD.md`에 F-41~F-45로 정의돼 있고 화면 표(7.5)에 흐름까지 그려져 있었으나,
+> **이 문서의 「요구사항 ↔ Phase 추적표」에 행이 없었다.** 그 표는 스스로 *"여기에 행이 없는 P0는
+> 구현되지 않는다"*고 경고하고 있었고, 실제로 그대로 됐다 — 엔티티·리포지토리·DTO·메일 발송 인터페이스·
+> `ErrorCode.RESET_TOKEN_INVALID`·`SecurityConfig`의 permitAll 경로·`password-reset-token.expiration-minutes`
+> 설정값까지 다 만들어져 있는데 **이걸 잇는 서비스와 컨트롤러만 없는** 상태로 남았다.
+> Phase 10 검증에서 "`RESET_TOKEN_INVALID`를 던지는 코드가 없다"는 형태로 발견됐다.
+> 이번에 추적표에 PWD-01~07 행을 먼저 넣고 이 Phase를 만들었다.
+
+**작업**
+
+- `service/PasswordResetService` — 요청·검증·확정 3개 흐름
+  > 토큰 생성·해시는 `RefreshTokenService`의 방식(`SecureRandom` 32바이트 → Base64URL,
+  > SHA-256 → hex)을 그대로 따른다. 기존 코드를 공용 유틸로 추출하지 않는다.
+  > 재설정 성공 시 `refreshTokenService.revokeAllForUser(userId)`를 **재사용**한다 (F-44).
+- `service/PasswordResetRateLimiter` — NF-30(이메일·IP 10분 3회). JDK만 사용하고 Phase 12에서
+  만든 `SchedulingConfig`의 `@EnableScheduling`으로 만료 항목을 주기 정리한다
+- `controller/PasswordResetController` — `/api/auth/password/{forgot,verify,reset}`
+  > 경로는 `PRD.md` 7.5가 지정한 값이다. `SecurityConfig`의 `PERMIT_ALL_PATHS`에
+  > `/api/auth/password/**`가 **이미 있으므로 보안 설정 변경이 필요 없다.**
+- `domain/User`에 `changePassword(String encodedPassword)` 추가 (`@Setter` 금지 규칙)
+- `ErrorCode`에 `TOO_MANY_REQUESTS`(429) 추가 + 프론트 `ErrorCode` 유니온·문구 매핑 동기화
+- **통합 테스트 13번 작성** (기존 1~12번 체계를 잇는다)
+- 프론트: `(auth)/forgot-password`·`(auth)/reset-password` 화면 2개 +
+  `hooks/usePasswordReset.ts` + 로그인 화면에 "비밀번호를 잊으셨나요?" 링크
+  > `reset-password`는 `useSearchParams`로 `?token=`을 읽으므로 `login/page.tsx`처럼
+  > `<Suspense>`로 감싸야 한다.
+
+**DoD**
+
+- [ ] `./mvnw spotless:apply` 후 `./mvnw verify` 종료 코드 0 — 기존 38건 + 신규 13번 통과
+- [ ] `npm run check && npm run build` 종료 코드 0
+- [ ] `docs/CHECKLIST.md` 17장 시나리오 전수 통과
+- [ ] 없는 계정·소셜 전용 계정·정상 계정의 응답과 화면 문구가 **완전히 동일**하다 (NF-31, F-45)
+- [ ] 같은 링크를 두 번 쓰면 두 번째가 400 `RESET_TOKEN_INVALID`다 (F-43)
+- [ ] 재설정 후 기존 세션이 전부 끊기고 **자동 로그인되지 않는다** (F-44)
+- [ ] 10분 내 4번째 요청이 429로 막힌다 (NF-30)
+
+> **운영 SMTP 발송은 이 Phase의 범위가 아니다.** 로컬은 `LocalPasswordResetMailSender`가 콘솔에
+> 링크를 출력하는 방식으로 기능 전체를 완성·검증한다. 실제 메일 발송은 Phase 11로 이관했다.
