@@ -69,6 +69,24 @@ todo-project/
 
 테스트 스타터가 기능별로 쪼개져 있다. 새 테스트를 추가할 때 필요한 `-test` 스타터가 `pom.xml`에 있는지 먼저 확인한다.
 
+### 3.1.1 Jackson 3다 — `com.fasterxml.jackson.databind.ObjectMapper` 빈은 없다
+
+Boot 4가 쓰는 것은 **`tools.jackson.core:jackson-databind:3.x`**다(`spring-boot-starter-jackson`).
+`com.fasterxml.jackson` 2.x도 클래스패스에 있지만 이는 **`jjwt-jackson`이 끌어온 런타임 의존성**일 뿐
+Spring 빈이 아니다.
+
+```java
+// 실패: NoSuchBeanDefinitionException
+@Autowired private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+```
+
+테스트에서 JSON을 파싱해야 하면 `ObjectMapper`를 주입하지 말고 **`com.jayway.jsonpath.JsonPath`**를 쓴다.
+MockMvc의 `jsonPath()` 매처가 이미 의존하므로 테스트 클래스패스에 있고, Jackson 버전과 무관하다.
+
+```java
+Number id = JsonPath.read(responseBody, "$.data.attachmentId");
+```
+
 ### 3.2 Spotless가 빌드를 실패시킨다
 
 - `spotless:check`가 **`validate` 단계에 묶여 있다.** 포맷이 틀리면 컴파일 전에 빌드가 죽는다.
@@ -78,7 +96,7 @@ todo-project/
 ### 3.3 코드 규칙
 
 - 계층은 `controller → service → repository`. 컨트롤러가 리포지토리를 직접 호출하지 않는다.
-- 패키지는 기능별로 나눈다: `auth`, `user`, `todo`, `global`.
+- 패키지는 **계층형**이다: `config`, `controller`, `domain`, `dto`, `exception`, `security`, `service`. 새 클래스도 이 구조에 맞춰 넣는다 (기능별 패키지가 아니다).
 - DTO는 **record**, 엔티티는 **class**.
 - 엔티티에 `@Setter`를 열지 않는다. 상태 변경은 `complete()`, `updateContent()` 같은 의미 있는 메서드로 표현한다.
 - 컨트롤러가 엔티티를 반환하지 않는다. 항상 DTO로 변환한다.
@@ -105,8 +123,8 @@ todo-project/
 
 ### 4.2 디렉터리
 
-- **`src/` 디렉터리를 만들지 않는다.** `app/`, `components/`, `lib/`, `hooks/`, `providers/`, `types/`가 `todo-frontend/` 루트 직속이다.
-- import alias는 `@/*` → `./*`.
+- **소스는 전부 `src/` 아래에 있다.** `app/`, `components/`, `lib/`, `hooks/`, `types/`가 `todo-frontend/src/` 직속이다. 루트 직하에 이 폴더들을 만들지 않는다.
+- import alias는 `@/*` → `./src/*` (`tsconfig.json`). `components.json`의 css 경로도 `src/app/globals.css`를 가리키므로 **셋 중 하나만 고치면 조용히 깨진다.**
 - 파일명: 컴포넌트는 `PascalCase.tsx`, 훅·유틸은 `camelCase.ts`.
 
 ### 4.3 TypeScript
@@ -121,8 +139,8 @@ todo-project/
 
 - **CSS-first다. `tailwind.config.js` / `tailwind.config.ts`를 만들지 않는다.** 설정은 전부 `app/globals.css`에 있다.
 - 토큰은 `@theme inline` 블록에 정의한다. v3의 `theme.extend` 문법을 쓰지 않는다.
-- 다크모드는 `@custom-variant dark (&:is(.dark *))` — **`.dark` 클래스 기반**이다. `next-themes`를 도입하면 `attribute="class"`로 설정한다.
-- shadcn 설정: style `radix-nova`, baseColor `neutral`, rsc `true`, icon `lucide`.
+- 다크모드는 `@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *))` — **`<html data-theme="light|dark">` 속성 기반**이다. `.dark` 클래스 기반이 아니다. `next-themes`는 쓰지 않고 `src/hooks/useTheme.ts`가 직접 관리한다.
+- shadcn 설정: style `new-york`, baseColor `neutral`, rsc `true`, icon `lucide`, css `src/app/globals.css`.
 - Radix는 개별 `@radix-ui/*`가 아니라 **통합 `radix-ui` 패키지**가 설치돼 있다. 개별 패키지를 새로 추가하지 않는다.
 
 ### 4.5 컴포넌트 경계
@@ -201,10 +219,8 @@ Prettier 설정을 임의로 바꾸지 않는다. 코드를 쓸 때 이 값에 �
 ## 7. 금지 사항
 
 - ❌ `tailwind.config.js` / `tailwind.config.ts` 생성 (CSS-first다)
-- ❌ `src/` 디렉터리 생성
 - ❌ `todo-frontend/AGENTS.md` 삭제 시도 (자동 재생성됨)
 - ❌ Dockerfile, docker-compose.yml, Testcontainers 사용 — **명시적으로 배제됨**
-- ❌ Amazon S3 / 파일 업로드 기능 추가 — 이번 범위 밖
 - ❌ NextAuth / Auth.js 도입 — 인증은 백엔드 주도 OAuth2다
 - ❌ 엔티티에 `@Setter` 추가
 - ❌ 컨트롤러에서 엔티티 직접 반환
@@ -245,15 +261,17 @@ npm run format         # 포맷 자동 수정
 
 | 현재 상태 | 작업 시 주의 | 해소 시점 |
 |---|---|---|
-| 백엔드 패키지가 `com.example` (`TodoBackendApplication.java`) | 새 클래스는 이동 후 구조(`com.example.todoapp.*`)를 전제로 만들지 말고, 이동 작업과 함께 처리한다 | ROADMAP Phase 0 |
-| `pom.xml`에 **Jsoup·SpringDoc 없음** | 서버 sanitize(F-26)·Swagger(F-35~F-37) 코드를 쓰기 전에 승인 및 의존성 추가가 선행돼야 한다 | ROADMAP Phase 0 |
-| TanStack Query·Framer Motion·Tiptap·isomorphic-dompurify·next-themes **미설치** | 이 라이브러리를 `import`하는 코드를 쓰지 않는다. 설치는 승인 후 (`docs/ROADMAP.md` 3.2절) | Phase 6·8 |
-| `docs/SCHEMA.md`·`API.md`·`DESIGN.md` 미작성 | 각각 Phase 1·2·6의 산출물이다. 해당 Phase 작업 시 함께 만든다 | Phase 1·2·6 |
+| `docs/API.md`·`DESIGN.md` 미작성 | 각각 Phase 2·6의 산출물이다. 참조하기 전에 존재를 먼저 확인한다 | Phase 2·6 |
 | `PROMPTS.md` **미작성** | ROADMAP 머리말이 참조하나 존재하지 않는다. 이 파일을 찾지 말 것 | 작성 시 |
+| 비밀번호 재설정 **미배선** | `domain/PasswordResetToken`과 리포지토리, 재설정 DTO 2종, `LocalPasswordResetMailSender`는 있으나 이를 호출하는 서비스·컨트롤러가 없다. `SecurityConfig`는 `/api/auth/password/**`를 permitAll로 열어뒀지만 핸들러가 없다 | F-41 구현 시 |
 
 ### 최근 해소된 항목 (참고용, 더 이상 주의 불필요)
 
-- DB는 `todolist_db` **별도 데이터베이스**로 이미 분리됨 (`application.properties` 확인).
+- 백엔드 패키지는 `com.example.todoapp.*`로 **이동 완료**. Eclipse 실행 구성의 옛 `com.example.TodoBackendApplication` 참조도 정리됨.
+- `pom.xml`에 **Jsoup 1.23.2·SpringDoc 3.1.0 설치 완료**.
+- TanStack Query·motion·Tiptap 3.30.6·isomorphic-dompurify **설치 완료**. `next-themes`는 도입하지 않고 `src/hooks/useTheme.ts`로 직접 구현했다.
+- `docs/SCHEMA.md`·`CHECKLIST.md` **작성 완료**.
+- DB는 `todolist_db` **별도 데이터베이스**로 이미 분리됨.
 - `todo-frontend/.git` 중첩 저장소 **없음**.
 - 루트 `.gitignore` **존재함**.
 - `docs/CHECKLIST.md` **작성 완료**(409줄). ROADMAP 3장 완료 판정 칼럼이 참조 가능.

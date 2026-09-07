@@ -67,7 +67,9 @@ todo-project/          # 문서 저장소 (독립 git)
 - 로컬: 직접 설치한 PostgreSQL
 - 배포(후순위): 프론트 = AWS Amplify, 백엔드 = EC2, DB = RDS
 - **Docker는 사용하지 않는다.** Dockerfile, docker-compose.yml, Testcontainers 모두 금지.
-- **Amazon S3는 이번 범위에서 사용하지 않는다.** (파일 업로드 기능 없음)
+- **Amazon S3는 본문 이미지 첨부 저장소로만 사용한다.** 로컬 개발은 `todo-project/upload` 디렉터리를
+  쓰고, 운영에서만 S3로 전환한다. 전환은 `app.storage.type` 설정 변경만으로 이뤄지며
+  프론트엔드 코드는 바뀌지 않는다. 버킷은 퍼블릭으로 열지 않는다.
 
 ---
 
@@ -81,7 +83,8 @@ todo-project/          # 문서 저장소 (독립 git)
 6. 예외 응답은 **`GlobalExceptionHandler` 한 곳**에서만 만든다. 컨트롤러에서 개별 try-catch로 응답을 조립하지 않는다.
 7. 비밀번호는 **BCrypt**로만 저장한다. 평문/단방향 해시 직접 구현 금지.
 8. Tiptap 본문 HTML은 **저장 전 서버에서 Jsoup으로 sanitize**하고, **렌더링 시 클라이언트에서 DOMPurify로 한 번 더** 거른다. 둘 중 하나만 하는 것은 금지.
-9. **비밀/키를 코드에 하드코딩하지 않는다.** 모두 환경변수로 뺀다. `.env`, `application-local.yml`은 `.gitignore`에 넣는다.
+   이미지는 `img[alt, data-attachment-id]`만 허용하고 **`src`는 저장하지 않는다.** 조회 URL은 만료되므로 렌더 시점에 주입한다. 두 허용 목록은 항상 같은 집합이어야 한다.
+9. **비밀/키를 코드에 하드코딩하지 않는다.** 모두 환경변수로 뺀다. `.env`, `application-local.properties`는 `.gitignore`에 넣는다.
 10. **주석은 한글로 작성한다.** 단, 코드 식별자(클래스/변수/함수명)는 영문이다.
 11. 임의로 라이브러리를 추가하지 않는다. 필요하면 먼저 이유와 함께 제안하고 승인을 받는다.
 
@@ -96,7 +99,7 @@ todo-project/          # 문서 저장소 (독립 git)
 
 ### Java
 - 계층: `controller` → `service` → `repository`. 컨트롤러가 리포지토리를 직접 호출하지 않는다.
-- 패키지 구조는 **기능별(package-by-feature)**로 나눈다: `auth`, `user`, `todo`, `global`.
+- 패키지 구조는 **계층형**이다: `config`, `controller`, `domain`, `dto`, `exception`, `security`, `service`. 새 클래스도 이 구조에 맞춰 넣는다.
 - DTO는 **record**로 만든다. 엔티티는 클래스.
 - 엔티티에 `@Setter`를 열지 않는다. 상태 변경은 의미 있는 메서드로 표현한다 (`complete()`, `updateContent()`).
 - 생성자 주입만 사용한다. 필드 주입(`@Autowired` 필드) 금지.
@@ -154,6 +157,8 @@ todo-project/          # 문서 저장소 (독립 git)
 - **구현 전에 계획을 먼저 제시하고 승인을 받는다.** 승인 없이 대규모 파일 생성을 시작하지 않는다.
 - 한 단계(Phase)가 끝나면 반드시 **완료 조건에 적힌 명령을 실제로 실행해서 통과하는지 확인**한 뒤 커밋한다.
 - 커밋 메시지: `feat: ...`, `fix: ...`, `chore: ...`, `test: ...`, `docs: ...` (Conventional Commits, 본문은 한글 가능)
+  - 타입 앞 이모지는 **선택 사항**이다. `✨ feat: ...`도 `feat: ...`도 둘 다 허용한다. 강제하지 않는 이유는 기존 커밋 이력이 전부 이모지 없는 형식이기 때문이다
+  - 검사는 `todo-frontend`에만 걸려 있다(husky + commitlint). `todo-backend`·`todo-project`에는 훅이 없어 형식이 자동으로 검증되지 않으므로 **직접 지켜야 한다**
 - 요구사항이 모호하면 **추측해서 만들지 말고 질문한다.**
 - 기존 파일을 수정할 때는 관련 없는 코드를 함께 리팩터링하지 않는다.
 - 라이브러리 API가 확실하지 않으면 **기억에 의존하지 말고 공식 문서를 확인한다.** 특히 Spring Boot 4 / Spring Security 7 / Next.js 16 / Tailwind CSS 4는 이전 메이저 버전과 문법이 다르므로, 학습된 지식으로 짐작하지 말 것.

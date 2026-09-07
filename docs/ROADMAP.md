@@ -18,11 +18,14 @@
 | 4     | Todo API + Todo 테스트     | backend  | ✅   |
 | 5     | 구글 OAuth2 + OAuth 테스트 | backend  | ✅   |
 | 6     | 프론트 스캐폴딩            | frontend | ✅   |
-| 7     | 인증 화면                  | frontend | ⬜   |
-| 8     | Todo 화면                  | frontend | ⬜   |
-| 9     | 인터랙션 다듬기            | frontend | ⬜   |
-| 10    | 전체 검증                  | 전체     | ⬜   |
+| 7     | 인증 화면                  | frontend | ✅   |
+| 8     | Todo 화면                  | frontend | ✅   |
+| 9     | 인터랙션 다듬기            | frontend | ✅   |
+| 10    | 전체 검증                  | 전체     | 🟡   |
 | 11    | AWS 배포                   | 전체     | ⬜   |
+| 12    | 로컬 이미지 첨부           | 전체     | ✅   |
+| 13    | S3 전환                    | backend  | ✅   |
+| 14    | 비밀번호 재설정            | 전체     | ⬜   |
 
 ⬜ 대기 · 🟡 진행중 · ✅ 완료
 
@@ -77,9 +80,9 @@
 | AUTH-01 회원가입                         | 3(API) · 7(화면)                                              | 3 · 7 · 10                                       |
 | AUTH-02 비밀번호 6자 이상 + 72바이트     | 3(바이트 validator) · 7(실시간 검증)                          | 3(한글 25자 → 400) · 7(제출 전 인라인 안내) · 10 |
 | AUTH-03 이메일 중복                      | 3(409) · 7(인라인 문구)                                       | 3 · 7                                            |
-| AUTH-04 로그인·JWT 24h                   | 3 · 7                                                         | 3 · 7 · 10                                       |
+| AUTH-04 로그인·JWT 30분                  | 3 · 7                                                         | 3 · 7 · 10                                       |
 | AUTH-05 구글 로그인                      | 5 · 7(`/oauth/callback`)                                      | 5 · 7 · 10                                       |
-| AUTH-06 로그아웃                         | 7 (프론트 전용, 서버 API 없음)                                | 7 · 10                                           |
+| AUTH-06 로그아웃                         | 7 (**서버 `POST /api/auth/logout` + 프론트**)                 | 7 · 10                                           |
 | AUTH-07 라우트 보호                      | 7 (`(main)` 클라이언트 레이아웃)                              | 7(만료 토큰 케이스) · 10                         |
 | AUTH-08 헤더 닉네임 / 이메일 미표시      | 3(`/auth/me` 응답) · 7(헤더)                                  | 3(응답 필드) · 7(DOM에 이메일 없음) · 10         |
 | AUTH-09 계정 충돌 거부                   | 5 · 7(안내 문구)                                              | 5 · 7 · 10                                       |
@@ -105,10 +108,25 @@
 | UX-04 에러 + 재시도 버튼                 | 6(`ErrorState.onRetry` 필수) · 7 · 8                          | 6 · 7 · 8(재요청 확인) · 10                      |
 | UX-05 반응형 360~1920                    | 6(토큰·컨테이너) · 8                                          | 8(360px) · 10(1920px)                            |
 | UX-06 label·키보드                       | 7 · 8                                                         | 7 · 8 · 10                                       |
-| UX-07 다크 토큰 (`prefers-color-scheme`) | 6                                                             | 6 · 10                                           |
+| UX-07 다크 토큰 (`html[data-theme]` + 토글)  | 6 · 후속(2026-09-03)                                          | 6 · 10 · 후속                                    |
+| IMG-01 이미지 첨부 (F-46)                | 12(백엔드 API · Tiptap 노드)                                  | 12                                               |
+| IMG-02 업로드 제한 (F-47, NF-34)         | 12(타입 화이트리스트 · 크기 이중 방어)                        | 12(테스트 11번)                                  |
+| IMG-03 첨부 소유권 (F-48)                | 12(쿼리 단계 강제, 404)                                       | 12(테스트 10번)                                  |
+| IMG-04 본문 참조 방식 (F-49)             | 12(Jsoup · DOMPurify 양쪽 `img` 허용, `src` 미저장)           | 12(테스트 12번 · 수동 11·12·16)                  |
+| IMG-05 스토리지 추상화 (F-50)            | 12(`StorageService` + 로컬 구현) · 13(S3 구현)                | 12 · 13(프론트 무변경 확인)                      |
+| IMG-06 고아 파일 정리 (F-51)             | 12(`@Scheduled` 배치, 상태별 정책)                            | 12                                               |
+| IMG-07 서명 URL (NF-32)                  | 12(jjwt 재사용, 용도·만료 서명)                               | 12(테스트 10번)                                  |
+| IMG-08 경로 조작 방어 (NF-33)            | 12(`Path.normalize()` + base 하위 검증)                       | 12(단위 테스트)                                  |
+| PWD-01 재설정 요청 (F-41)                | 14(`POST /api/auth/password/forgot`) · 14(`/forgot-password`) | 14                                               |
+| PWD-02 재설정 링크 처리 (F-42)           | 14(`GET .../verify` + `POST .../reset`) · 14(`/reset-password`) | 14                                             |
+| PWD-03 토큰 정책 1회용·30분 (F-43)       | 14(발급 시 기존 미사용 토큰 무효화)                           | 14                                               |
+| PWD-04 재설정 후 전체 로그아웃 (F-44)    | 14(`revokeAllForUser` 재사용, 자동 로그인 안 함)              | 14                                               |
+| PWD-05 소셜 전용 계정 차단 (F-45)        | 14(`hasPassword()` false면 발송 안 함, 응답 동일)             | 14                                               |
+| PWD-06 rate limit (NF-30)                | 14(이메일·IP 10분 3회, 초과 시 429)                           | 14                                               |
+| PWD-07 계정 존재 미노출 (NF-31)          | 14(없는 계정·소셜 계정·정상 계정 응답 동일)                   | 14                                               |
 
-> `PRD.md` 5.1의 **에러 문구 매핑 표**는 Phase 6에서 `lib/errorMessages.ts`로 단일화하고, Phase 7·8에서 화면별로 적용, Phase 10에서 6종 전부를 대조한다.
-> `PRD.md` 7장 비기능 요구사항의 검증 위치(응답 속도 4 · 체감 반응 9 · 브라우저 10 · 반응형 8·10 · 인증 보안 3·4 · 시크릿 관리 10·11 · XSS 4·8 · 문서화 4 · 접근성 7·8)는 위 표 및 각 Phase DoD와 일치한다.
+> **에러 문구 매핑**은 `PRD.md`에 표로 존재하지 않는다(`PRD.md` 5.1은 보안 비기능요구사항 NF-01~NF-31일 뿐이다). 정본은 백엔드 `ErrorCode` enum(7종)을 그대로 옮긴 `lib/errorMessages.ts`이며, Phase 6에서 단일화하고 Phase 7·8에서 화면별로 적용, Phase 10에서 7종 전부를 대조한다.
+> `PRD.md` **5장** 비기능 요구사항의 검증 위치(응답 속도 4 · 체감 반응 9 · 브라우저 10 · 반응형 8·10 · 인증 보안 3·4 · 시크릿 관리 10·11 · XSS 4·8 · 문서화 4 · 접근성 7·8)는 위 표 및 각 Phase DoD와 일치한다.
 
 ---
 
@@ -142,7 +160,8 @@
 - [x] **세 저장소 각각에서 `.env`는 무시되고 `.env.example`은 무시되지 않음** — 세 저장소 모두 `git check-ignore -q .env`가 종료코드 `0`, `.env.example`이 `1`
   > ⚠️ **`-v` 출력만 보고 판정하지 않는다.** 부정 규칙(`!.env.example`)에 매칭되면 `-v`는 그 규칙을 출력하지만 종료코드는 `1`(무시되지 않음)이다. 출력 유무가 아니라 **종료코드**로 판정한다.
 - [x] 세 저장소 모두 현재 브랜치가 `main`이고 `develop`이 존재함 (로컬 `master` 없음)
-- [ ] 세 저장소 모두 첫 커밋 및 원격 푸시 완료 — **커밋은 완료, 푸시는 미완료.** GitHub 원격은 세 저장소 모두 연결됐으나 `main`·`develop` 어느 것도 push되지 않아 원격에 브랜치가 없다. `todo-frontend`에만 낡은 `origin/master` 참조가 남아 있어 정리가 필요하다
+- [x] 세 저장소 모두 첫 커밋 및 원격 푸시 완료 — **해소 (2026-09-07 재확인).** 세 저장소 모두 `origin/main`·`origin/develop`이 원격에 존재한다. 아래 2026-09-01 절차 기록은 그 시점 상태이며, 이후 실제로 푸시됐다.
+  > **다만 로컬이 원격보다 앞선 상태가 반복된다.** 2026-09-07 기준 `develop`이 origin보다 `todo-project` 4·`todo-backend` 1·`todo-frontend` 1 커밋 앞서 있었고, `main`은 Phase 3~8 수준에 멈춰 `develop`을 한참 못 따라가고 있었다(Phase 12·13 결과물이 `main`에 하나도 없었다). `CLAUDE.md`가 정한 `feature → develop → main` 흐름이 유지되지 않은 것으로, Phase 14 착수 전에 세 저장소 모두 푸시·병합해 정리했다.
 
   > **푸시 절차 (2026-09-01 기준, 아직 실행하지 않음).** 로컬에 쌓인 커밋은 `todo-project` main 14 / develop 4, `todo-backend` main 10 / develop 2, `todo-frontend` main 8 / develop 3건이다.
   >
@@ -160,7 +179,7 @@
   >
   > 순서를 거꾸로 하면 3에서 막힌다. 2는 웹 UI 설정 변경이라 사용자가 직접 한다.
   >
-  > 푸시 전 확인: `gh` CLI가 설치돼 있지 않아 세 저장소가 public인지 private인지 확인하지 못했다. **public이면 푸시 즉시 코드가 공개된다.** `.env`·`application-local.yml`은 무시 규칙에 걸려 있음을 종료코드로 확인했으나, 이미 커밋된 파일에 비밀값이 없는지는 푸시 직전에 한 번 더 본다.
+  > 푸시 전 확인: `gh` CLI가 설치돼 있지 않아 세 저장소가 public인지 private인지 확인하지 못했다. **public이면 푸시 즉시 코드가 공개된다.** `.env`·`application-local.properties`(당시 `application-local.yml`)는 무시 규칙에 걸려 있음을 종료코드로 확인했으나, 이미 커밋된 파일에 비밀값이 없는지는 푸시 직전에 한 번 더 본다.
 - [x] 첫 커밋의 파일 수가 예상 범위 안임 — `todo-project` 10개 / `todo-backend` 11개 / `todo-frontend` 19개
 - [x] `CLAUDE.md` **1장** 구조도의 문서 경로가 실제 파일 위치와 일치함 — 2026-09-01 정정. `PRD.md`·`ROADMAP.md`·`DEV_TOOLS.md`·`guides/`가 빠져 있었고, 없는 `API.md`·`DESIGN.md`가 있는 것처럼 적혀 있었다(둘은 미작성 표시로 남겼다). 구조도가 2장이 아니라 1장에 있다는 점도 함께 정정했다
 - [x] `docs/guides/`가 `README.md` + 재작성된 5개 문서로만 구성됨 — `component-patterns.md`, `forms.md`, `nextjs-app-router.md`, `project-structure.md`, `styling-guide.md`. 금지 파일 2종 없음
@@ -191,6 +210,7 @@
 - [x] `pom.xml`에 **jjwt 3종(`jjwt-api`/`jjwt-impl`/`jjwt-jackson`)이 동일 버전으로 핀**되어 있음 (Phase 3의 `JwtTokenProvider` 전제) — 모두 `0.12.6`
 - [x] `./mvnw dependency:tree` 오류 없음 (2026-08-31 재확인: `BUILD SUCCESS`)
 - [x] **`src/main/resources`에 `application.properties`가 없고 `application.yml`·`application-local.yml`·`application-prod.yml`이 있음**
+  > ⚠️ **Phase 12에서 뒤집혔다.** 설정 파일은 다시 `.properties`로 전환됐고 `.yml`은 하나도 남아 있지 않다. 위 항목은 Phase 1 시점의 기록이다.
 - [x] `./mvnw spring-boot:run`이 옵션 없이 local 프로파일로 기동 성공 (2026-08-31 재확인)
 - [x] **기동 로그에 `The following 1 profile is active: "local"`이 찍힘**
 - [x] `http://localhost:8080/swagger-ui/index.html`이 200으로 열리고 API 목록 화면이 렌더됨
@@ -224,7 +244,8 @@
 - 입력값 제약을 스키마와 일치시킨다 (`CLAUDE.md` 4장 제약 표)
 - `UserRepository`, `TodoRepository` (`deleted_at IS NULL` 조건 포함 쿼리)
 - 인덱스 `idx_todos_user_deleted`
-- `src/test/resources/application-test.yml` (todolist_db_test, `ddl-auto: create-drop`)
+- `src/test/resources/application-test.properties` (todolist_db_test, `ddl-auto: create-drop`)
+  > Phase 2 당시에는 `application-test.yml`이었다. Phase 12에서 `.properties`로 전환됐다.
 - **`@EnableJpaAuditing`은 메인 애플리케이션 클래스에 붙인다** (`@Configuration`에 두면 `@DataJpaTest`가 로드하지 않아 `created_at`이 null이 됨)
 - Repository 테스트에 **`@AutoConfigureTestDatabase(replace = NONE)` + `@ActiveProfiles("test")`** 필수 (없으면 임베디드 DB로 교체 시도)
 
@@ -250,7 +271,7 @@
 **작업**
 
 - `SecurityConfig` (SecurityFilterChain, CORS, 경로별 인가)
-  - **`permitAll` 경로에 Swagger(`/swagger-ui/**`, `/v3/api-docs/**`)를 반드시 포함** (`CLAUDE.md` 6장 목록 그대로)
+  - **`permitAll` 경로에 Swagger(`/swagger-ui/**`, `/v3/api-docs/**`)를 반드시 포함**
   - CORS 허용 헤더에 `Authorization`, `Content-Type` 명시
 - `JwtTokenProvider` (생성/검증, 24시간 만료, **`sub = user.id`**)
 - `JwtAuthenticationFilter` (`sub` → id 조회, `deleted_at IS NULL` 확인)
@@ -272,7 +293,7 @@
 - [x] 로그인 성공 시 유효 JWT, 실패 시 401
 - [x] **미가입 이메일로 로그인한 401과 비밀번호가 틀린 401의 `code`·`message`가 완전히 동일함** (계정 존재 여부를 구분 노출하지 않는다 — `PRD.md` 5.1)
 - [x] 토큰 없이 `/api/v1/auth/me` 호출 시 401
-- [x] `/api/v1/auth/me` 응답에 `nickname`과 `email`이 모두 포함됨 (AUTH-08 — 화면 표시 여부는 Phase 7에서 통제)
+- [x] `/api/auth/me` 응답에 `nickname`과 `email`이 모두 포함됨 (AUTH-08 — 화면 표시 여부는 Phase 7에서 통제)
 - [x] 비밀번호가 DB에 해시로 저장됨
 - [x] **Security 도입 후에도 Swagger UI 접속 가능** (Phase 1 DoD 회귀 방지)
 - [x] Swagger Authorize에 토큰을 넣고 `/auth/me` 호출이 200으로 성공
@@ -299,7 +320,7 @@
 - **`PUT`은 전체 교체이며 `TodoUpdateRequest`에 `completed`를 넣지 않는다**
 - **`PATCH /toggle`은 바디로 `{"completed": true}`를 받는다** (서버가 뒤집지 않음)
 - `TodoService`: 소유권 검증, Soft Delete, **HTML 정화**
-- **HtmlSanitizer**: Jsoup Safelist, 허용 태그·`rel` 주입·스킴 제한 (`CLAUDE.md` 6장)
+- **HtmlSanitizer**: Jsoup Safelist, 허용 태그·`rel` 주입·스킴 제한 (`CLAUDE.md` 3장 절대 규칙 8)
 - 페이지네이션 + `completed`(미지정 시 전체) + `keyword`(대소문자 무시) 필터
 - 정렬은 `createdAt,desc` 고정. **허용 필드 화이트리스트(`createdAt`, `dueDate`) 밖의 값은 기본값으로 대체** (없는 프로퍼티로 500 방지)
 - `PageResponse<T>` DTO → **`ApiResponse.data` 안에 담아 반환**
@@ -337,7 +358,7 @@
 >
 > - **검색 성능**: `LOWER(title)` 함수 기반 인덱스(`idx_todos_title_lower`)를 `db/add-title-index.sql`로 수동 생성했다(이 프로젝트에 Flyway/Liquibase가 없어 JPA `ddl-auto`로는 함수 표현식 인덱스를 만들 수 없음). 10,000건 시드 기준 키워드 검색 중앙값 **38.8ms**로 500ms DoD를 여유롭게 통과했다. 다만 `EXPLAIN ANALYZE` 확인 결과 이 규모(선택도 20%)에서는 PostgreSQL 플래너가 인덱스 대신 Seq Scan을 선택한다 — 실행시간(11.8ms)이 이미 충분히 빠르기 때문이며, 데이터가 더 커지거나 검색 조건의 선택도가 낮아지면 플래너가 인덱스를 선택하게 된다. 성능 목표는 달성했고 인덱스도 정확히 존재하지만, 이번 규모에서 실행계획에 나타나지는 않는다는 사실을 기록해 둔다.
 > - **버그 발견 및 수정**: `keyword` 파라미터가 없을 때(`GET /api/todos`, completed만 지정) `500 lower(bytea) 이름의 함수가 없음`이 발생했다. JPQL의 `:keyword`가 null일 때 PostgreSQL이 파라미터 타입을 추론하지 못해 `bytea`로 잘못 캐스팅하는 문제였다. `TodoRepository.search`의 JPQL에 `cast(:keyword as string)`을 명시해 해결했다.
-> - **HTML 정화**: Jsoup `Safelist.none()`에서 시작해 Phase 6 Tiptap 최종 설정과 대응하는 태그(`p,h2,h3,strong,em,ul,ol,li,blockquote,pre,code,br,a`)만 허용하고, `a[href]`에 `rel="nofollow noopener noreferrer"`를 강제 주입하며 `http`/`https`/`mailto` 외 스킴(예: `javascript:`)을 차단한다.
+> - **HTML 정화**: Jsoup `Safelist.none()`에서 시작해 Phase 6 Tiptap 최종 설정과 대응하는 태그(`p,strong,em,ul,ol,li,br,a`)만 허용하고, `a[href]`에 `rel="nofollow noopener noreferrer"`를 강제 주입하며 `http`/`https`/`mailto` 외 스킴(예: `javascript:`)을 차단한다.
 
 ---
 
@@ -376,7 +397,8 @@
 
 - **Node 20 이상** 확인 후 `create-next-app` (**Next.js 16.3.3 유지**, App Router, TypeScript)
 - Tailwind CSS 4 설정 — `globals.css`의 `@theme`에 디자인 토큰 정의 (**v3 방식 금지**)
-- **디자인 토큰은 라이트/다크 양쪽 정의 + `@media (prefers-color-scheme: dark)`** (`class` 전략 금지 — 토글이 없어 FOUC만 생김)
+- ~~**디자인 토큰은 라이트/다크 양쪽 정의 + `@media (prefers-color-scheme: dark)`** (`class` 전략 금지 — 토글이 없어 FOUC만 생김)~~
+  → **번복됨 (2026-09-03).** 이 지침은 `PRD.md` F-33("라이트 기본 + 다크 **토글**. 선택은 유지되고 첫 로드 시 색이 번쩍이지 않는다")과 어긋난다. "토글이 없어서 미디어쿼리로 간다"는 근거가 순환 논리였다 — 토글이 없는 이유가 토글을 만들지 않았기 때문이다. 토글을 구현하면서 전환 신호를 `html[data-theme]`으로 바꿨다. 자세한 내용은 아래 「Phase 6 이후 변경」 참고
 - shadcn/ui 초기화 (**npm 사용 시 `--legacy-peer-deps`**, 스타일 `new-york`), lucide-react 설치
 - **`npm install motion`** (`framer-motion` 아님), sonner, date-fns, DOMPurify 설치
 - **Tiptap 설치**: `@tiptap/react`, `@tiptap/starter-kit` **두 개만.** `@tiptap/extension-link`는 **설치하지 않는다** — v3 StarterKit에 `Link`가 포함되어 있어 중복 등록이 된다 (`CLAUDE.md` 8장)
@@ -404,10 +426,11 @@
 - [x] Node 20 이상에서 빌드됨
 - [x] `npm run build` 성공, 출력 디렉토리가 `.next`
 - [x] `package.json`에 `motion`이 있고 `framer-motion`이 없음
-- [x] 디자인 토큰이 OS 다크 설정에 따라 전환됨 (`class` 조작 없이 CSS만으로)
+- [x] 디자인 토큰이 OS 다크 설정에 따라 전환됨 ~~(`class` 조작 없이 CSS만으로)~~ — 2026-09-03에 `html[data-theme]` 방식으로 바뀌었다. OS 연동은 "시스템"이 기본값이라 그대로 동작한다
 - [x] 페이지 `page.tsx`에 `"use client"`가 붙어 있음
 - [x] **`components.json`의 `style`이 `new-york`임** (현재 `radix-nova`)
-- [x] **`globals.css`에 `.dark` 클래스 셀렉터나 `@custom-variant dark (&:is(.dark *))`가 없고, 다크 토큰이 `@media (prefers-color-scheme: dark)` 안에 정의되어 있음** (현재 shadcn 기본값이 `class` 전략이라 반드시 걷어내야 한다)
+- [x] ~~**`globals.css`에 `.dark` 클래스 셀렉터나 `@custom-variant dark (&:is(.dark *))`가 없고, 다크 토큰이 `@media (prefers-color-scheme: dark)` 안에 정의되어 있음**~~ (당시 판정 기준. shadcn 기본값인 `class` 전략을 걷어내는 것이 목적이었다)
+  → **무효 (2026-09-03).** 토글 구현으로 이 조건이 뒤집혔다. 현재는 `@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *))`가 **있어야** 정상이다 — 없으면 토큰만 바뀌고 shadcn 컴포넌트의 `dark:` 유틸리티가 따라오지 않는다. 다만 shadcn 기본값인 `.dark` **클래스** 전략을 쓰지 않는다는 원래 취지는 유지된다(클래스가 아니라 `data-theme` 속성이다)
 - [x] 디자인 토큰 값이 아래 「Phase 6 확정 값」 팔레트와 일치함 (배경 `#FAFAFA`/`#0A0A0A`, 브랜드색 `#4F46E5`, 우선순위 3색) — shadcn 기본 neutral이 남아 있지 않음
   > ⚠️ `CLAUDE.md`에 8장은 없다(6장까지). 팔레트 정본은 `src/app/globals.css`의 `@theme` 토큰이며(`docs/guides/styling-guide.md` 86줄 규정), 확정 값은 아래 표에 기록한다.
   > ⚠️ **브랜드색 `#4F46E5`를 shadcn `--accent` 토큰에 넣지 않는다.** shadcn 규약에서 `accent`는 호버 시 깔리는 옅은 표면색이다. 브랜드색은 `--primary`·`--ring`에 넣는다.
@@ -427,7 +450,7 @@ DoD 15개 항목을 전부 실제 명령으로 확인했다. 확인 방법과, �
 | 빌드·정적검사 | `npm run check`(type-check+lint+format:check), `npm run build` | 둘 다 종료코드 0, `.next` 생성 |
 | Node | `node -v` | v24.18.0 (20 이상) |
 | 버전·패키지 | `package.json` 직접 조회 | `next`/`eslint-config-next` 모두 16.3.3, `motion` 있음, `framer-motion`·`@tiptap/extension-link`·`react-hook-form`·`zod` 없음 |
-| 다크 전환 | Playwright `emulateMedia({colorScheme})`로 라이트↔다크 전환 후 computed style 측정 | 배경 `rgb(250,250,250)`↔`rgb(10,10,10)`, `--primary` `#4f46e5`↔`#818cf8`. `html`의 class는 두 상태에서 동일하고 `.dark`도 없다 — **CSS만으로 전환됨** |
+| 다크 전환 | Playwright `emulateMedia({colorScheme})`로 라이트↔다크 전환 후 computed style 측정 | 배경 `rgb(250,250,250)`↔`rgb(10,10,10)`, `--primary` `#4f46e5`↔`#818cf8`. `html`의 class는 두 상태에서 동일하고 `.dark`도 없다 — **CSS만으로 전환됨** <br>※ 2026-09-03 이후로는 `html[data-theme]`이 바뀌며 전환된다. 색값 자체는 그대로다 |
 | Pretendard | computed `font-family` | `pretendard` (fallback 아님) |
 | Pagination | `totalPages=1`과 `5`를 함께 렌더 | 1일 때 컨테이너 `innerHTML`이 빈 문자열, `nav` 0개 |
 | ErrorState | 재시도 버튼 2회 클릭 | 카운터 `0` → `2` (`onRetry` 실제 호출) |
@@ -504,7 +527,7 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 
 #### 날짜 직렬화 (실측 발견 — 문서에 없던 함정)
 
-백엔드 `TodoResponse`의 `createdAt`·`updatedAt`·`completedAt`은 `LocalDateTime`이고 `application.yml`에 Jackson 날짜 설정이 없어 **`Z` 접미사 없이** `"2026-09-01T12:00:00.123456"` 형태로 직렬화된다. JS `new Date()`는 오프셋 없는 ISO 문자열을 **로컬 시각으로 해석**하므로 KST 브라우저에서 9시간 어긋난다. 백엔드를 고치지 않고 프론트 `lib/datetime.ts`의 `parseServerDateTime` 단일 진입점에서 `Z`를 붙여 흡수한다. `dueDate`는 `LocalDate`(`"2026-09-01"`)이므로 **`Z`를 붙이면 안 되며** 별도 함수로 분리한다.
+백엔드 `TodoResponse`의 `createdAt`·`updatedAt`·`completedAt`은 `LocalDateTime`이고 `application.properties`에 Jackson 날짜 설정이 없어 **`Z` 접미사 없이** `"2026-09-01T12:00:00.123456"` 형태로 직렬화된다. JS `new Date()`는 오프셋 없는 ISO 문자열을 **로컬 시각으로 해석**하므로 KST 브라우저에서 9시간 어긋난다. 백엔드를 고치지 않고 프론트 `lib/datetime.ts`의 `parseServerDateTime` 단일 진입점에서 `Z`를 붙여 흡수한다. `dueDate`는 `LocalDate`(`"2026-09-01"`)이므로 **`Z`를 붙이면 안 되며** 별도 함수로 분리한다.
 
 > 버전·설치 방법은 `CLAUDE.md` 3장에서 모두 확정됐다. 이 Phase에서 재조사하지 않는다.
 
@@ -512,13 +535,26 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 
 ## Phase 7 — 인증 화면
 
+> ### Phase 7 착수 결정 (2026-09-01)
+>
+> | 항목 | 결정 | 근거 |
+> | --- | --- | --- |
+> | 브랜치 | `develop`을 `main`으로 ff 정렬한 뒤 **`feature/` → `develop` → `main`** 복귀 | Phase 1~6이 `main`에 직접 커밋됐고 `develop`이 08-28에 멈춰 있었다. `develop` 전용 커밋이 0이라 무손실 정렬이 가능했다 |
+> | 로그아웃 | **서버 `POST /api/auth/logout` 추가** | `CLAUDE.md` 5장(절대 규칙)·`PRD.md` F-08·7.4가 서버 로그아웃을 요구한다. `AuthService.logout()`이 이미 구현돼 있어 컨트롤러 메서드 1개 + `SecurityConfig` 1줄이면 된다 |
+> | 네트워크 문구 | **"연결에 실패했습니다."로 통일** | `lib/errorMessages.ts`의 값을 이 문구로 바꾼다. 재시도 버튼이 옆에 붙으므로 "잠시 후 다시 시도해 주세요"는 중복이다 |
+> | 구글 검증 | **백엔드를 8080에 띄워 실측** | 등록된 리다이렉트 URI가 `http://localhost:8080/login/oauth2/code/google`이고 `redirect-uri`를 따로 지정하지 않아 Spring이 baseUrl 기준으로 생성한다. 8081로 띄우면 `redirect_uri_mismatch`가 난다 |
+>
+> **참조 정정**: 이 Phase가 참조하던 `PRD.md` 5.1/5.3/5.4는 실제 문서와 달랐다(5.1=보안, 5.3=코드 품질, 5.4=접근성). 실제 내용은 7.1(가입 흐름)·7.2(구글 로그인)·7.3(토큰 갱신)·7.4(로그아웃)에 있어 그쪽으로 고쳤다. `CLAUDE.md` 9장 참조 2건은 해당 장이 없어 제거했다(`CLAUDE.md`는 6장까지). 추적표의 "JWT 24h"는 실제 30분(`access-token-expiration: 1800000`)이라 정정했다.
+>
+> ⚠️ **`UX-01`~`UX-07`은 `PRD.md`에 정의가 없다.** 위 추적표의 행 이름(UX-01 스켈레톤, UX-04 에러+재시도 버튼, UX-06 label·키보드)만이 유일한 근거다.
+
 **저장소**: `todo-frontend` · **관련 요구사항**: AUTH-01~09, UX-01, UX-06 · **선행 조건**: 백엔드 **Phase 3 완료**(가입·로그인·`/auth/me`), 구글 로그인 DoD는 **Phase 5 완료** 필요. 백엔드를 로컬에서 띄운 상태로 진행한다
 
 **작업**
 
 - `/login`, `/signup`, `/oauth/callback`
 - **`/oauth/callback`은 `useSearchParams`를 쓰므로 `<Suspense>`로 감싼다** (없으면 `npm run build` 실패)
-- **`/oauth/callback` 세부** (`PRD.md` 5.4)
+- **`/oauth/callback` 세부** (`PRD.md` 7.2 구글 로그인 흐름)
   - 토큰 저장 → **URL에서 토큰 제거**(히스토리·공유 링크에 남지 않도록) → `/todos` 이동
   - **`token` 파라미터가 없거나 빈 문자열이면 `/login`으로 보낸다**
   - 처리 중에는 스켈레톤만 보여주고 **사용자가 조작할 요소를 두지 않는다**
@@ -526,12 +562,12 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 - **`/todos` 플레이스홀더 페이지 생성** — 라우트 보호를 검증하려면 대상 페이지가 존재해야 한다 (내용은 Phase 8)
 - Phase 6에서 비워둔 **헤더의 닉네임·로그아웃을 `useAuth`에 연결**
   - **이메일은 화면에 표시하지 않는다.** `/auth/me` 응답에는 들어오지만 헤더에는 닉네임만 노출한다 (`AUTH-08`)
-- `useAuth` 훅 (로그인 / **로그아웃: 토큰 삭제 + 캐시 초기화** / 현재 사용자)
-- **라우트 보호는 `(main)` 클라이언트 레이아웃에서 처리한다. `middleware.ts`를 만들지 않는다** (localStorage는 middleware에서 읽을 수 없음 — `CLAUDE.md` 9장)
-  - **인증 판정이 끝나기 전에는 스켈레톤을 보여준다** (`UX-01`, `PRD.md` 5.1)
+- `useAuth` 훅 (로그인 / **로그아웃: `POST /api/auth/logout` + 토큰 삭제 + 캐시 초기화** / 현재 사용자)
+- **라우트 보호는 `(main)` 클라이언트 레이아웃에서 처리한다. `middleware.ts`를 만들지 않는다** (localStorage는 middleware에서 읽을 수 없다)
+  - **인증 판정이 끝나기 전에는 스켈레톤을 보여준다** (`UX-01`)
 - 401 응답 시 자동 로그아웃 처리
-- `?error=email_conflict` 안내 문구 표시
-- **`/signup` 실시간 검증** (`PRD.md` 5.3) — 이메일 형식, **비밀번호 6자 이상 + UTF-8 72바이트 이하**, 닉네임 1~50자. 안내 문구에 **한글 1자 = 3바이트**임을 밝힌다
+- **`?error=email_conflict`와 `?error=oauth_failed` 안내 문구 표시** — 백엔드 `OAuth2FailureHandler`가 두 값을 보낸다. 하나만 처리하면 사용자가 취소했을 때 아무 안내도 없이 로그인 화면만 뜬다
+- **`/signup` 실시간 검증** (`PRD.md` 7.1 — "검증 실패 시 해당 필드 아래 에러 표시") — 이메일 형식, **비밀번호 6자 이상 + UTF-8 72바이트 이하**, 닉네임 1~50자. 안내 문구에 **한글 1자 = 3바이트**임을 밝힌다
 - **에러 문구는 Phase 6의 `lib/errorMessages.ts`만 사용한다** (정본은 백엔드 `ErrorCode` enum)
   - `INVALID_INPUT` → 서버가 준 필드별 메시지를 해당 입력 아래 인라인
   - `UNAUTHORIZED`(로그인 시) → "이메일 또는 비밀번호가 올바르지 않습니다."를 폼 상단 인라인
@@ -541,28 +577,86 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 
 **DoD**
 
-- [ ] 이메일 가입·로그인 정상 동작
-- [ ] **가입 화면에서 한글 25자 비밀번호를 입력하면 제출 전에 바이트 초과 안내가 인라인으로 뜸** (서버 400에만 의존하지 않음 — `AUTH-02`)
-- [ ] **중복 이메일 가입 시 "이미 사용 중인 이메일입니다."가 이메일 입력 아래 인라인으로 뜸** (`AUTH-03`, `PRD.md` 5.1)
-- [ ] **미가입 이메일과 비밀번호 오류의 화면 문구가 동일함** ("이메일 또는 비밀번호가 올바르지 않습니다.") — 계정 존재 여부가 드러나지 않음
-- [ ] **백엔드를 내린 채 로그인을 시도하면 "연결에 실패했습니다." + 재시도 버튼이 나옴** (네트워크 실패 매핑 — `UX-04`)
-- [ ] 구글 로그인 → 콜백 → `/todos` 이동, URL에서 토큰 제거됨
-- [ ] **`/oauth/callback`에 `?token=` 없이 직접 접근하면 `/login`으로 이동함** (`PRD.md` 5.4)
-- [ ] **`/oauth/callback` 화면에 공통 헤더와 조작 가능한 요소가 없음**
-- [ ] **헤더에 닉네임이 보이고 이메일은 어디에도 렌더되지 않음** (DevTools에서 DOM 검색 — `AUTH-08`)
-- [ ] 계정 충돌 시 안내 문구 노출
-- [ ] 로그아웃 시 토큰·캐시 모두 제거되고 `/login`으로 이동
-- [ ] 새로고침해도 로그인 상태 유지
-- [ ] 미인증 상태로 `/todos` 접근 시 로그인으로 이동
-- [ ] **만료된 토큰을 localStorage에 직접 넣고 `/todos`에 접근했을 때, 보호 화면이 한 프레임도 노출되지 않고 곧바로 `/login`으로 이동**
-  > `useAuth`가 토큰 존재 여부만 보면 만료 토큰이 판정을 통과해, 401 왕복 동안 보호 화면이 노출된다. `exp`를 디코드해야 한다 (`CLAUDE.md` 9장). 검증용 만료 토큰은 `JWT_EXPIRATION`을 일시적으로 낮춰 발급받으면 된다
-- [ ] `middleware.ts` 파일이 존재하지 않음
-- [ ] `npm run build` 성공 (`useSearchParams` Suspense 경계 확인)
-- [ ] **모든 입력에 label 연결, Tab·Enter만으로 가입·로그인 완주 가능**
+- [x] 이메일 가입·로그인 정상 동작
+- [x] **가입 화면에서 한글 25자 비밀번호를 입력하면 제출 전에 바이트 초과 안내가 인라인으로 뜸** (서버 400에만 의존하지 않음 — `AUTH-02`)
+- [x] **중복 이메일 가입 시 "이미 사용 중인 이메일입니다."가 이메일 입력 아래 인라인으로 뜸** (`AUTH-03`)
+- [x] **미가입 이메일과 비밀번호 오류의 화면 문구가 동일함** ("이메일 또는 비밀번호가 올바르지 않습니다.") — 계정 존재 여부가 드러나지 않음
+- [x] **백엔드를 내린 채 로그인을 시도하면 "연결에 실패했습니다." + 재시도 버튼이 나옴** (네트워크 실패 매핑 — `UX-04`)
+- [x] 구글 로그인 → 콜백 → `/todos` 이동, URL에서 토큰 제거됨
+- [x] **`/oauth/callback`에 `?token=` 없이 직접 접근하면 `/login`으로 이동함** (`PRD.md` 7.2)
+- [x] **`/oauth/callback` 화면에 공통 헤더와 조작 가능한 요소가 없음**
+- [x] **헤더에 닉네임이 보이고 이메일은 어디에도 렌더되지 않음** (DevTools에서 DOM 검색 — `AUTH-08`)
+- [x] 계정 충돌 시 안내 문구 노출
+- [x] 로그아웃 시 토큰·캐시 모두 제거되고 `/login`으로 이동
+- [x] 새로고침해도 로그인 상태 유지
+- [x] 미인증 상태로 `/todos` 접근 시 로그인으로 이동
+- [x] **만료된 토큰을 localStorage에 직접 넣고 `/todos`에 접근했을 때, 보호 화면이 한 프레임도 노출되지 않고 곧바로 `/login`으로 이동**
+  > `useAuth`가 토큰 존재 여부만 보면 만료 토큰이 판정을 통과해, 401 왕복 동안 보호 화면이 노출된다. `exp`를 디코드해야 한다. 검증용 만료 토큰은 `jwt.access-token-expiration`을 일시적으로 낮춰 발급받으면 된다
+- [x] `middleware.ts` 파일이 존재하지 않음
+- [x] `npm run build` 성공 (`useSearchParams` Suspense 경계 확인)
+- [x] **모든 입력에 label 연결, Tab·Enter만으로 가입·로그인 완주 가능**
+
+### Phase 7 재검증 / 발견 기록 (2026-09-01)
+
+DoD 17개를 전부 실제 조작으로 확인했다. 최종 구성은 **백엔드 8080 · 프론트 3000**이다.
+
+**검증 방법과 결과**
+
+| 항목 | 확인 방법 | 결과 |
+| --- | --- | --- |
+| 빌드·정적검사 | `npm run check`, `npm run build` | 둘 다 종료코드 0 |
+| 이메일 가입·로그인 | 브라우저에서 폼 제출 | 가입 → 즉시 로그인 → `/todos` |
+| 한글 25자 비밀번호 | 입력 직후 DOM 조회 | `password-error`에 "현재 75바이트" 안내, **제출 버튼 `disabled`** |
+| 영문 72/73자, 5자 | 동일 | 72자 통과 · 73자 차단 · 5자 차단 |
+| 중복 이메일 | 기가입 이메일로 재가입 | `role=alert`가 **`email-error` 하나뿐**이고 문구는 "이미 사용 중인 이메일입니다." |
+| 미가입/오답 문구 동일 | 두 경우 문구 문자열 비교 | 완전 일치 — "이메일 또는 비밀번호가 올바르지 않습니다." |
+| 네트워크 실패 | 백엔드 종료 후 로그인 | "연결에 실패했습니다." + 재시도 버튼 |
+| **구글 로그인** | 실제 구글 계정으로 완주 | `/todos` 도달, 헤더에 구글 계정 이름, **URL에 `token=` 흔적 없음**, 백엔드 에러 로그 0건 |
+| 구글 `redirect_uri` | `curl -i /oauth2/authorization/google`의 Location 파싱 | `http://localhost:8080/login/oauth2/code/google` — 등록값과 일치 |
+| 콜백 파라미터 방어 | `?token=` 없이 / 빈 문자열로 접근 | 둘 다 `/login` 이동 |
+| 콜백 화면 구성 | 초기 HTML을 `fetch`로 받아 파싱 | header·button·a·input **전부 0개** (대조군 `/login`은 button 1·a 2) |
+| 헤더 이메일 미노출 | `innerText`·`innerHTML` 문자열 검색 | 0건 |
+| 로그아웃 | 버튼 클릭 후 Resource Timing 확인 | `/api/auth/logout` 요청 1건, 토큰 삭제, `/login` 이동 |
+| 새로고침 유지 | `location.reload()` | `/todos` 유지, 헤더 닉네임 유지 |
+| 미인증 `/todos` | 토큰 없이 접근 | `/login` 이동, 보호 화면 미렌더 |
+| **만료 토큰** | `exp`가 과거인 JWT 주입 후 접근 | `/login` 이동, **백엔드 요청 0건**, 보호 화면 미렌더 |
+| `middleware.ts` | `find` | 없음 |
+| 키보드 완주 | Tab·Enter만으로 가입 | `/todos` 도달 |
+
+> 만료 토큰 케이스가 핵심이다. Resource Timing에 **백엔드 요청이 0건**으로 찍혔다 — `useAuth`의 `enabled: isTokenValid(...)`가 `/auth/me` 호출 자체를 막아 401 왕복이 없다. 토큰 존재 여부만 봤다면 요청 1건이 찍히고 그 왕복 동안 화면이 노출됐을 것이다.
+
+**발견해 고친 것**
+
+1. **쿠키 없이 `POST /api/auth/refresh`가 500을 냈다.** `@CookieValue`가 `required=true`라 `MissingRequestCookieException`이 발생하는데 `GlobalExceptionHandler`가 그 타입을 처리하지 않아 generic 핸들러로 떨어졌다. 라우트 보호 동선에서 미인증 접근마다 발생하던 결함이다. 전용 핸들러를 추가해 **401**로 고쳤다.
+2. **로그아웃은 서비스 계층이 이미 완성돼 있었다.** `AuthService.logout()`·`RefreshTokenService.revoke()`·`RefreshTokenCookieFactory.expire()`가 전부 존재했고 컨트롤러 엔드포인트만 빠져 있었다. 컨트롤러 메서드 1개와 `SecurityConfig` 1줄로 해결했다. 쿠키는 `required=false`로 받아 **멱등**하게 만들었다 — 쿠키가 없다는 것은 이미 로그아웃된 상태이지 오류가 아니다.
+3. **`?error=oauth_failed` 처리가 누락돼 있었다.** ROADMAP 작업 목록이 `email_conflict`만 적었으나 `OAuth2FailureHandler`는 두 값을 보낸다. 하나만 처리하면 사용자가 구글 동의를 취소했을 때 아무 안내 없이 로그인 화면만 뜬다.
+
+**미해결로 남긴 것**
+
+- **잘못된 JSON 본문이 500을 낸다.** `HttpMessageNotReadableException`도 generic 핸들러로 떨어진다(검증 중 인코딩 문제로 우연히 확인했다). 400 `INVALID_INPUT`이 맞지만, 우리 프론트는 `JSON.stringify`로만 보내므로 Phase 7 동선에서는 발생하지 않아 손대지 않았다. 쿠키 결함과 같은 계열이다.
+- **`docs/DESIGN.md`가 여전히 없다.** `shrimp-rules.md`는 이 문서를 "Phase 6 산출물"로 규정하지만 Phase 6은 팔레트를 ROADMAP 「Phase 6 확정 값」에 기록하는 것으로 갈음했다.
 
 ---
 
 ## Phase 8 — Todo 화면
+
+> ### Phase 8 착수 결정 (2026-09-01)
+>
+> `PRD.md`와 이 문서가 서로 다른 말을 하던 5건을 확정했다. 결정하지 않았으면 만들 화면 자체가 달라졌을 항목들이다.
+>
+> | 항목 | 결정 | 근거 |
+> | --- | --- | --- |
+> | 정렬 UI | **생성일·마감일 2종 제공**, 우선순위 정렬은 없음 | `PRD.md` F-16이 정렬을 요구사항으로 명시한다. 이 문서가 "정렬 UI 없음"의 근거로 들던 **「`PRD.md` 1장 비목표」는 실재하지 않는다**(1장은 제품 원칙과 성공 기준뿐). 백엔드 `SORT_WHITELIST`가 `createdAt`·`dueDate` 둘뿐이라 2종은 서버 수정 없이 된다. 우선순위는 `Priority`가 enum이라 DB 정렬이 문자열 순(`HIGH<LOW<MEDIUM`)이 되어 의미가 맞지 않는다 |
+> | 페이지 크기 | **백엔드에 상한 50을 넣고 기본값 10을 명시**, 프론트도 `size=10` 전송 | 실측 결과 **기본값은 이미 10이었다** — `@PageableDefault`의 `size()` 기본값이 10이다(`spring.data.web.pageable.default-page-size`의 20과 혼동하기 쉽다). 문제는 **상한**이다. `size=10000`을 보내면 Spring 기본 `max-page-size` 2000으로만 잘려 `PRD.md` F-13(최대 50)·NF-08(서버가 제한)을 위반한다 |
+> | 수정 메서드 | **PUT 유지**, `PRD.md` F-19를 정정 | 백엔드·Phase 4 DoD·이 Phase가 전부 PUT이고 Phase 4에서 이미 검증을 통과했다. 폼이 네 필드를 항상 함께 보내므로 부분 수정의 실익이 없다. PATCH는 nullable 필드와 "값을 null로 지우기"를 구분하기 어려워 마감일 삭제 처리가 애매해진다 |
+> | 삭제 확인 | **만든다** (목록·상세 양쪽) | `PRD.md` F-22가 명시 요구인데 이 Phase의 작업 목록·DoD 어디에도 없었다. `alert-dialog`를 어차피 받으므로 비용이 낮다. Soft Delete라 데이터는 남지만 **UI상 복구 경로가 없어 사용자에겐 사실상 비가역**이다 |
+> | 요약 카운트 뱃지 | **Phase 8에서는 미룬다** | `PRD.md` F-23이 요구하지만 백엔드에 카운트 엔드포인트가 없다(컨트롤러·DTO grep 확인). 신규 API(컨트롤러·서비스·리포지토리·DTO)가 필요해 이 Phase 범위가 크게 는다. 필터 버튼은 숫자 없이 만들고 **F-23은 Phase 9 이후 항목으로 이관**한다 |
+>
+> **참조 정정**: 이 Phase가 참조하던 `PRD.md` 5.5·5.6은 실재하지 않는다(5장은 5.1 보안 / 5.2 데이터 / 5.3 코드 품질 / 5.4 접근성까지). `CLAUDE.md` 6·8·9장 참조 3건도 해당 장이 없어 제거했다(`CLAUDE.md`는 6장까지이고 6장은 「작업 방식」이다). `UX-01`~`UX-06`은 `PRD.md`에 정의가 없고 위 추적표의 행 이름만이 근거다.
+>
+> **시드 상태(2026-09-01 확인)**: `seed-dev@example.com`이 Todo **100건**(완료 33건, 마감일 없음 25건)으로 이미 적용돼 있다. `seed-perf@example.com`은 10,000건이다. **`seed-dev.sql`의 `todos` INSERT는 멱등이 아니므로** 재실행 전에 반드시 건수를 먼저 센다.
+>
+> **부수 발견(Phase 2 소관, 이 Phase에서 고치지 않음)**: `User.email`이 `@Column(unique = true)` **전체 유니크**라 `PRD.md` NF-13(「살아있는 사용자 기준 부분 유니크 인덱스」)과 F-02(「Soft Delete된 계정의 이메일은 재사용 가능」)를 만족하지 못한다. 지금은 삭제된 계정의 이메일을 영원히 재사용할 수 없다.
 
 **저장소**: `todo-frontend` · **관련 요구사항**: TODO-01~10, 12~16, UX-01~06 · **선행 조건**: 백엔드 **Phase 4 완료**(Todo API 6종 + 시드). `db/seed-dev.sql`을 로컬에 적용한 상태로 진행해야 페이지네이션·필터 DoD를 눈으로 확인할 수 있다
 
@@ -573,48 +667,70 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 - `useTodos` 훅 (React Query)
 - **`TodoForm` 공용 컴포넌트** → `/todos/new`와 `/todos/[id]`가 재사용 (진입 즉시 편집 가능, 명시적 저장)
 - **`TodoForm`에 완료 체크박스를 두지 않는다.** 완료는 목록에서만 변경
-- **Tiptap 통합 — StarterKit을 기본값으로 쓰지 않는다.** `heading.levels [2,3]`, `strike: false`, `horizontalRule: false`, **`underline: false`**로 설정하고 **`link`는 StarterKit 내장 옵션으로 설정**한다 (v3에서 Link·Underline이 StarterKit에 포함됨 — `CLAUDE.md` 8장)
-- **`editor.commands.setContent()` 호출 직전에 `lib/sanitize.ts`로 DOMPurify 정화** — 이 앱에는 `dangerouslySetInnerHTML`이 없으므로 여기가 유일한 렌더 방어 지점이다 (`CLAUDE.md` 6장)
+- **Tiptap 통합 — StarterKit을 기본값으로 쓰지 않는다.** `heading.levels [2,3]`, `strike: false`, `horizontalRule: false`, **`underline: false`**로 설정하고 **`link`는 StarterKit 내장 옵션으로 설정**한다 (v3에서 Link·Underline이 StarterKit에 포함됨 — 공식 문서 확인)
+  > ⚠️ `setContent`는 기본으로 `onUpdate`를 발생시킨다(`emitUpdate` 기본 `true`). 초기 주입에서 그냥 호출하면 폼이 즉시 dirty로 표시된다. **정규화·TrailingNode와 별개인 두 번째 원인**이므로 `{ emitUpdate: false }`를 함께 줘야 한다.
+  > ⚠️ `useEditor`에 **`immediatelyRender: false`**가 필수다. Next.js는 기본이 SSR이라 이 옵션 없이는 하이드레이션 불일치 에러가 난다.
+- **`editor.commands.setContent()` 호출 직전에 `lib/sanitize.ts`로 DOMPurify 정화** — 이 앱에는 `dangerouslySetInnerHTML`이 없으므로 여기가 유일한 렌더 방어 지점이다
 - 우선순위 뱃지, 마감일 표시 (date-fns 포맷)
-- **완료 항목은 제목에 취소선 + 흐린 색상**을 적용한다 (`PRD.md` 5.5)
-- **`/todos/[id]` 저장 실패 처리** — 폼 내용을 유지한 채 에러를 표시한다. 입력을 날리거나 목록으로 튕기지 않는다 (`TODO-13`, `UX-04`, `PRD.md` 5.6)
+- **완료 항목은 제목에 취소선 + 흐린 색상**을 적용한다. 색만으로 구분하지 않는다(체크박스 상태와 취소선이 함께 신호를 준다 — `PRD.md` NF-24)
+- **`/todos/[id]` 저장 실패 처리** — 폼 내용을 유지한 채 에러를 표시한다. 입력을 날리거나 목록으로 튕기지 않는다 (`TODO-13`, `UX-04`)
   > ⚠️ `TODO-13`은 Phase 9의 토글·삭제 롤백만으로 충족되지 않는다. **저장(PUT) 실패 경로는 낙관적 업데이트를 쓰지 않으므로 Phase 9가 손대지 않는다.** 이 Phase에서 별도로 처리한다.
-- **`/todos/[id]` 삭제 성공 시 `/todos`로 이동**한다 (`TODO-12`, `PRD.md` 5.6)
+- **`/todos/[id]` 삭제 성공 시 `/todos`로 이동**한다 (`TODO-12`)
+- **삭제 전 확인 다이얼로그를 거친다** (`PRD.md` F-22). 목록·상세 양쪽에서 적용한다
 - **에러 문구는 Phase 6의 `lib/errorMessages.ts`만 사용한다.** `NOT_FOUND`는 전체 화면 상태, `INTERNAL_ERROR`는 토스트 또는 에러 카드, 네트워크 실패는 재시도 버튼이 있는 에러 카드 (백엔드 `ErrorCode` enum)
-- **이탈 확인 대화상자 — 3계층으로 구현** (`beforeunload` + 버튼 핸들러 + `popstate` 가드). App Router에 공식 차단 API가 없어 한 줄로 끝나지 않는다. **별도 공수 4~8시간을 잡는다** (`CLAUDE.md` 9장)
+- **이탈 확인 대화상자 — 3계층으로 구현** (`beforeunload` + 버튼 핸들러 + `popstate` 가드). App Router에 공식 차단 API가 없어 한 줄로 끝나지 않는다. **별도 공수 4~8시간을 잡는다**
 - **`dirty` 판정을 직접 구현한다.** 폼 라이브러리를 쓰지 않으므로 `formState.isDirty`가 없다. 제목·우선순위·마감일은 단순 비교로 끝나지만 **본문은 그렇지 않다** — Tiptap이 HTML을 자기 스키마로 정규화하므로 서버 원본과 `editor.getHTML()`을 직접 비교하면 사용자가 아무것도 고치지 않아도 dirty로 판정된다. **초기 스냅샷은 `setContent()` 직후의 `editor.getHTML()`로 잡는다**(정규화를 거친 값끼리 비교)
-- **삭제 실패 시 페이지 이동까지 되돌린다** — 페이지 이동은 `onMutate`가 아니라 `onSuccess`에서 수행 (`CLAUDE.md` 9장)
-- **경계 상황**: 마지막 항목 삭제로 페이지가 비면 이전 페이지로 이동, `/todos/[id]` 404 시 전용 화면 (`CLAUDE.md` 9장)
+- **삭제 실패 시 페이지 이동까지 되돌린다** — 페이지 이동은 `onMutate`가 아니라 `onSuccess`에서 수행
+- **경계 상황**: 마지막 항목 삭제로 페이지가 비면 이전 페이지로 이동, `/todos/[id]` 404 시 전용 화면
 - 로딩 스켈레톤 / 빈 상태 / 검색 결과 없음 / 에러 상태
 
 **DoD**
 
-- [ ] **목록이 페이지당 정확히 10건씩 끊기고, 항목 순서가 생성일 내림차순임** (시드 데이터의 `created_at`과 대조 — `TODO-05`, `TODO-06`)
-- [ ] 20건 이상에서 페이지네이션 정상
-- [ ] **정렬 기준을 고르는 UI가 화면에 없음** (생성일 내림차순 고정 — `PRD.md` 1장 비목표)
-- [ ] 검색·필터 상태가 URL에 반영되고 새로고침·뒤로가기에서 유지됨
-- [ ] **완료 처리한 항목의 제목에 취소선과 흐린 색상이 적용됨** (`PRD.md` 5.5)
-- [ ] `npm run build` 성공
-- [ ] Tiptap 내용 저장 후 재조회 시 서식 유지 (툴바 항목 전부)
-- [ ] 본문에 `# `, `~~취소선~~`, `---`를 입력해도 서식이 생성되지 않음 (저장 후 소실되는 입력이 없음)
-- [ ] **본문에서 `Ctrl+U`를 눌러도 밑줄(`<u>`)이 생성되지 않음** (v3 StarterKit의 Underline이 꺼져 있는지 확인 — 켜져 있으면 저장 시 서식이 조용히 사라진다)
-- [ ] 2페이지 이상에서 마지막 항목 삭제 시 이전 페이지로 이동
-- [ ] **2페이지 마지막 항목 삭제가 실패했을 때, 사용자가 보고 있는 화면에서 롤백이 눈으로 확인됨** (페이지가 먼저 넘어가 버려 롤백이 안 보이면 실패)
-- [ ] 타인 소유 id로 접근 시 "찾을 수 없습니다" 화면 표시 + **"목록으로 가기" 버튼이 있고, 자동 리다이렉트가 일어나지 않음** (`TODO-14`, `PRD.md` 5.6)
-- [ ] `/todos/[id]` 로딩 중 **폼 형태 스켈레톤**이 보임 (`UX-01`)
-- [ ] **백엔드를 내린 채 저장을 누르면 입력한 제목·본문이 그대로 남아 있고 에러가 표시됨** (`TODO-13`, `UX-04`)
-- [ ] **`/todos/[id]`에서 삭제하면 `/todos`로 이동함** (`TODO-12`)
-- [ ] **`setContent()` 직전에 `lib/sanitize.ts`가 호출됨** (본문에 `<script>`가 섞인 데이터를 DB에 직접 넣고 상세 화면 진입 시 실행되지 않음)
-- [ ] `/todos/new`와 `/todos/[id]`가 `TodoForm`을 재사용
-- [ ] 수정 화면에서 저장해도 완료 상태가 바뀌지 않음
-- [ ] 변경 후 이탈 시 확인 대화상자 노출 (**새로고침 / 페이지 내 취소 버튼 / 브라우저 뒤로가기 3경로 모두**)
-- [ ] **저장 직후에는 확인 대화상자가 뜨지 않음** (`dirty` 해제 확인)
-- [ ] **본문이 있는 할 일을 열어 아무것도 고치지 않고 나갈 때 확인 대화상자가 뜨지 않음** (Tiptap 정규화로 dirty가 오판되지 않는지 — 서식이 섞인 본문으로 시험한다)
-- [ ] 4가지 화면 상태 모두 눈으로 확인
-- [ ] **에러 상태의 재시도 버튼을 눌렀을 때 실제로 재요청이 나가고, 서버를 다시 올리면 목록이 정상 렌더됨** (`UX-04` — 버튼이 보이기만 하고 동작하지 않는 경우를 걸러낸다)
-- [ ] **빈 상태 문구("아직 할 일이 없어요")와 검색 결과 없음 문구가 서로 다름** (`UX-03`)
-- [ ] 360px 화면에서 레이아웃 정상 (가로 스크롤 없음)
-- [ ] **키보드만으로 할 일 생성·완료 토글·삭제 수행 가능**
+- [x] **목록이 페이지당 정확히 10건씩 끊기고, 항목 순서가 생성일 내림차순임** (시드 데이터의 `created_at`과 대조 — `TODO-05`, `TODO-06`)
+- [x] 20건 이상에서 페이지네이션 정상
+- [x] **서버가 페이지 크기를 제한함** — `size` 미지정 시 10건, `size=51`이 50으로 클램프됨 (`PRD.md` F-13·NF-08)
+- [x] **정렬 2종(생성일·마감일)이 동작하고 오름·내림차순을 고를 수 있음. 우선순위 정렬은 제공하지 않음** (백엔드 화이트리스트가 `createdAt`·`dueDate` 둘뿐이다)
+- [x] **정렬 상태가 URL에 반영되고 새로고침·뒤로가기에서 유지됨** (`PRD.md` F-17)
+- [x] 검색·필터 상태가 URL에 반영되고 새로고침·뒤로가기에서 유지됨
+- [x] **완료 처리한 항목의 제목에 취소선과 흐린 색상이 적용됨**
+- [x] `npm run build` 성공
+- [x] Tiptap 내용 저장 후 재조회 시 서식 유지 (툴바 항목 전부)
+- [x] 본문에 `# `, `~~취소선~~`, `---`를 입력해도 서식이 생성되지 않음 (저장 후 소실되는 입력이 없음)
+- [x] **본문에서 `Ctrl+U`를 눌러도 밑줄(`<u>`)이 생성되지 않음** (v3 StarterKit의 Underline이 꺼져 있는지 확인 — 켜져 있으면 저장 시 서식이 조용히 사라진다)
+- [x] 2페이지 이상에서 마지막 항목 삭제 시 이전 페이지로 이동
+- [x] **2페이지 마지막 항목 삭제가 실패했을 때, 사용자가 보고 있는 화면에서 롤백이 눈으로 확인됨** (페이지가 먼저 넘어가 버려 롤백이 안 보이면 실패)
+- [x] 타인 소유 id로 접근 시 "찾을 수 없습니다" 화면 표시 + **"목록으로 가기" 버튼이 있고, 자동 리다이렉트가 일어나지 않음** (`TODO-14`, `PRD.md` 5.6)
+- [x] `/todos/[id]` 로딩 중 **폼 형태 스켈레톤**이 보임 (`UX-01`)
+- [x] **백엔드를 내린 채 저장을 누르면 입력한 제목·본문이 그대로 남아 있고 에러가 표시됨** (`TODO-13`, `UX-04`)
+- [x] **`/todos/[id]`에서 삭제하면 `/todos`로 이동함** (`TODO-12`)
+- [x] **`setContent()` 직전에 `lib/sanitize.ts`가 호출됨** (본문에 `<script>`가 섞인 데이터를 DB에 직접 넣고 상세 화면 진입 시 실행되지 않음)
+- [x] `/todos/new`와 `/todos/[id]`가 `TodoForm`을 재사용
+- [x] 수정 화면에서 저장해도 완료 상태가 바뀌지 않음
+- [x] 변경 후 이탈 시 확인 대화상자 노출 (**새로고침 / 페이지 내 취소 버튼 / 브라우저 뒤로가기 3경로 모두**)
+- [x] **저장 직후에는 확인 대화상자가 뜨지 않음** (`dirty` 해제 확인)
+- [x] **본문이 있는 할 일을 열어 아무것도 고치지 않고 나갈 때 확인 대화상자가 뜨지 않음** (Tiptap 정규화로 dirty가 오판되지 않는지 — 서식이 섞인 본문으로 시험한다)
+- [x] 4가지 화면 상태 모두 눈으로 확인
+- [x] **에러 상태의 재시도 버튼을 눌렀을 때 실제로 재요청이 나가고, 서버를 다시 올리면 목록이 정상 렌더됨** (`UX-04` — 버튼이 보이기만 하고 동작하지 않는 경우를 걸러낸다)
+- [x] **빈 상태 문구("아직 할 일이 없어요")와 검색 결과 없음 문구가 서로 다름** (`UX-03`)
+- [x] 360px 화면에서 레이아웃 정상 (가로 스크롤 없음)
+- [x] **키보드만으로 할 일 생성·완료 토글·삭제 수행 가능**
+
+> ### Phase 8 재검증 / 발견 기록 (2026-09-01)
+>
+> DoD 28항목을 실제로 돌려 확인했다. 그 과정에서 **결함 2건을 찾아 고쳤고, 내가 내린 오진 2건을 되돌렸다.**
+>
+> | # | 발견 | 조치 |
+> | --- | --- | --- |
+> | 1 | **페이지네이션이 360px에서 넘쳤다.** `PRD.md` F-29의 「모바일에서는 더 축약」이 구현돼 있지 않았다. 버튼 7개 × 44px + 간격이 가용 폭을 넘었다 | 현재 페이지에서 2칸 이상 떨어진 번호에 `hidden sm:inline-flex`를 적용. 360px 실측에서 페이지네이션 **309px / 가용 341px**, 가로 스크롤 없음 |
+> | 2 | **오프라인·백그라운드에서 목록이 조용히 어긋났다.** React Query는 요청을 시작·재개할 수 없으면 `fetchStatus`를 `paused`로 두는데, 이때 `status`는 그대로라 `isError`가 켜지지 않는다. 결과적으로 **URL은 4페이지인데 화면에는 1페이지 데이터가 남고 아무 경고도 없었고**, 첫 진입이면 **스켈레톤이 영원히 돌았다** | `query.isPaused`로 분기를 추가했다. 데이터가 있으면 목록을 유지한 채 경고 배너 + 재시도 버튼, 없으면 에러 화면을 띄운다. 온라인 복귀 시 일시정지된 요청이 자동 재개되는 것까지 실측 확인 |
+> | 3 | ~~데이터가 있는 상태에서 재요청이 실패하면 `isError`가 켜지지 않으므로 `failureCount`로 감지해야 한다~~ | **오진. 되돌렸다.** `query-core/query.js`의 리듀서는 `case "error"`에서 **데이터 유무와 무관하게 `status: "error"`를 무조건 설정**한다. 따라서 `!isError && failureCount > 0` 조건은 실패 시 참이 될 수 없는 죽은 코드였다. 실제로 막아야 했던 것은 위 2번의 `paused`였고, 그 경로에서는 시도 자체가 없어 `failureCount`가 **0**이라 원래 조건으로는 배너가 뜨지 않았다 |
+> | 4 | ~~재시도 버튼이 요청을 내지 않으니 `networkMode: "always"`가 필요하다~~ | **오진. 되돌렸다.** `retryer.js`의 `canContinue()`는 `focusManager.isFocused()`를 함께 보고, `focusManager`는 `document.visibilityState !== "hidden"`으로 판정한다. 원격 제어 중인 백그라운드 Chrome 창이 `hidden`이라 재시도가 **의도대로** 멈춘 것이었다. 창을 앞으로 꺼내 `visible` 상태에서 재측정하니 **클릭 1회당 요청 정확히 1건**이 나갔고 3페이지가 정상 렌더됐다. `networkMode`는 `refetchOnReconnect` 동작까지 바꾸므로 근거 없이 남길 수 없어 2개 파일에서 제거했다 |
+>
+> **교훈**: 3·4번 모두 **코드를 읽고 세운 가설을 실측으로 확인하지 않은 채 고친 것**이 원인이다. 라이브러리 동작은 추측하지 말고 `node_modules`의 실제 소스를 열어 확인한다.
+>
+> **검증 방법**: 360px는 Chrome 최소 창 너비(약 500px) 제약 때문에 창 크기로는 잴 수 없어, **동일 출처 360px `<iframe>`** 안에서 측정했다(iframe 내부 문서는 자체 뷰포트를 가지므로 미디어 쿼리가 실제 기기와 동일하게 평가된다). 목록·작성·상세 세 화면 모두 넘치는 요소 0개, 44px 미만 터치 타깃 0개. 네트워크 실패는 `window.fetch` 가로채기로, 오프라인은 `offline` 이벤트 디스패치로 재현했다(둘 다 앱 코드를 건드리지 않는다).
+>
+> **검증 데이터 정리**: XSS 검증용으로 DB에 직접 넣은 Todo와 페이지네이션 검증용 계정(`p8page@example.com`) 및 그 항목 10건을 **Soft Delete로** 정리했다(규칙 5에 따라 물리 삭제하지 않았다). 사용자 소유 항목은 `deleted_at IS NULL` 조건으로 제외해 손대지 않았다.
 
 ---
 
@@ -624,24 +740,62 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 
 > `TODO-13` 중 **저장(PUT) 실패 처리는 Phase 8에서 끝낸다.** 이 Phase가 다루는 것은 낙관적 업데이트를 쓰는 **토글·삭제**의 롤백뿐이다.
 
+> ### Phase 9 착수 결정 (2026-09-03)
+>
+> **연타 직렬화 방식: `scope`로 확정한다 (`isMutating()` 가드 아님).** 이전 버전이 근거로 들던
+> **「`CLAUDE.md` 9장」은 실재하지 않는다**(`CLAUDE.md`는 6장 「작업 방식」까지다 — 과거 Phase들에서
+> 반복 발견된 깨진 크로스레퍼런스와 같은 종류의 오기). 실제 근거는 TanStack Query 소스다:
+> `node_modules/@tanstack/query-core`의 `retryer.js`를 보면 `scope`가 거는 `canRun()`은
+> `config.fn()`(=실제 mutationFn 호출, fetch 발사) **이전에** 확인되어 조건이 거짓이면 `pause()`로
+> 들어간다 — 즉 `scope`는 **네트워크 요청이 서버에 도달하는 순서 자체**를 직렬화한다. 반면
+> `onSettled`의 `isMutating()` 가드는 응답이 이미 온 뒤에야 "이게 마지막 요청인지" 판정하므로
+> **네트워크 재정렬**(요청이 보낸 순서와 다르게 서버에 도착하는 것)까지는 막지 못한다. `scope`는
+> `useMutation` 정의 시점의 정적 옵션이라 페이지 레벨 단일 훅 공유로는 todo별로 줄 수 없어,
+> `useToggleTodo(id)`로 시그니처를 바꿔 `TodoItem` 내부에서 직접 호출하도록 리팩터링했다(호출부는
+> `TodoItem` 1곳뿐 — Phase 8에서 `TodoForm`에 완료 체크박스를 두지 않기로 했으므로 영향 범위가 좁다).
+>
+> **삭제는 scope를 쓰지 않는다.** 확인 다이얼로그가 이미 연타를 막으므로(확인 버튼이 대기 중
+> 비활성화) 페이지 레벨 단일 인스턴스 구조를 유지했다.
+
 **작업**
 
 - 완료 토글·삭제 낙관적 업데이트 (`onMutate` / `onError` 롤백 / `onSettled`)
 - 토글은 **목표 상태를 그대로 서버에 전송** (서버 계산에 의존하지 않음)
-- **연타 대비 — mutation 직렬화 또는 마지막 1회 invalidate.** React Query v5 mutation은 기본 병렬이라 목표 상태 전송(멱등)만으로는 요청 재정렬을 막지 못한다. `scope: { id: \`todo-toggle-${todoId}\` }`또는`onSettled`의 `isMutating() === 1` 가드를 적용한다 (`CLAUDE.md` 9장)
+- **연타 대비 — mutation 직렬화.** React Query v5 mutation은 기본 병렬이라 목표 상태 전송(멱등)만으로는 요청 재정렬을 막지 못한다. `scope: { id: \`todo-toggle-${todoId}\` }`를 적용한다(위 착수 결정 참고)
 - Motion: 목록 등장(stagger), 삭제(`AnimatePresence`), 토글 스프링 — **import는 `motion/react`**
 - 실패 시 토스트 알림(`sonner`)
 - `prefers-reduced-motion` 대응
 
 **DoD**
 
-- [ ] 토글·삭제 시 대기 시간 없이 즉시 반영
-- [ ] **체크박스를 빠르게 연타해도 새로고침 후 상태가 UI와 일치**
-- [ ] **연타를 멈춘 뒤 최종 상태가 "마지막에 클릭한 값"과 일치하며, 잠시 후 반대 값으로 되돌아가지 않음**
+- [x] 토글·삭제 시 대기 시간 없이 즉시 반영
+- [x] **체크박스를 빠르게 연타해도 새로고침 후 상태가 UI와 일치**
+- [x] **연타를 멈춘 뒤 최종 상태가 "마지막에 클릭한 값"과 일치하며, 잠시 후 반대 값으로 되돌아가지 않음**
   > 앞 항목만 보면 결함이 통과한다. `invalidateQueries`가 어떤 값으로든 수렴시키므로 "UI와 서버가 일치"는 항상 참이 된다. 문제는 **수렴한 값이 사용자 의도와 다를 수 있다는 것**이다
-- [ ] 서버를 내린 상태에서 실패 → UI 롤백 + 알림 확인
-- [ ] 애니메이션이 200ms 이내, 과하지 않음
-- [ ] 애니메이션 관련 import가 모두 `motion/react`에서 이루어짐
+- [x] 서버를 내린 상태에서 실패 → UI 롤백 + 알림 확인
+- [x] 애니메이션이 200ms 이내, 과하지 않음
+- [x] 애니메이션 관련 import가 모두 `motion/react`에서 이루어짐
+
+> ### Phase 9 재검증 / 발견 기록 (2026-09-03)
+>
+> DoD 6항목을 브라우저에서 정밀 폴링(50ms 간격)으로 실측했다.
+>
+> - **연타 직렬화 증명**: 체크박스 5회 연타 후 Resource Timing API로 5건의 `PATCH /toggle` 요청의
+>   `startTime`/`responseEnd`를 측정해 **겹침 0건**을 확인했다 — `scope`가 요청 발사 순서를 실제로
+>   직렬화한다는 것을 코드가 아니라 관측값으로 증명했다. 새로고침 후 서버 상태도 마지막 클릭값과
+>   일치했다.
+> - **롤백 + 토스트 타이밍**: 서버를 내린 상태에서 토글은 t=477ms에 낙관적 반영 → t=2427ms에
+>   실패 확정과 동시에 롤백 + 토스트, 삭제는 t=305ms 낙관적 반영 → t=2494ms 롤백 + 토스트. 로컬호스트에서
+>   connection-refused가 확정되기까지 약 1.8~2초 걸리는 것은 이 개발 환경(Windows)의 특성이며
+>   앱 결함이 아니다(직접 `fetch`로 실측: 1799ms). 이 지연 동안 낙관적 업데이트가 화면에 계속
+>   유지되는 것은 의도된 동작이다.
+> - **reduced-motion**: 이 세션에서 OS 레벨 `prefers-reduced-motion` 에뮬레이션 도구를 쓸 수 없어
+>   실제 토글 관측 대신 `motion-dom` 소스(`visual-element-target.mjs`)로 대체 검증했다. `reducedMotion`
+>   활성화 시 `positionalKeys`(transform 계열 — 이 Phase가 쓰는 `y`, `scale` 포함)만 즉시 처리되고
+>   `opacity`는 그대로 전환되는데, 이는 전정기관을 자극하는 이동·확대만 끄고 안전한 페이드는
+>   남기는 WCAG 권고와 정확히 일치하는 설계다.
+> - **문서 오류 정정**: 이 절이 근거로 들던 `CLAUDE.md` 9장 인용(실재하지 않는 장)을 위 착수
+>   결정으로 대체했다.
 
 ---
 
@@ -658,57 +812,231 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 
 **환경**
 
-- [ ] `todolist_db`, `todolist_db_test`와 함께 PostgreSQL 실행
-- [ ] `./mvnw spring-boot:run` 오류 없이 기동
-- [ ] `./mvnw test` 전체 통과 (통합 테스트 8건 + Repository 단위 테스트)
-- [ ] `npm run build` 성공
-- [ ] Swagger UI에서 전체 API 확인
-- [ ] 세 저장소의 브랜치가 `main`/`develop` 체계이고 `master`가 남아 있지 않음
-- [ ] `CLAUDE.md`·`PRD.md`·`ROADMAP.md`가 서로를 참조하는 경로가 실제 파일 위치와 일치함
+- [x] `todolist_db`, `todolist_db_test`와 함께 PostgreSQL 실행
+- [x] `./mvnw spring-boot:run` 오류 없이 기동
+- [x] `./mvnw test` 전체 통과 (통합 테스트 8건 + Repository 단위 테스트) — 실측 결과 19건: 통합 8(Auth 3·Todo 4·스모크 1) + Repository 8(Todo 4·User 4) + 서비스 3(OAuth2). 원래 "8건" 표현은 정확했다
+- [x] `npm run build` 성공
+- [x] Swagger UI에서 전체 API 확인 — 실측 중 `/swagger-ui.html`이 401로 막혀 있는 결함을 발견해 즉시 수정(아래 발견 기록 참고)
+- [x] 세 저장소의 브랜치가 `main`/`develop` 체계이고 `master`가 남아 있지 않음
+- [x] `CLAUDE.md`·`PRD.md`·`ROADMAP.md`가 서로를 참조하는 경로가 실제 파일 위치와 일치함 — 이 과정에서 이 문서 자체의 오기 5건(PRD 5.1 에러 문구 매핑 오기 2건, CLAUDE.md 6장 오인용 3건)을 추가로 발견해 정정했다
 
 **인증**
 
-- [ ] 회원가입 시 사용자 생성 및 JWT 반환
-- [ ] 로그인 시 유효한 JWT 반환 (`sub`에 user id)
-- [ ] 보호된 엔드포인트에 유효 토큰 필요
-- [ ] 구글 소셜 로그인 정상 동작, nickname 채워짐
-- [ ] 동일 이메일 로컬 계정 존재 시 구글 로그인 거부 및 안내
-- [ ] 로그아웃 시 토큰·캐시 제거
-- [ ] 헤더에 닉네임만 표시되고 이메일은 화면 어디에도 노출되지 않음 (`AUTH-08`)
-- [ ] 만료 토큰으로 보호 화면 접근 시 화면 노출 없이 `/login`으로 이동 (`AUTH-07`)
+- [x] 회원가입 시 사용자 생성 및 JWT 반환
+- [x] 로그인 시 유효한 JWT 반환 (`sub`에 user id)
+- [x] 보호된 엔드포인트에 유효 토큰 필요
+- [x] 구글 소셜 로그인 정상 동작, nickname 채워짐 — 실제 구글 계정 로그인은 자격증명 대리 입력 정책상 자동화 불가. `/oauth2/authorization/google` 리다이렉트 배선과 `CustomOAuth2UserServiceTest`(신규 계정 생성 시 nickname이 구글 name으로 채워짐을 검증하는 단위 테스트, Task 2에서 통과 확인)로 대체 확인
+- [x] 동일 이메일 로컬 계정 존재 시 구글 로그인 거부 및 안내 — 위와 동일한 이유로 `CustomOAuth2UserServiceTest`의 이메일 충돌 거부 테스트(OAuth2AuthenticationException + EMAIL_CONFLICT_ERROR_CODE)로 대체 확인
+- [x] 로그아웃 시 토큰·캐시 제거
+- [x] 헤더에 닉네임만 표시되고 이메일은 화면 어디에도 노출되지 않음 (`AUTH-08`)
+- [x] 만료 토큰으로 보호 화면 접근 시 화면 노출 없이 `/login`으로 이동 (`AUTH-07`)
 
 **기능**
 
-- [ ] Todo CRUD가 페이지네이션과 함께 작동
-- [ ] 모든 응답이 `{success, data, error}` 포맷 (목록 포함)
-- [ ] 완료 필터(미지정 시 전체)·제목 검색(대소문자 무시) 동작
-- [ ] 수정 저장이 완료 상태를 덮어쓰지 않음
-- [ ] 토글 연타 후에도 서버 상태와 UI 일치
-- [ ] Soft Delete 시 `deleted_at` 갱신 및 목록 제외
-- [ ] 타 사용자 리소스 접근 시 404
-- [ ] Tiptap 저장/렌더링 정상, 우선순위·마감일 반영
-- [ ] 낙관적 업데이트 및 실패 롤백 동작
+- [x] Todo CRUD가 페이지네이션과 함께 작동
+- [x] 모든 응답이 `{success, data, error}` 포맷 (목록 포함)
+- [x] 완료 필터(미지정 시 전체)·제목 검색(대소문자 무시) 동작
+- [x] 수정 저장이 완료 상태를 덮어쓰지 않음 — 토글로 완료 처리 후 PUT으로 나머지 필드를 전부 바꿔도 completed·completedAt이 그대로 유지됨을 확인
+- [x] 토글 연타 후에도 서버 상태와 UI 일치
+- [x] Soft Delete 시 `deleted_at` 갱신 및 목록 제외 — DB에 행은 남고 목록에서만 제외됨(물리 삭제 아님)까지 확인
+- [x] 타 사용자 리소스 접근 시 404 — GET·PUT·DELETE 세 메서드 전부 404(403 아님) 확인
+- [x] Tiptap 저장/렌더링 정상, 우선순위·마감일 반영
+- [x] 낙관적 업데이트 및 실패 롤백 동작
 
 **보안**
 
-- [ ] `<script>` 포함 본문이 저장 시 정화됨
-- [ ] 링크에 `rel="noopener noreferrer"` 주입됨 — **저장 시(Jsoup)뿐 아니라 렌더 후 DOM에서도 남아 있는지 확인.** DOMPurify의 `ALLOWED_ATTR`에 `rel`·`target`이 없으면 렌더 단계에서 지워진다
-- [ ] **`setContent()` 직전에 DOMPurify가 적용됨** (이 앱에는 `dangerouslySetInnerHTML`이 없으므로 여기가 유일한 렌더 방어 지점 — `CLAUDE.md` 6장)
-- [ ] **툴바 · Tiptap 확장 · Jsoup 화이트리스트 · DOMPurify `ALLOWED_TAGS` 네 곳의 태그 집합이 일치**
-- [ ] 입력값 상한(비밀번호 **UTF-8 72바이트**, 제목 200자, 본문 50,000자) 검증 동작 — **한글 비밀번호로도 시험한다**
-- [ ] 시크릿이 저장소에 커밋되지 않음
+- [x] `<script>` 포함 본문이 저장 시 정화됨 — Jsoup을 우회해 DB에 직접 삽입 후 렌더 화면에서도 DOMPurify가 실행을 막음을 확인(이중 방어 양쪽 다 실측)
+- [x] 링크에 `rel="noopener noreferrer"` 주입됨 — **저장 시(Jsoup)뿐 아니라 렌더 후 DOM에서도 남아 있는지 확인.** DOMPurify의 `ALLOWED_ATTR`에 `rel`·`target`이 없으면 렌더 단계에서 지워진다
+- [x] **`setContent()` 직전에 DOMPurify가 적용됨** (이 앱에는 `dangerouslySetInnerHTML`이 없으므로 여기가 유일한 렌더 방어 지점 — `CLAUDE.md` 3장 절대 규칙 8)
+- [x] **툴바 · Tiptap 확장 · Jsoup 화이트리스트 · DOMPurify `ALLOWED_TAGS` 네 곳의 태그 집합이 일치** — `@tiptap/starter-kit`의 실제 번들 확장 목록을 `.d.ts`로 직접 확인해 4곳 모두 `p h2 h3 strong em ul ol li blockquote pre code br a` 13종으로 완전히 일치함을 확정(아래 비교표 참고)
+- [x] 입력값 상한(비밀번호 **UTF-8 72바이트**, 제목 200자, 본문 50,000자) 검증 동작 — **한글 비밀번호로도 시험한다** — 한글 25자(75바이트)로 72바이트 초과 거부, 제목 201자·본문 50001자도 각각 정확히 거부됨을 확인
+- [x] 시크릿이 저장소에 커밋되지 않음 — 세 저장소 `git log --all` 전체 이력에서 시크릿 파일·값 커밋 이력 0건
 
 **UX**
 
-- [ ] 로딩/빈 상태/검색 결과 없음/에러 상태 모두 확인 (**에러 상태의 재시도 버튼이 실제로 재요청을 보냄** — `UX-04`)
-- [ ] `PRD.md` 5.1 에러 문구 매핑 6종이 화면에서 표 그대로 나옴 (`INVALID_INPUT` / `UNAUTHORIZED` 2경우 / `EMAIL_DUPLICATED` / `TODO_NOT_FOUND` / `INTERNAL_ERROR` / 네트워크 실패)
-- [ ] 로그인 실패 문구가 계정 존재 여부를 구분하지 않음
-- [ ] 360px ~ 1920px 반응형 정상
-- [ ] **Chromium 계열 1종 + 사용 가능한 다른 엔진 1종에서 확인** (Mac은 Chrome+Safari, Windows는 Chrome+Edge/Firefox)
-- [ ] OS 다크 설정에 따라 테마 전환
-- [ ] 폼 label 연결 및 키보드 조작 가능
+- [x] 로딩/빈 상태/검색 결과 없음/에러 상태 모두 확인 (**에러 상태의 재시도 버튼이 실제로 재요청을 보냄** — `UX-04`)
+- [x] `lib/errorMessages.ts`의 에러 문구 매핑이 화면에서 표 그대로 나옴 — **7종 전부 화면에서 확인 (2026-09-03 후속).** 단, 확인 경로가 두 종류이며 아래 「에러 문구 매핑 7종」 표에 어느 쪽인지 명시했다. 5종은 실제 서버 응답으로, `FORBIDDEN`·`RESET_TOKEN_INVALID` 2종은 서버가 그 코드를 던지는 경로 자체가 없어 응답을 주입해 **프론트 매핑 경로만** 확인했다
+- [x] 로그인 실패 문구가 계정 존재 여부를 구분하지 않음
+- [x] 360px ~ 1920px 반응형 정상 — 360px는 Phase 8, 1920px는 이번에 확인(넘침 없음, 콘텐츠 폭 적절히 제한)<br>⚠️ **이 판정은 짧은 닉네임에서만 성립하고 있었다(2026-09-03 후속 발견).** 닉네임은 50자까지 허용되는데 헤더에 축소 처리가 없어 긴 닉네임에서 320px를 넘쳤다. `min-w-0` + `truncate`로 수정 후 재실측: 닉네임 50자·컨테이너 320px에서 닉네임 605px→63px 축소·말줄임 적용, 로고 64px·테마 54px·로그아웃 90×44px 유지, 가로 넘침 없음
+- [ ] **Chromium 계열 1종 + 사용 가능한 다른 엔진 1종에서 확인** ~~(Mac은 Chrome+Safari, Windows는 Chrome+Edge/Firefox)~~ — **이 안내 자체가 부정확했다(2026-09-03 정정).** **Edge는 Chromium(Blink) 엔진이라 "다른 엔진"이 아니다.** Chrome+Edge를 확인해도 같은 엔진을 두 번 보는 것이므로 이 항목의 목적(렌더링 엔진 차이 검증)을 달성하지 못한다. Windows에서 실질적인 두 번째 엔진은 **Gecko(Firefox)** 뿐이다.<br>이 PC 실측: Firefox 미설치, Playwright MCP도 Blink(`Chrome/152.0.0.0`, `vendor: Google Inc.`), Playwright 브라우저 캐시에 Firefox·WebKit 바이너리 없음. **다른 엔진이 존재하지 않아 이 환경에서는 충족 불가**다. Firefox 설치는 사용자 결정 사항이라 임의로 하지 않는다
+- [x] OS 다크 설정에 따라 테마 전환 — Windows 레지스트리를 임시 전환해 배경색이 실제로 바뀌는 것을 실측 후 원복 (2026-09-03 토글 도입 후 재실측: "시스템" 상태에서 OS 다크 + 새로고침 시 `data-theme="dark"`, 배경 `rgb(10,10,10)` 확인)
+- [x] 폼 label 연결 및 키보드 조작 가능
 
-→ 전 항목 통과 시 세 저장소에 `v1.0.0` 태그
+→ 전 항목 통과 시 세 저장소에 `v1.0.0` 태그. **37개 중 36개 통과 (2026-09-03 후속 검증 반영).** 남은 1개는 두 번째 렌더링 엔진 항목으로, **이 PC에 Chromium 외의 엔진이 설치되어 있지 않아 환경상 충족 불가**다(Firefox 설치가 선행되어야 한다). 태그는 이 항목의 처리 방침을 정한 뒤 별도로 승인받는다.
+
+> ### Phase 10 재검증 / 발견 기록 (2026-09-03)
+>
+> 계획 단계에서 "39개"로 셌던 체크리스트는 실제로 **37개**다(환경 7 · 인증 8 · 기능 9 · 보안 6 · UX 7). ROADMAP 원문 자체는 정확했고 계획 당시 집계가 틀렸다.
+>
+> **4곳 태그 집합 비교표** (보안 그룹에서 가장 결함 가능성이 높다고 판단한 항목 — 결과: 완전 일치)
+>
+> | 소스 | 태그 |
+> |---|---|
+> | Jsoup Safelist | `p h2 h3 strong em ul ol li blockquote pre code br a` |
+> | DOMPurify `ALLOWED_TAGS` | `p h2 h3 strong em ul ol li blockquote pre code br a` |
+> | Tiptap 실제 활성 확장 (`@tiptap/starter-kit`의 `.d.ts`로 직접 확인, strike·underline·horizontalRule 비활성화 반영) | 동일 13종 |
+> | 툴바 버튼 | 위 13종 중 `p`(기본값)·`li`(목록의 암시적 자식)·`br`(Shift+Enter)를 제외한 나머지에 버튼 존재 — 3개는 버튼이 없는 게 정상(암시적/키보드 접근) |
+>
+> **백엔드 테스트 실측 개수**: `./mvnw test` 19건 전부 통과. Surefire 리포트에 구 패키지(`com.example.*`, 8/28 잔존) 3건이 섞여 있어 타임스탬프로 걸러냈다. 현재 패키지 6개 클래스: `AuthControllerTest` 3 · `TodoControllerTest` 4 · `TodoRepositoryTest` 4 · `UserRepositoryTest` 4 · `CustomOAuth2UserServiceTest` 3 · `TodoBackendApplicationTests`(스모크) 1. 원래 "통합 테스트 8건" 표현(Auth 3+Todo 4+스모크 1)은 정확했다.
+>
+> **실측 중 발견해 즉시 수정한 결함 3건**
+>
+> 1. **Swagger UI 진입점이 401로 막혀 있었다.** `SecurityConfig`의 `PERMIT_ALL_PATHS`에 `/swagger-ui/**`만 있고 SpringDoc의 실제 진입점 `/swagger-ui.html`(→ `/swagger-ui/index.html` 리다이렉트)이 빠져 있었다. 경로 하나를 추가해 재기동 후 정상 렌더(2개 태그, 11개 오퍼레이션) 확인.
+> 2. **`CustomOAuth2UserServiceTest`의 주석이 실재하지 않는 「`CLAUDE.md` 14장」을 인용**하고 있었다(`CLAUDE.md`는 6장까지). 코드베이스 전체(백엔드·프론트엔드)를 grep해 이 1건 외에는 3~5장(유효 범위)만 있음을 확인 후 제거.
+> 3. **`TodoForm.tsx`가 "Cannot update a component while rendering a different component" 경고를 내고 있었다**(사용자가 실사용 중 발견해 보고). 렌더 중 상태 조정 패턴을 자기 자신이 아니라 부모(`NewTodoPage`/`[id]/page.tsx`)의 `setIsDirty`에 적용한 것이 원인 — `useEffect`로 옮겨 수정. `reportedDirty` 보조 state도 함께 제거됐다.
+>
+> **문서 오류 추가 발견 5건**: `docs/ROADMAP.md` 110·111번째 줄이 "PRD.md 5.1의 에러 문구 매핑 표"(존재하지 않음)와 "PRD.md 7장 비기능요구사항"(실제로는 5장)이라는, 이 문서 전체에서 가장 이른 지점의 오기였다. 253·302·827번째 줄의 "CLAUDE.md 6장" 3건도 실제 근거인 3장 절대 규칙 8로 정정했다. 이미 완료·병합된 Phase 3·7·8 절까지 포함해 함께 고쳤다(Phase 9에서도 같은 패턴을 발견해 과거 Phase 절까지 정정한 전례를 따름).
+>
+> **미해결 — 범위가 큰 결함 (사용자 보고 완료, 기록만 남기고 넘어가기로 결정, 2026-09-03)**
+>
+> `RESET_TOKEN_INVALID` 에러 코드가 enum에만 정의되어 있고 실제로 던지는 코드가 없다. 조사 결과 **비밀번호 재설정 기능이 백엔드·프론트엔드 양쪽 다 미구현**이다 — `PasswordResetToken` 엔티티·Repository·DTO·`LocalPasswordResetMailSender`는 만들어져 있지만 이를 연결하는 서비스·컨트롤러가 없고(`AuthController`는 signup/login/refresh/logout/me 5개뿐), 프론트엔드에도 관련 화면이 없다. `PRD.md` NF-30·NF-31, 이 문서의 `/api/auth/password/**` permitAll 설정 등 여러 문서가 이 기능의 존재를 전제하고 있다. 새 API+서비스+화면을 구현해야 하는 범위라 이번 Phase에서 만들지 않는다.
+>
+> **미확인 — 정상 흐름에서 도달 어려움**: `FORBIDDEN`(역할 기반 인가가 없어 트리거 경로 없음), `INTERNAL_ERROR`(서버를 살려둔 채 500을 강제해야 함, 재현 안 함).
+>
+> **대기 중**: 두 번째 브라우저 엔진(Edge) 확인 — PowerShell로 Edge를 열어 사용자에게 직접 확인을 요청했고 응답 대기 중이다.
+>
+> **자동화 아티팩트로 확정, 앱 결함 아님**: `computer.type`으로 회원가입 폼을 채워 제출했을 때 요청이 아예 안 나가고 폼이 리셋되는 것처럼 보이는 현상이 있었으나, JS로 React controlled input에 네이티브 값을 직접 주입해 재현하니 완전히 정상 동작(EMAIL_DUPLICATED 인라인 에러 정확 표시, 폼 상태 보존)했다. 이 세션의 입력 방식 문제였다.
+
+> ### Phase 10 후속 검증 (2026-09-03)
+>
+> 미확정 2건을 다시 파고들어 **1건 해소 + 결함 2건 발견·수정**했다. 통과 수는 35 → 36이다.
+>
+> #### 에러 문구 매핑 7종 — 해소
+>
+> | 코드 | 화면 문구 | 확인 경로 |
+> |---|---|---|
+> | `INVALID_INPUT` | 입력값이 올바르지 않습니다. | 실제 서버 응답 |
+> | `EMAIL_DUPLICATED` | 이미 사용 중인 이메일입니다. | 실제 서버 응답 |
+> | `UNAUTHORIZED` | 이메일 또는 비밀번호가 올바르지 않습니다. | 실제 서버 응답 |
+> | `NOT_FOUND` | 요청한 리소스를 찾을 수 없습니다. | 실제 서버 응답 |
+> | `INTERNAL_ERROR` | 서버 오류가 발생했습니다. | **실제 서버 응답** (아래 결함으로 재현됨) |
+> | `FORBIDDEN` | 접근 권한이 없습니다. | 응답 주입 — **프론트 매핑만** |
+> | `RESET_TOKEN_INVALID` | 링크가 만료되었거나 이미 사용되었습니다. | 응답 주입 — **프론트 매핑만** |
+> | (네트워크 실패) | 연결에 실패했습니다. | 실제 오프라인 재현 |
+>
+> 주입 2종은 **서버가 그 코드를 던지는 경로 자체가 없다.** `FORBIDDEN`은 `JwtAccessDeniedHandler`에만 있는데 CSRF가 비활성이고 인가 규칙이 `anyRequest().authenticated()` 하나뿐이라 `AccessDeniedException`이 발생할 수 없다(소유권 위반은 전부 404). `RESET_TOKEN_INVALID`는 비밀번호 재설정 API가 미구현이다. 두 경우 모두 `apiClient → normalize → toDisplayMessage → 화면 렌더`의 프론트 경로 전체는 실제로 통과시켰으나, **서버 동작을 확인한 것은 아니다.**
+>
+> #### 발견·수정한 결함 2건
+>
+> **1. 잘못된 요청 본문이 500으로 응답됐다** (백엔드, `fix: 잘못된 요청 본문이 500으로...`)
+>
+> `INTERNAL_ERROR` 재현 경로를 찾다가 발견했다. `priority: "NOT_A_PRIORITY"`나 `dueDate: "not-a-date"`를 보내면 `HttpMessageNotReadableException`이 전용 핸들러 없이 `@ExceptionHandler(Exception.class)` 폴백으로 떨어져 **500 INTERNAL_ERROR**가 나갔다. 클라이언트 오류이므로 400 INVALID_INPUT이 맞다. 500으로 응답하면 서버 로그에 ERROR로 쌓여 실제 장애와 구분되지 않는다.
+>
+> 같은 파일의 `MissingRequestCookieException` 핸들러에 *"이 핸들러가 없으면 아래 generic 핸들러로 떨어져 500이 나간다"*는 주석이 이미 있었다. 동일한 함정을 한 번 더 밟은 것이다.
+>
+> - 실측(수정 후): 잘못된 enum·날짜 → 400 `INVALID_INPUT`, 정상 요청 → 200, 빈 제목 → 400 + `details.title` 유지. `./mvnw test` 전체 통과
+>
+> **2. 긴 닉네임에서 헤더가 320px를 넘쳤다** (프론트, `fix: 긴 닉네임에서 헤더가...`)
+>
+> 반응형 항목이 `[x]`였지만 짧은 닉네임에서만 성립하고 있었다. 닉네임은 50자까지 허용되는데 축소 처리가 없었다. `min-w-0`이 없으면 flex 아이템의 최소 크기가 콘텐츠 크기로 고정돼 `truncate`만으로는 동작하지 않는다.
+>
+> #### 남은 1건 — 두 번째 렌더링 엔진
+>
+> ROADMAP이 대안으로 제시했던 **Edge는 Chromium(Blink)이라 "다른 엔진"이 아니다.** 지난 세션이 기다리던 Edge 확인은 받았더라도 이 항목을 충족시키지 못했을 것이다. 이 PC에는 Gecko·WebKit이 전혀 없어(Firefox 미설치, Playwright도 Blink) 환경상 충족 불가다. 선택지는 (a) Firefox 설치 후 확인, (b) 항목을 "단일 엔진 확인"으로 낮춰 명시적으로 인정, (c) 배포 후 실기기 확인으로 미룸 — 사용자 결정 사항이다.
+
+---
+
+## Phase 6 이후 변경 — UX 개선 6건 (2026-09-03)
+
+Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 기존 Phase의 결정을 고친 것이므로 여기에 기록한다.
+
+### 1. 마감일 하한
+
+`<input type="date">`에 `min`을 걸어 지난 날짜를 고를 수 없게 했다. `form`에 `noValidate`가 있어 브라우저 검증이 꺼져 있으므로 `validateDueDate`로 제출 경로도 막았다.
+
+**단, 하한은 상황에 따라 내려간다.** 서버(`Todo.java`)에는 날짜 제약이 없어 이미 지난 마감일을 가진 데이터가 실제로 존재할 수 있고, 그것을 수정하는 것까지 막으면 제목만 고치려 해도 걸린다. 기존 값이 오늘보다 이전이면 하한을 그 값까지 내린다.
+
+- 실측: 오늘(`2026-09-03`)이 `min`으로 걸림 / `2020-01-01` 주입 후 제출 → **POST 요청 발생하지 않음**, "마감일은 오늘 이후로 정해 주세요." 표시, `aria-invalid="true"`
+- 실측(엣지): `dueDate=2020-01-01`인 항목의 수정 화면 → `min`이 `2020-01-01`로 내려가고, 제목만 고쳐 저장 시 에러 없이 성공
+
+### 2. 할 일 추가 후 이동 경로
+
+`/todos/{id}` → `/todos`. ~~수정 화면은 종전대로 상세에 남는다.~~ → **수정 화면도 같은 규칙으로 통일했다(같은 날 후속 요청).** 저장 후 그 화면에 남을 이유가 없다. 둘 다 `replace`라 뒤로가기가 방금 떠난 편집 화면으로 되돌아오지 않는다.
+
+이동 전에 `setIsDirty(false)`를 먼저 호출한다. `useUnsavedChanges`가 dirty일 때 `history`에 쌓아둔 popstate 가드가 이 시점에 정리된다.
+
+- 실측: `/todos/10130`에서 제목 수정 후 저장 → `/todos`로 이동, 바뀐 제목이 목록에 반영, 이탈 확인 다이얼로그 뜨지 않음
+
+### 3. 다크 모드 토글 — **Phase 6 결정 번복**
+
+`PRD.md` F-33은 원래 다크 **토글**을 요구했다. Phase 6에서 "토글이 없어 FOUC만 생긴다"는 이유로 `prefers-color-scheme` 전용으로 축소했는데, 이는 순환 논리였다(토글이 없는 이유가 토글을 만들지 않았기 때문). Phase 10 검증이 이를 놓친 이유도 명확하다 — 체크리스트가 ROADMAP 기준("OS 다크 설정에 따라 전환")이었지 PRD F-33 기준이 아니었다.
+
+| 항목 | 내용 |
+|---|---|
+| 전환 신호 | `@media (prefers-color-scheme: dark)` → `html[data-theme="light\|dark"]` |
+| 토글 단계 | 3단 (시스템 / 라이트 / 다크). **기본값 "시스템"이라 기존 OS 연동 동작이 보존된다** <br>※ 아래 5번에서 순환 버튼 → 드롭다운 메뉴로 바뀌었다 |
+| 저장 | `localStorage["todo_theme"]`. "system"은 저장하지 않는다(값 없음 = 시스템) |
+| FOUC 방지 | `app/layout.tsx` `<head>`의 동기 스크립트가 첫 페인트 전에 `data-theme` 확정 |
+| 라이브러리 | 없음. `next-themes`를 쓰지 않는다(절대 규칙 11) |
+
+**`data-theme`에는 선택이 아니라 해석된 결과만 들어간다.** "시스템"은 스크립트가 `matchMedia`로 읽어 `light`/`dark` 중 하나로 확정한다. 그래서 CSS는 상태가 둘뿐이고 같은 다크 토큰을 두 벌 유지하지 않아도 된다.
+
+**`@custom-variant dark`가 반드시 필요하다.** shadcn의 `button`·`input`·`select`·`checkbox`가 `dark:` 유틸리티를 쓰는데, Tailwind 4 기본 `dark:`는 `prefers-color-scheme`이라 토큰만 바꾸면 그쪽이 따라오지 않는다.
+
+`useTheme`은 `localStorage`를 `useState`로 복제하지 않고 **`useSyncExternalStore`로 구독**한다. ESLint `react-hooks/set-state-in-effect`가 effect 내 동기 `setState`를 막아 처음 작성한 방식이 거부됐고, 그것이 올바른 신호였다 — `getServerSnapshot`이 분리돼 hydration 불일치가 구조적으로 생기지 않고 다른 탭의 변경도 `storage` 이벤트로 따라온다.
+
+`sonner`는 자기 DOM에 색을 직접 칠해 `data-theme`을 따르지 않으므로 선택값을 넘기는 `ThemeToaster`로 감쌌다.
+
+**실측 결과**
+
+| 확인 | 결과 |
+|---|---|
+| 3단 순환 | 다크 → 시스템(저장값 `null`) → 라이트 → 다크. 라벨·`data-theme`·저장값 모두 일치 |
+| 새로고침 유지 | `dark` 선택 후 새로고침 → `dark` 유지, 배경 `rgb(10,10,10)` |
+| FOUC | 서버 HTML에서 인라인 스크립트가 `<body>`보다 **앞**에 위치함을 확인 |
+| OS 연동 보존 | "시스템" 상태 + OS 다크 + 새로고침 → `data-theme="dark"`, 배경 `rgb(10,10,10)` |
+| 명시적 선택 우선 | OS 다크 + "라이트" 선택 → 새로고침해도 `light` 유지 |
+| shadcn 컴포넌트 | 다크에서 input·button 배경이 함께 어두워짐 (`@custom-variant` 동작 확인) |
+| hydration 경고 | 콘솔에 없음 |
+
+> **실측하지 못한 것**: 앱 실행 **중** OS 테마를 바꿨을 때의 실시간 반영. 이 자동화 환경의 Chrome이 `prefers-color-scheme`의 `change` 이벤트를 아예 발생시키지 않았다(훅과 동일한 방식으로 단 관측용 리스너에도 오지 않았고, `matches` 값만 바뀌었다). 코드 경로 자체는 표준 `matchMedia` 구독이며, 페이지 로드 시 OS 반영은 위 표대로 실측됐다.
+
+### 4. 할 일 추가 버튼을 화면당 하나로
+
+빈 목록에서 헤더 버튼과 EmptyState 버튼이 **동시에** 보여 같은 동작을 하는 버튼이 둘이었다.
+
+~~빈 상태에서는 헤더 버튼을 감추고 EmptyState 버튼만 남긴다 — 안내 문구 바로 아래에 버튼이 있어야 시선을 위로 되돌리지 않는다. 검색 결과 없음은 제외한다. 표시 조건은 `showsEmptyCta` 하나로 계산해 헤더와 렌더 분기가 함께 쓴다.~~
+
+→ **번복됨 (같은 날 후속, 아래 6번 참고).** 버튼 개수 문제는 해결됐지만 **버튼 위치가 상태에 따라 움직이는** 새 문제를 만들었다. `showsEmptyCta`도 함께 제거됐다.
+
+### 5. 테마 버튼을 드롭다운 메뉴로
+
+아이콘 하나로 3단을 순환하던 방식은 현재 상태도, 다음에 무엇이 될지도 아이콘만 보고는 알기 어려웠다. 세 옵션을 이름과 함께 펼쳐 보이고 직접 고르게 한다.
+
+- `DropdownMenuRadioGroup` 사용 → 현재 선택에 인디케이터가 붙고 `role="menuitemradio"` / `aria-checked`가 보조기술에 그대로 전달된다
+- 트리거에 `ChevronDown`을 붙여 "눌리면 뭔가 열린다"는 신호를 준다. 없으면 이전 순환 버튼과 외형이 구분되지 않는다
+- 옵션 정보는 배열이 아니라 `Record`다. `noUncheckedIndexedAccess`가 켜져 있어 배열 인덱스는 항상 `undefined` 가능성을 달고 다닌다
+
+**새 의존성 없음.** 이 저장소는 개별 `@radix-ui/react-*` 대신 통합 `radix-ui`(^1.6.7) 패키지를 쓰고 `dropdown-menu`가 이미 그 안에 있다. 따라서 절대 규칙 11에 해당하지 않는다. shadcn이 생성한 `ui/dropdown-menu.tsx`는 프로젝트 Prettier 설정에 맞춰 포맷했다(기존 `ui/` 컴포넌트와 동일한 처리).
+
+**실측 결과**
+
+| 확인 | 결과 |
+|---|---|
+| 메뉴 열기 | 3개 항목이 이름·아이콘과 함께 표시, 현재 선택에 인디케이터 |
+| 마우스 선택 | "다크" 클릭 → `data-theme="dark"`, 배경 `rgb(10,10,10)`, `localStorage` 저장, 트리거 아이콘 갱신 |
+| 키보드 조작 | 트리거 포커스 → `Enter` 열림(`aria-expanded=true`, 포커스가 메뉴 안으로) → `Home`/`↓`로 이동 → `Enter` 선택 성공 |
+| `Escape` | 닫히고 포커스가 트리거로 복귀 |
+| 선택 후 포커스 | 트리거로 복귀 (측정을 너무 일찍 하면 복원 중이라 `false`로 보인다) |
+| aria | `aria-haspopup="menu"`, `aria-expanded` 관리, `role="menuitemradio"` 3개, `aria-checked` 현재 값에만 `true` |
+| 터치 타겟 | 트리거 54×44px (NF-22 44px 충족) |
+
+> **발견 — 이번 변경이 원인이 아닌 기존 문제**: 헤더는 **닉네임이 길면 320px에서 넘친다.** 닉네임 `themetester`(11자, 78px)일 때 내용물 총폭이 335px로 15px 넘쳤고, `정석`(2자)으로 바꾸면 281px로 39px 여유가 생겼다. 트리거의 `ChevronDown`은 12px이라 이를 빼도 긴 닉네임에서는 여전히 넘친다 — 원인은 닉네임 길이다. 닉네임은 최대 50자(`NICKNAME_MAX_LENGTH`)까지 허용되므로 헤더에 `min-w-0`·`truncate` 등의 처리가 필요하다. ~~이번 요청 범위 밖이라 기록만 남긴다.~~ → **Phase 10 후속 검증에서 수정 완료**(위 「Phase 10 후속 검증」의 결함 2번).
+
+### 6. 할 일 추가 버튼 위치 고정 — 4번 번복
+
+4번에서 버튼 개수는 하나로 만들었지만, **버튼이 상태에 따라 화면을 가로질러 움직이는** 문제를 새로 만들었다. 사용자가 검색 중에 발견했다.
+
+- 재현 실측: 할 일 0개일 때 본문 중앙 `(660, 405)` → 검색어를 입력해 결과가 없어지면 제목줄 우측 `(977, 89)` → 검색어를 지우면 다시 중앙
+- 검색 디바운스가 300ms라 **타이핑을 멈춘 뒤에야** 버튼이 움직인다. 사용자가 원인을 짐작하기 어려운 형태다
+
+헤더 버튼을 항상 두고 EmptyState의 버튼을 없앤다. 버튼이 화면당 하나라는 4번의 성질은 유지된다. 빈 화면에서 행동 수단을 잃지 않도록 안내 문구를 `"첫 번째 할 일을 추가해 보세요."` → `"위쪽 '할 일 추가' 버튼으로 첫 번째 할 일을 만들어 보세요."`로 바꿔 버튼을 가리키게 했다.
+
+조건을 한 곳에서 계산하려고 뒀던 `showsEmptyCta`도 제거했다. 버튼이 한 자리에 고정되면서 헤더와 동기화할 대상 자체가 사라졌다.
+
+**교훈**: "빈 상태에는 그 화면의 primary action을 둔다"는 통념을 따랐지만, 이 화면은 검색으로 **빈 상태를 드나든다.** 상태 전이가 잦은 화면에서는 위치 안정성이 근접성보다 중요하다.
+
+- 실측(7가지 상태의 `a[href="/todos/new"]` 위치·개수): 할 일 0개 / 입력 직후(디바운스 중) / 검색 결과 없음 / 검색어 지운 뒤 / 할 일 있음 / 검색 로딩 중 / 검색 결과 있음 — **전부 `x=977, y=89`, 개수 1개로 동일**
 
 ---
 
@@ -749,6 +1077,18 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
      > EC2에 `postgresql-client` 설치 → `scp`로 DDL 파일을 EC2에 전송 → **EC2에서 `psql -h <rds-endpoint> -U <user> -d todolist_db -f schema.sql`** 실행.
      > 이 경로를 준비하지 않으면 11-1 중반에 막힌다. EC2를 먼저 띄운 뒤 RDS 스키마를 적용하는 순서가 된다.
 
+### 11-1-1. 비밀번호 재설정 메일 발송 (Phase 14에서 이관)
+
+Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profile("local")`)으로 기능을 완성했다.
+**운영 프로파일용 구현체는 아직 없다.** `PasswordResetMailSender` 구현 빈이 하나도 없으면
+`PasswordResetService` 주입이 실패해 **운영 프로파일 기동 자체가 안 된다** — 배포 전 반드시 처리한다.
+
+- `@Profile("prod")` SMTP 구현체 작성 (AWS SES 또는 외부 SMTP)
+- `spring-boot-starter-mail` 의존성 추가 — **`CLAUDE.md` 절대 규칙 11에 따라 착수 시 승인을 받는다**
+- 운영 프로파일에 SMTP 설정 추가 (자격증명은 전부 환경변수)
+- 발신 도메인 확보·검증(SES는 도메인 또는 발신 주소 검증이 선행 조건이다).
+  `frontend.url`은 이미 있으므로 링크 조립에 그대로 재사용한다
+
 ### 11-2. 백엔드 (EC2)
 
 - EC2에 JDK 21 설치
@@ -761,3 +1101,136 @@ todoKeys.detail(id)   = ['todos', 'detail', id] as const
 ### 11-3. HTTPS (방식 확정: nginx + certbot)
 
 개인 프로젝트 규모이므로 **EC2 한 대에 nginx 리버스 프록시 + Let's Encrypt**로 간다. ALB + ACM은 관리가 편하지만 상시 비용... (12KB 남음)
+
+---
+
+## Phase 12 — 로컬 이미지 첨부
+
+**저장소**: backend + frontend + 문서 (F-46 ~ F-51, NF-32 ~ NF-34)
+
+> 설계 정본은 `docs/appendFileImage.md`다. 이 Phase의 작업 항목은 그 문서의 요약이며,
+> 충돌 시 `CLAUDE.md` > `PRD.md` > 이 문서 > `appendFileImage.md` 순으로 우선한다.
+
+**작업**
+
+- `application.yml` → `application.properties` 전환 (6개 파일 + `.gitignore` 11줄 + 문서 참조)
+  > `.properties`는 **ISO-8859-1로 로딩**된다. 값에는 ASCII만 쓰고 한글은 주석에만 둔다.
+  > Spring Boot 4.1 문서: *"By default, properties files are imported using the ISO-8859-1 charset."*
+- `attachments` 테이블 + `Attachment` 엔티티 + `AttachmentRepository` (`docs/SCHEMA.md` 5장)
+  > Flyway를 도입하지 않는다. local은 `ddl-auto: update`, prod는 `db/add-attachments.sql` 수동 실행.
+- `StorageService` 인터페이스 + `LocalStorageService` + `StorageSignature`
+  > 서명 토큰은 **`pom.xml`에 이미 있는 jjwt를 재사용**한다. `javax.crypto.Mac`으로 새로 짜지 않는다.
+  > 단 `STORAGE_SIGNING_SECRET`은 `JWT_SECRET`과 **반드시 분리**한다.
+- `AttachmentService` + `AttachmentController` + `SecurityConfig` permitAll 2경로
+  > 로컬 업로드 URL에도 **서명 토큰을 붙인다.** 로컬이 JWT를 요구하면 프론트가 로컬/S3를 분기해야 하고,
+  > S3 presigned PUT은 `Authorization` 헤더가 붙으면 서명 검증에 실패한다. 이 지점이 F-50의 성립 조건이다.
+- **`HtmlSanitizer` Safelist에 `img` 추가** + `TodoService` 연결 로직 + 고아 정리 배치
+  > 첨부 수집은 **반드시 `sanitize()` 이후의 HTML**을 대상으로 한다. 순서가 뒤바뀌면
+  > sanitize가 제거할 태그의 첨부까지 `LINKED`로 승격되어 본문에 없는 파일이 영구 보존된다.
+- **통합 테스트 9~12번 작성** (기존 1~8번 체계를 잇는다)
+- 프론트: `types/attachment.ts` · `lib/attachments.ts` · `hooks/useAttachments.ts` ·
+  Tiptap 이미지 노드 · **`lib/sanitize.ts`의 `ALLOWED_TAGS`에 `img` 추가** · `globals.css`
+  > `uploadFile`만 **`apiClient`를 우회**해 순수 `fetch`를 쓴다. `apiClient`는 모든 요청에
+  > `Authorization` 헤더와 `credentials: "include"`를 강제하는데, 그대로 S3에 보내면 서명이 깨진다.
+  > 진행률은 포기하고 불확정 스피너로 간다. `fetch`는 업로드 진행률을 제공하지 않는다.
+
+**DoD**
+
+- [x] `./mvnw spotless:apply` 후 `./mvnw verify` 종료 코드 0 — 기존 19건 + 신규 9~12번 전부 통과
+  > 최종 38건 통과(`BUILD SUCCESS`). 신규분은 `AttachmentControllerTest`(9~12번) + `StorageSignatureTest` +
+  > `LocalStorageServiceTest` + `StorageProfileSwitchTest`다 (2026-09-07)
+- [x] `npm run check && npm run build` 종료 코드 0 — 커밋 `72a7050` 시점에 확인 (2026-09-07)
+- [x] `docs/CHECKLIST.md` 16장 16개 시나리오 전수 통과 — 16.1~16.16 전부 ☑ (2026-09-07)
+- [x] 저장된 본문 HTML에 `src`가 없고 `data-attachment-id`만 있다 (F-49) — CHECKLIST 16.16
+- [x] 타인 `attachmentId` 접근이 **404**다 (F-48, NF-03) — CHECKLIST 16.9 + 통합 테스트 10번
+- [x] `upload/` 폴더가 `todo-project` git status에 잡히지 않는다 — CHECKLIST 16.10
+- [x] `image/svg+xml` 업로드가 거부된다 (F-47) — CHECKLIST 16.13 + 통합 테스트 11번
+
+---
+
+## Phase 13 — S3 전환
+
+**저장소**: backend (F-50)
+
+> **Phase 11(AWS 배포) 완료를 전제로 한다.** 버킷·IAM이 없으면 진행할 수 없다.
+
+**작업**
+
+- AWS SDK v2 `s3` 의존성 추가 — BOM으로 버전 관리 (승인됨)
+  > `s3-presigner`는 **별도 아티팩트가 아니다.** `S3Presigner` 클래스는 `s3` 모듈 안에 포함돼 있다.
+  > 별도로 추가하면 Maven이 "`version`이 missing"이라는 에러를 낸다 — BOM의 `dependencyManagement`에
+  > 그런 아티팩트 자체가 없기 때문이다. `./mvnw dependency:tree`로 실제 해석 결과를 확인하고 알아냈다.
+- `config/S3Config` (`S3Client`, `S3Presigner` 조건부 빈) + `service/storage/S3StorageService`
+  > 자격증명은 `DefaultCredentialsProvider`가 자동 처리한다. **코드에 분기를 두지 않는다.**
+  > 로컬 시험은 환경변수, EC2는 IAM Role.
+  > `S3Client.builder()...build()`와 `S3Presigner.builder()...build()`는 생성 시점에 네트워크 호출을
+  > 하지 않는다(지연 연결). 그래서 실제 버킷 없이도 `@SpringBootTest`로 빈 배선만 검증할 수 있다
+  > (`StorageProfileSwitchTest`).
+- `application-prod.properties`에 `app.storage.type=s3` + 버킷·리전
+- AWS 콘솔: 버킷 CORS(`PUT`/`GET`/`HEAD`, `AllowedHeader`에 **`Content-Type` 필수**),
+  퍼블릭 액세스 차단 유지, IAM은 해당 버킷의 `PutObject`/`GetObject`/`DeleteObject`만
+  > presigned PUT은 **`Content-Type`이 서명에 포함**된다. presign 시 보낸 값과 PUT 헤더 값이
+  > 한 글자라도 다르면 403이다. 로컬 테스트에서는 재현되지 않고 이 Phase에서만 터진다.
+
+**DoD**
+
+- [x] `app.storage.type=s3`로 기동해 Phase 12의 16개 시나리오가 동일하게 통과한다
+  > 실제 버킷(`todolist-dev-ojs933327`, ap-northeast-2)으로 presign → PUT → complete → GET 전체 흐름을
+  > 라이브로 확인했다. 바이트 완전 일치, Content-Type 서명 일치, 소유권 404까지 정상 (2026-09-07).
+  > 최초 확인 시 버킷 정책에 `s3:GetObject`를 `Principal: "*"`로 공개 허용하는 `PublicReadGetObject`
+  > 정책(정적 웹사이트 호스팅 예시 정책)이 남아 있어 서명 없는 접근이 열려 있었다 — 코드 결함이 아니라
+  > 버킷 설정 문제였다. 정책 삭제 후 `403 AccessDenied`로 정상 차단 확인 (2026-09-07, `docs/CHECKLIST.md`
+  > 16-1.6). presigned URL은 이 정책과 무관한 별개 인증 경로라 이 수정이 위 흐름에 영향을 주지 않는다.
+- [x] **`todo-frontend`에 커밋이 발생하지 않는다** (git status 클린) — F-50의 최종 수용 기준
+  > Phase 12·13 커밋 완료 후 세 저장소 모두 git status 클린 확인 (2026-09-07)
+- [x] `app.storage.type=local`로 되돌리면 다시 로컬 스토리지로 동작한다
+  > `StorageProfileSwitchTest` + 로컬 테스트 스위트 38건이 `app.storage.type=local`로 통과 (2026-09-07)
+- [x] AWS 키가 소스 어디에도 없다 (NF-05) — `grep -rn "AKIA"` 0건 확인 (2026-09-07)
+
+---
+
+## Phase 14 — 비밀번호 재설정
+
+**저장소**: backend + frontend + 문서 · **관련 요구사항**: F-41 ~ F-45, NF-30, NF-31
+
+> ### 이 Phase가 뒤늦게 생긴 이유 (2026-09-07)
+>
+> 비밀번호 재설정은 `PRD.md`에 F-41~F-45로 정의돼 있고 화면 표(7.5)에 흐름까지 그려져 있었으나,
+> **이 문서의 「요구사항 ↔ Phase 추적표」에 행이 없었다.** 그 표는 스스로 *"여기에 행이 없는 P0는
+> 구현되지 않는다"*고 경고하고 있었고, 실제로 그대로 됐다 — 엔티티·리포지토리·DTO·메일 발송 인터페이스·
+> `ErrorCode.RESET_TOKEN_INVALID`·`SecurityConfig`의 permitAll 경로·`password-reset-token.expiration-minutes`
+> 설정값까지 다 만들어져 있는데 **이걸 잇는 서비스와 컨트롤러만 없는** 상태로 남았다.
+> Phase 10 검증에서 "`RESET_TOKEN_INVALID`를 던지는 코드가 없다"는 형태로 발견됐다.
+> 이번에 추적표에 PWD-01~07 행을 먼저 넣고 이 Phase를 만들었다.
+
+**작업**
+
+- `service/PasswordResetService` — 요청·검증·확정 3개 흐름
+  > 토큰 생성·해시는 `RefreshTokenService`의 방식(`SecureRandom` 32바이트 → Base64URL,
+  > SHA-256 → hex)을 그대로 따른다. 기존 코드를 공용 유틸로 추출하지 않는다.
+  > 재설정 성공 시 `refreshTokenService.revokeAllForUser(userId)`를 **재사용**한다 (F-44).
+- `service/PasswordResetRateLimiter` — NF-30(이메일·IP 10분 3회). JDK만 사용하고 Phase 12에서
+  만든 `SchedulingConfig`의 `@EnableScheduling`으로 만료 항목을 주기 정리한다
+- `controller/PasswordResetController` — `/api/auth/password/{forgot,verify,reset}`
+  > 경로는 `PRD.md` 7.5가 지정한 값이다. `SecurityConfig`의 `PERMIT_ALL_PATHS`에
+  > `/api/auth/password/**`가 **이미 있으므로 보안 설정 변경이 필요 없다.**
+- `domain/User`에 `changePassword(String encodedPassword)` 추가 (`@Setter` 금지 규칙)
+- `ErrorCode`에 `TOO_MANY_REQUESTS`(429) 추가 + 프론트 `ErrorCode` 유니온·문구 매핑 동기화
+- **통합 테스트 13번 작성** (기존 1~12번 체계를 잇는다)
+- 프론트: `(auth)/forgot-password`·`(auth)/reset-password` 화면 2개 +
+  `hooks/usePasswordReset.ts` + 로그인 화면에 "비밀번호를 잊으셨나요?" 링크
+  > `reset-password`는 `useSearchParams`로 `?token=`을 읽으므로 `login/page.tsx`처럼
+  > `<Suspense>`로 감싸야 한다.
+
+**DoD**
+
+- [ ] `./mvnw spotless:apply` 후 `./mvnw verify` 종료 코드 0 — 기존 38건 + 신규 13번 통과
+- [ ] `npm run check && npm run build` 종료 코드 0
+- [ ] `docs/CHECKLIST.md` 17장 시나리오 전수 통과
+- [ ] 없는 계정·소셜 전용 계정·정상 계정의 응답과 화면 문구가 **완전히 동일**하다 (NF-31, F-45)
+- [ ] 같은 링크를 두 번 쓰면 두 번째가 400 `RESET_TOKEN_INVALID`다 (F-43)
+- [ ] 재설정 후 기존 세션이 전부 끊기고 **자동 로그인되지 않는다** (F-44)
+- [ ] 10분 내 4번째 요청이 429로 막힌다 (NF-30)
+
+> **운영 SMTP 발송은 이 Phase의 범위가 아니다.** 로컬은 `LocalPasswordResetMailSender`가 콘솔에
+> 링크를 출력하는 방식으로 기능 전체를 완성·검증한다. 실제 메일 발송은 Phase 11로 이관했다.

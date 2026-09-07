@@ -57,6 +57,12 @@ Desktop.ini
 # (todo-backend/·todo-frontend/를 통째로 무시하는 것과 같은 이유).
 /shrimp_data/
 
+### 첨부 파일 업로드 (PRD F-46) ###
+# 로컬 스토리지 실체. 어느 저장소에도 커밋하지 않는다.
+# todo-backend/todo-frontend 의 .gitignore 는 이 경로를 볼 수 없다 -- 자기 저장소 밖이고,
+# gitignore 패턴은 상위 경로(../)를 참조할 수 없기 때문이다. 그래서 여기에만 둔다.
+upload/
+
 ### 로그 / 임시 파일 ###
 *.log
 logs/
