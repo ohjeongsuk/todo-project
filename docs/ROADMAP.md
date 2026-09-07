@@ -1,6 +1,6 @@
 # ROADMAP — Todo List 프로젝트
 
-> **버전** 1.8 · **최종 수정** 2026-08-28
+> **버전** 1.9 · **최종 수정** 2026-09-07
 > 이 문서는 "어떤 순서로 만드는가"를 정의하며, **완료 판정의 정본**이다.
 > **한 번에 전체를 생성하지 않는다.** Phase 단위로 진행하고, 각 Phase의 DoD를 모두 만족한 뒤 다음으로 넘어간다.
 > 기술 규칙은 `CLAUDE.md`, 기능 정의는 `PRD.md` 참조.
@@ -1044,18 +1044,18 @@ Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 
 
 **저장소**: 전체 · **Docker 사용하지 않음**
 
-> ### ⚠️ 미해결 리스크 — Amplify의 Next.js 16 지원 (2026-09-01 확인)
+> ### ⚠️ 알려진 리스크 — Amplify의 Next.js 16 지원 (2026-09-01 확인, 2026-09-07 결정)
 >
 > AWS 공식 문서는 이 시점에도 Amplify Hosting의 Next.js 지원 범위를 **12~15**로 명시하고 있고 **16은 목록에 없다.**
 > 출처: [SSR supported features](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-supported-features.html) · [Amplify support for Next.js](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-amplify-support.html)
 >
-> 프로젝트는 2026-09-01에 **Next.js 16.3.3 유지**를 확정했다(실제 코드·`CLAUDE.md` 3장·`docs/guides` 5개 문서가 모두 16 기준이라 15 다운그레이드 비용이 더 컸다). 따라서 이 Phase 착수 시 **다음 중 하나를 먼저 결정해야 한다**:
+> **결정 (2026-09-07): 옵션 1 — 실제로 Amplify에 배포해 동작 여부를 직접 확인한다.** 미지원 목록이 곧 실패를 뜻하지는 않으므로, 다운그레이드나 호스팅 교체 전에 먼저 시도한다(실제 코드·`CLAUDE.md` 3장·`docs/guides` 5개 문서가 모두 16 기준이라 15 다운그레이드는 비용이 크다). **11-4에서 빌드·SSR이 실패하면** 그 시점에 다음을 순서대로 검토한다(변경 범위가 작은 순):
 >
-> 1. 실제로 Amplify에 배포해 동작 여부를 확인한다 (미지원 목록이 곧 실패를 뜻하지는 않는다)
-> 2. 배포 시점에 15.x로 다운그레이드한다
+> 1. 실패 원인이 좁은 범위(특정 API 미지원 등)면 해당 부분만 우회
+> 2. 15.x로 다운그레이드 (`CLAUDE.md` 3장·`docs/guides` 5개 문서를 함께 수정해야 한다)
 > 3. 호스팅을 바꾼다 (OpenNext + SST, Vercel, EC2 자체 호스팅 등)
 >
-> **이 결정 전에는 Phase 11을 시작하지 않는다.**
+> 대안으로 넘어가는 경우 이 문서와 위에서 언급한 문서들을 함께 갱신한다.
 
 ### 11-0. 사전 준비
 
@@ -1100,7 +1100,57 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
 
 ### 11-3. HTTPS (방식 확정: nginx + certbot)
 
-개인 프로젝트 규모이므로 **EC2 한 대에 nginx 리버스 프록시 + Let's Encrypt**로 간다. ALB + ACM은 관리가 편하지만 상시 비용... (12KB 남음)
+개인 프로젝트 규모이므로 **EC2 한 대에 nginx 리버스 프록시 + Let's Encrypt**로 간다. ALB + ACM은 관리가 편하지만 상시 비용이 발생해 이 규모에는 과하다.
+
+- EC2에 nginx 설치
+- nginx가 80/443을 받아 `localhost:8080`(Spring Boot)으로 리버스 프록시
+  - 80은 443으로 리다이렉트만 한다 (평문 응답 금지 — 11-2에서 이미 결정)
+  - `proxy_set_header X-Forwarded-Proto $scheme;` · `X-Forwarded-For $proxy_add_x_forwarded_for;` · `X-Forwarded-Host $host;`를 반드시 넣는다 (아래 forward-headers 설정의 전제)
+- `certbot --nginx -d api.example.com`으로 인증서 발급
+  > Route 53(또는 DNS 제공자)에 `api.example.com` A 레코드가 EC2를 가리키도록 **먼저** 만들어 둬야 certbot의 HTTP-01 챌린지가 통과한다.
+- **`application-prod.properties`에 `server.forward-headers-strategy=framework` 추가.** nginx가 TLS를 종료하고 백엔드에는 평문 HTTP로 전달하므로, 이 설정이 없으면 Spring이 모든 요청을 `http`로 인식한다. 영향받는 지점:
+  - Google OAuth2 리다이렉트 URI가 `{baseUrl}/login/oauth2/code/google`로 조립될 때 스킴이 `http`가 되어, 구글 콘솔에 등록한 `https://...` 리다이렉트 URI와 불일치해 콜백이 실패한다
+  - 프록시 구간의 스킴 인식이 꼬이면 `X-Forwarded-*` 기반의 다른 보안 판단에도 영향을 줄 수 있어 함께 켠다
+- certbot 자동 갱신 확인 — 설치 시 함께 등록되는 systemd timer(`certbot.timer`)가 활성 상태인지 확인하고 `certbot renew --dry-run`으로 사전 점검
+
+### 11-4. 프론트엔드 (Amplify)
+
+> ⚠️ 위 "알려진 리스크" 콜아웃 참조. Next.js 16이 Amplify 공식 지원 목록(12~15) 밖이므로, **이 단계의 첫 빌드·배포 결과가 이번 Phase 전체 방향을 가른다.**
+
+- AWS Amplify Hosting 콘솔에서 `todo-frontend` GitHub 저장소 연결 (배포 브랜치: `main`)
+- 빌드 설정 — `npm ci` → `npm run build`. Amplify가 자동 감지한 빌드 스펙을 그대로 쓰되, 감지가 틀리면 `amplify.yml`을 직접 추가한다
+- 환경변수 등록: `NEXT_PUBLIC_API_BASE_URL=https://api.example.com` (11-3에서 발급한 도메인)
+- 커스텀 도메인 연결 (`todo.example.com`)
+- **첫 빌드·SSR 동작을 직접 확인한다.**
+  - 빌드 로그에서 Amplify가 Next.js 16을 SSR 컴퓨트로 인식하는지, 빌드 자체가 성공하는지 확인
+  - 배포된 URL에서 서버 컴포넌트(레이아웃 등)가 정상 렌더되는지, `'use client'` 컴포넌트가 정상 하이드레이션되는지 확인
+  - 실패하면 위 리스크 콜아웃의 대안 1→2→3 순서로 넘어간다. 어떤 실패였는지(빌드 실패/런타임 500/부분 기능 깨짐)를 이 문서에 기록한 뒤 진행한다
+
+### 11-5. 도메인 전환 마무리 (백엔드 설정 갱신)
+
+프론트·백엔드 도메인이 11-3·11-4에서 실제로 확정된 뒤에만 할 수 있다.
+
+- Google Cloud Console → OAuth 클라이언트의 승인된 리다이렉트 URI에 `https://api.example.com/login/oauth2/code/google` 추가 (로컬용 `http://localhost:8080/...`은 유지)
+- EC2 systemd `EnvironmentFile`에 운영 환경변수 채우기
+  - `CORS_ALLOWED_ORIGIN=https://todo.example.com`
+  - `FRONTEND_URL=https://todo.example.com` (비밀번호 재설정 링크 조립에 사용 — `CLAUDE.md` 5장)
+  - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+  - `AWS_S3_BUCKET` / `AWS_REGION` / `STORAGE_SIGNING_SECRET` (Phase 13에서 이미 정의된 값 재사용)
+  - 11-1-1에서 만든 SMTP/SES 자격증명
+- systemd 서비스 재시작 후 기동 로그에서 `spring.profiles.active=prod`로 뜨는지 확인
+
+**DoD**
+
+- [ ] `https://api.example.com/swagger-ui/index.html`이 200으로 열림 (인증서 유효, nginx 프록시 정상)
+- [ ] `http://api.example.com`이 `https://`로 리다이렉트됨 (평문 응답 없음)
+- [ ] `https://todo.example.com`에서 서버 컴포넌트·클라이언트 컴포넌트가 정상 렌더됨 (Amplify 빌드·SSR 동작 확인 — 11-4의 실질적 판정 지점)
+- [ ] 운영 URL에서 회원가입 → 로그인 → Todo 생성이 실제로 성공함 (cross-site CORS·쿠키 설정 검증)
+- [ ] 운영 URL에서 구글 로그인 콜백이 성공함 (`server.forward-headers-strategy` + 구글 콘솔 리다이렉트 URI 등록 검증)
+- [ ] 브라우저 개발자도구에서 `refresh_token` 쿠키가 `Secure; HttpOnly; SameSite=None`으로 설정됨을 확인
+- [ ] 로그아웃 후 새로고침 시 `/login`으로 이동함 (서버 측 Refresh Token 폐기 확인 — 클라이언트 삭제만으로 끝나지 않았는지)
+- [ ] 비밀번호 재설정 요청 시 콘솔 로그가 아니라 실제 이메일이 발송됨 (11-1-1 SMTP/SES 구현체 검증)
+- [ ] `certbot renew --dry-run` 성공 (자동 갱신 준비 확인)
+- [ ] `todo-backend`·`todo-frontend` 소스 어디에도 AWS/Google 키가 하드코딩되어 있지 않음 — `grep -rn "AKIA"` 0건
 
 ---
 
