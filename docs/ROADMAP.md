@@ -1081,11 +1081,44 @@ Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 
      > EC2에 `postgresql-client` 설치 → `scp`로 DDL 파일을 EC2에 전송 → **EC2에서 `psql -h <rds-endpoint> -U <user> -d todolist_db -f schema.sql`** 실행.
      > 이 경로를 준비하지 않으면 11-1 중반에 막힌다. EC2를 먼저 띄운 뒤 RDS 스키마를 적용하는 순서가 된다.
 
+> **✅ 완료 (2026-09-09) — 다만 위 전제와 실제가 달랐다.**
+>
+> **1) RDS는 프라이빗이 아니라 퍼블릭 액세스 상태다.** 로컬 PC에서 엔드포인트로 바로 접속됐다.
+> 그래서 EC2 경유 없이 로컬에서 스키마를 적용했고, 위 ⚠️ 콜아웃의 우회 경로는 쓰지 않았다.
+> **이는 11-1이 요구한 "프라이빗 서브넷 + 퍼블릭 액세스 비활성화"와 어긋난다.** 지금은 마스터 비밀번호
+> 하나가 유일한 방어선이다. 실사용자 오픈 전에 퍼블릭 액세스를 끄고 보안그룹을 EC2로 제한할 것.
+>
+> **2) 개발 내내 RDS의 `postgres` 데이터베이스를 직접 써왔다.** `application-local.properties`가
+> localhost가 아니라 RDS를 가리키고 있었고 `ddl-auto=update`였다. 그 결과 `postgres` DB에 스키마와
+> 데이터(users 34행 / todos 10,144행 / attachments 21행)가 이미 쌓여 있었다. todos 1만여 행은
+> `seed-perf.sql` 성능 테스트 데이터다.
+>
+> **3) 조치 (2026-09-09 결정): 빈 `todolist_db`를 새로 만들고 스키마만 적용했다.**
+> 성능 테스트 데이터가 운영 DB에 섞이지 않게 하려는 것이다. 기존 데이터는 `postgres` DB에 그대로
+> 남아 있어 필요하면 나중에 옮길 수 있다. 운영 DB명은 `CLAUDE.md` 절대 규칙 2대로 `todolist_db`다.
+>
+> **4) `db/schema.sql` 추출은 `pg_dump`가 아니라 Hibernate 스키마 생성으로 했다.**
+> 로컬 클라이언트가 17.x인데 RDS 서버가 18.3이라 `pg_dump`가 버전 불일치로 덤프를 거부했다
+> (`psql` 접속 자체는 된다). 엔티티 정의에서 DDL을 뽑고, `@Table(indexes=...)`로 만들 수 없는
+> `LOWER(title)` 함수 기반 인덱스만 `db/add-title-index.sql` 기준으로 보강했다.
+> 적용 후 prod 프로파일(`ddl-auto=validate`)로 실제 기동해 정합성을 확인했다.
+
 ### 11-1-1. 비밀번호 재설정 메일 발송 (Phase 14에서 이관)
 
 Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profile("local")`)으로 기능을 완성했다.
 **운영 프로파일용 구현체는 아직 없다.** `PasswordResetMailSender` 구현 빈이 하나도 없으면
 `PasswordResetService` 주입이 실패해 **운영 프로파일 기동 자체가 안 된다** — 배포 전 반드시 처리한다.
+
+> **⏸ 임시 조치 (2026-09-09) — 해소되지 않았다. 이월된 항목이다.**
+>
+> EC2 배포(11-2)를 먼저 진행하기 위해 `LocalPasswordResetMailSender`의 `@Profile("!prod")` 제한을
+> **임시로 풀어** 운영에서도 콘솔 로그 방식이 뜨게 했다. 기동 실패는 해소됐지만 **메일 발송 기능은
+> 여전히 없다.** 운영에서 이 빈이 활성화되면 기동 시 WARN 로그를 남기도록 해뒀다.
+>
+> **감수 중인 리스크:** 재설정 링크가 서버 로그(journald)에 평문으로 남는다. 즉
+> **EC2 로그 열람 권한이 곧 임의 계정의 비밀번호 재설정 권한**이 된다.
+> **실사용자에게 공개하기 전에 반드시 해소한다.** 아래 SMTP 구현체를 만들면서
+> `@Profile("!prod")`를 복원하는 것이 해소 조건이다.
 
 - `@Profile("prod")` SMTP 구현체 작성 (AWS SES 또는 외부 SMTP)
 - `spring-boot-starter-mail` 의존성 추가 — **`CLAUDE.md` 절대 규칙 11에 따라 착수 시 승인을 받는다**
@@ -1094,6 +1127,33 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
   `frontend.url`은 이미 있으므로 링크 조립에 그대로 재사용한다
 
 ### 11-2. 백엔드 (EC2)
+
+> **✅ 배포 자산 작성 완료 (2026-09-09).** `todo-backend/deploy/`에 5개 파일이 있다.
+> 남은 것은 EC2에서 실제로 돌려보는 일이다.
+>
+> | 파일 | 역할 |
+> |---|---|
+> | `todolist.service` | systemd 유닛. 전용 계정(`todolist`) 실행 + 샌드박싱 |
+> | `todolist.conf` | 비-비밀 설정(DB 호스트·CORS·JVM 옵션). **git 추적함** |
+> | `todolist.env.example` | 비밀 6개 예시. 실제 `todolist.env`는 커밋하지 않는다 |
+> | `install.sh` | 최초 1회 설치. JDK·psql·스왑 2GB·계정·유닛 등록 |
+> | `redeploy.sh` | 백업 → 교체 → 헬스체크, **실패 시 자동 롤백** |
+>
+> **설계 결정 3가지**
+> 1. **비밀/비-비밀을 파일로 분리했다.** systemd는 `EnvironmentFile`을 여러 번 선언할 수 있어
+>    런타임에 합쳐진다. 설정 변경 이력은 git에 남기면서 비밀은 서버에만 둘 수 있다.
+> 2. **`install.sh`에 `--no-start`가 있다.** prod는 `ddl-auto=validate`라 스키마가 먼저 있어야
+>    뜨는데, 스키마를 넣을 `psql`은 이 스크립트가 깐다. 그래서 최초 1회는 설치만 하고,
+>    스키마를 적용한 뒤 기동한다.
+> 3. **JVM 상한을 힙 밖까지 걸고 스왑 2GB를 만든다.** `-Xmx512m`은 총 사용량이 아니다.
+>    메타스페이스·코드캐시·스레드 스택이 200~300MB를 더 써 1GB 물리 메모리를 넘기면
+>    OOM Killer가 자바를 죽인다. Amazon Linux는 기본 스왑이 없다.
+>
+> **헬스체크 엔드포인트도 함께 추가했다** (`spring-boot-starter-actuator` 의존성 승인받아 도입).
+> `/actuator/health`는 DataSource까지 보는 레디니스라 배포 스크립트의 성공/롤백 판정에 쓰고,
+> `/api/health`는 DB를 조회하지 않는 경량 라이브니스라 외부 상시 폴링용이다.
+> `/actuator` 전체가 아니라 health 하위만 연다 — `env`·`beans`·`configprops`가 열리면
+> 환경변수와 빈 구성이 그대로 노출된다.
 
 - EC2에 JDK 21 설치
 - `./mvnw package`로 jar 생성 후 전송
@@ -1105,6 +1165,21 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
 ### 11-3. HTTPS (방식 확정: nginx + certbot)
 
 개인 프로젝트 규모이므로 **EC2 한 대에 nginx 리버스 프록시 + Let's Encrypt**로 간다. ALB + ACM은 관리가 편하지만 상시 비용이 발생해 이 규모에는 과하다.
+
+> **결정 (2026-09-09): 11-2를 HTTP 1단계와 HTTPS 2단계로 나눈다.**
+> 도메인이 아직 없어서다. 1단계는 EC2 공인 IP + HTTP로 띄워 **헬스체크와 Swagger까지만** 검증하고,
+> 도메인을 확보한 뒤 이 절(11-3)에서 HTTPS로 전환한다.
+>
+> **1단계에서 동작하지 않는 것 (정상이다, 버그가 아니다)**
+> - **구글 로그인** — 구글은 `localhost` 외에는 리다이렉트 URI에 HTTPS를 요구한다.
+>   (그래도 `GOOGLE_CLIENT_ID`/`SECRET`은 기본값이 없어 기동을 위해 값은 채워야 한다.)
+> - **Amplify 프론트 연동** — HTTPS 페이지에서 HTTP API 호출은 mixed content로 차단되고,
+>   `Secure` 쿠키도 HTTP에서는 거부된다. 로그인이 아예 성립하지 않는다.
+>
+> **2단계 전환 시 할 일**: `todolist.conf`에서 `REFRESH_COOKIE_SAME_SITE`·`REFRESH_COOKIE_SECURE`
+> 두 줄을 지운다(= `application-prod.properties`의 기본값 `None`/`true`로 복귀).
+> `server.forward-headers-strategy=framework` 주석을 푼다. 보안그룹에서 80/443을 열고 8080을 닫는다.
+> **jar 재빌드는 필요 없다.**
 
 - EC2에 nginx 설치
 - nginx가 80/443을 받아 `localhost:8080`(Spring Boot)으로 리버스 프록시
