@@ -1155,6 +1155,42 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
 > `/actuator` 전체가 아니라 health 하위만 연다 — `env`·`beans`·`configprops`가 열리면
 > 환경변수와 빈 구성이 그대로 노출된다.
 
+> **✅ 배포 완료 — 1단계(HTTP) 실동작 확인 (2026-09-09)**
+>
+> 인스턴스 `i-01e7e7e93d2079cf2` (t3.micro, ap-northeast-2c, Amazon Linux 2023, 공인 IP `13.125.173.54`)
+>
+> | 검증 | 결과 |
+> |---|---|
+> | 서비스 | `active` / `enabled` |
+> | 프로파일 | `The following 1 profile is active: "prod"` |
+> | `/actuator/health` | 200 `{"status":"UP"}` — DataSource까지 UP이므로 **RDS 연결·스키마 validate 동시 통과** |
+> | `/api/health` | 200 |
+> | Swagger | 200 (EC2 내부·외부 모두) |
+> | 인증 경로 | `/api/todos` 401 — permitAll이 과도하게 열리지 않음 |
+> | **actuator 노출 제한** | `/actuator/env`·`/actuator/beans` **401** — health만 열림을 실측 확인 |
+> | 재부팅 자동기동 | `systemctl reboot` 후 **약 40초 만에 스스로 UP** |
+> | 재배포 | `redeploy.sh` 정상 왕복 성공 (종료코드 0) |
+> | **롤백** | 손상 jar로 2가지 경로 모두 확인 (아래) |
+> | 메모리 | JVM RSS **409MB** / 총 913Mi 중 532Mi 사용, 스왑 2.0Gi 확보(사용량 0) |
+> | 기동 시간 | 약 18초 |
+>
+> **롤백은 2단 방어로 동작했다.**
+> 1. 크기·zip 무결성 검사가 **교체 전에** 손상 파일을 거부 → 서비스 무중단 유지
+> 2. 검사를 통과하지만 기동에 실패하는 jar(MANIFEST 제거)로 시험 →
+>    헬스체크 실패 감지 → **백업으로 자동 롤백 → 재기동 성공 → 종료코드 1**
+>
+> **막혔던 지점 (기록):** 첫 기동이 `Unable to determine Dialect without JDBC metadata`로 실패했다.
+> 표면 메시지와 달리 근본 원인은 `Caused by` 최하단의 `SocketTimeoutException: Connect timed out`,
+> 즉 **RDS 보안그룹 미설정**이었다. `refused`가 아니라 `timeout`인 점이 방화벽/보안그룹의 신호다.
+> 로컬 PC에서는 붙는데 EC2에서만 막힌 이유는, 같은 VPC라 EC2가 RDS를 **프라이빗 IP**(`172.31.35.123`)로
+> 해석해 접근하므로 집 공인 IP 허용 규칙에 걸리지 않기 때문이다.
+> **해결:** `todolist-rds-sg`(`sg-0a954993100afa1f0`) 인바운드에 `PostgreSQL 5432`,
+> 소스 = `todolist-EC2-sg`(`sg-01497e7b27019def2`) 추가.
+>
+> **⚠️ 미해결 — IAM 역할이 인스턴스에 부착돼 있지 않다.** 메타데이터 조회가 404다.
+> 기동은 막지 않지만(AWS SDK는 자격증명을 요청 시점에만 확인한다) **S3 첨부 업로드·조회가 실패한다.**
+> 프론트 연동 전에 부착할 것.
+
 - EC2에 JDK 21 설치
 - `./mvnw package`로 jar 생성 후 전송
 - **systemd 서비스로 등록** (자동 재시작, 부팅 시 기동)
