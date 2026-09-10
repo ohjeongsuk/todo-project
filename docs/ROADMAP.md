@@ -1,6 +1,6 @@
 # ROADMAP — Todo List 프로젝트
 
-> **버전** 1.8 · **최종 수정** 2026-08-28
+> **버전** 1.9 · **최종 수정** 2026-09-07
 > 이 문서는 "어떤 순서로 만드는가"를 정의하며, **완료 판정의 정본**이다.
 > **한 번에 전체를 생성하지 않는다.** Phase 단위로 진행하고, 각 Phase의 DoD를 모두 만족한 뒤 다음으로 넘어간다.
 > 기술 규칙은 `CLAUDE.md`, 기능 정의는 `PRD.md` 참조.
@@ -11,7 +11,7 @@
 
 | Phase | 내용                       | 저장소   | 상태 |
 | ----- | -------------------------- | -------- | ---- |
-| 0     | 저장소 초기화              | 전체     | 🟡   |
+| 0     | 저장소 초기화              | 전체     | ✅   |
 | 1     | 백엔드 스캐폴딩            | backend  | ✅   |
 | 2     | 도메인 & DB                | backend  | ✅   |
 | 3     | 인증 (로컬) + 인증 테스트  | backend  | ✅   |
@@ -21,7 +21,7 @@
 | 7     | 인증 화면                  | frontend | ✅   |
 | 8     | Todo 화면                  | frontend | ✅   |
 | 9     | 인터랙션 다듬기            | frontend | ✅   |
-| 10    | 전체 검증                  | 전체     | 🟡   |
+| 10    | 전체 검증                  | 전체     | ✅   |
 | 11    | AWS 배포                   | 전체     | ⬜   |
 | 12    | 로컬 이미지 첨부           | 전체     | ✅   |
 | 13    | S3 전환                    | backend  | ✅   |
@@ -29,7 +29,9 @@
 
 ⬜ 대기 · 🟡 진행중 · ✅ 완료
 
-> **Phase 0이 🟡인 이유 (2026-09-01):** DoD 9개 중 8개가 통과했고 **원격 푸시 하나만 남았다.** 세 저장소 모두 GitHub 원격이 연결돼 있으나 `main`·`develop`이 push되지 않았다. 푸시하면 Phase 0은 ✅가 된다.
+> ~~**Phase 0이 🟡인 이유 (2026-09-01):** DoD 9개 중 8개가 통과했고 **원격 푸시 하나만 남았다.** 세 저장소 모두 GitHub 원격이 연결돼 있으나 `main`·`develop`이 push되지 않았다. 푸시하면 Phase 0은 ✅가 된다.~~ → **해소 (2026-09-07).** DoD 9개 전부 통과. 세 저장소 모두 `origin/main`·`origin/develop`이 존재해 초기 푸시가 완료됐다. 다만 그 이후로도 **로컬이 원격보다 앞서는 상태가 반복**되고 있다 — 이 문서 작업만으로 `todo-project` `develop`이 다시 origin보다 2커밋 앞선 상태다(Phase 0 DoD 5번째 항목의 경고와 동일 패턴). 최초 설정 완료 판정 자체에는 영향이 없으나, 원격 push는 별도로 챙겨야 한다.
+
+> **Phase 10이 ✅인 이유 (2026-09-07 결정):** 최종 검증 체크리스트 37개 중 36개가 통과했다. 남은 1개("두 번째 렌더링 엔진 확인")는 이 PC에 Chromium 계열(Blink) 외의 브라우저 엔진이 전혀 없어(Firefox 미설치, Playwright도 Blink) 환경상 확인이 불가능하다. Firefox를 지금 설치하는 대신 **Phase 11 배포 완료 후 실기기·실브라우저로 확인하기로 결정**했다 — Phase 11 DoD에 항목을 추가했다. 이 결정으로 `v1.0.0` 태그는 아직 걸지 않았다(이연된 항목이 있는 상태에서의 태깅 여부는 별도 확인이 필요하다).
 
 > ### 스캐폴딩 정합성 점검 (2026-08-28)
 >
@@ -858,11 +860,11 @@ DoD 17개를 전부 실제 조작으로 확인했다. 최종 구성은 **백엔�
 - [x] `lib/errorMessages.ts`의 에러 문구 매핑이 화면에서 표 그대로 나옴 — **7종 전부 화면에서 확인 (2026-09-03 후속).** 단, 확인 경로가 두 종류이며 아래 「에러 문구 매핑 7종」 표에 어느 쪽인지 명시했다. 5종은 실제 서버 응답으로, `FORBIDDEN`·`RESET_TOKEN_INVALID` 2종은 서버가 그 코드를 던지는 경로 자체가 없어 응답을 주입해 **프론트 매핑 경로만** 확인했다
 - [x] 로그인 실패 문구가 계정 존재 여부를 구분하지 않음
 - [x] 360px ~ 1920px 반응형 정상 — 360px는 Phase 8, 1920px는 이번에 확인(넘침 없음, 콘텐츠 폭 적절히 제한)<br>⚠️ **이 판정은 짧은 닉네임에서만 성립하고 있었다(2026-09-03 후속 발견).** 닉네임은 50자까지 허용되는데 헤더에 축소 처리가 없어 긴 닉네임에서 320px를 넘쳤다. `min-w-0` + `truncate`로 수정 후 재실측: 닉네임 50자·컨테이너 320px에서 닉네임 605px→63px 축소·말줄임 적용, 로고 64px·테마 54px·로그아웃 90×44px 유지, 가로 넘침 없음
-- [ ] **Chromium 계열 1종 + 사용 가능한 다른 엔진 1종에서 확인** ~~(Mac은 Chrome+Safari, Windows는 Chrome+Edge/Firefox)~~ — **이 안내 자체가 부정확했다(2026-09-03 정정).** **Edge는 Chromium(Blink) 엔진이라 "다른 엔진"이 아니다.** Chrome+Edge를 확인해도 같은 엔진을 두 번 보는 것이므로 이 항목의 목적(렌더링 엔진 차이 검증)을 달성하지 못한다. Windows에서 실질적인 두 번째 엔진은 **Gecko(Firefox)** 뿐이다.<br>이 PC 실측: Firefox 미설치, Playwright MCP도 Blink(`Chrome/152.0.0.0`, `vendor: Google Inc.`), Playwright 브라우저 캐시에 Firefox·WebKit 바이너리 없음. **다른 엔진이 존재하지 않아 이 환경에서는 충족 불가**다. Firefox 설치는 사용자 결정 사항이라 임의로 하지 않는다
+- [ ] **Chromium 계열 1종 + 사용 가능한 다른 엔진 1종에서 확인** ~~(Mac은 Chrome+Safari, Windows는 Chrome+Edge/Firefox)~~ — **이 안내 자체가 부정확했다(2026-09-03 정정).** **Edge는 Chromium(Blink) 엔진이라 "다른 엔진"이 아니다.** Chrome+Edge를 확인해도 같은 엔진을 두 번 보는 것이므로 이 항목의 목적(렌더링 엔진 차이 검증)을 달성하지 못한다. Windows에서 실질적인 두 번째 엔진은 **Gecko(Firefox)** 뿐이다.<br>이 PC 실측: Firefox 미설치, Playwright MCP도 Blink(`Chrome/152.0.0.0`, `vendor: Google Inc.`), Playwright 브라우저 캐시에 Firefox·WebKit 바이너리 없음. **다른 엔진이 존재하지 않아 이 환경에서는 충족 불가**다. Firefox 설치는 사용자 결정 사항이라 임의로 하지 않는다.<br>**결정 (2026-09-07): Phase 11 배포 후 실기기로 확인.** 지금 Firefox를 설치하지 않고, Amplify/EC2에 실제로 배포된 뒤 다른 브라우저(모바일 Safari, 실PC의 Firefox 등)로 접속해 확인하기로 했다 — Phase 11 DoD에 이관
 - [x] OS 다크 설정에 따라 테마 전환 — Windows 레지스트리를 임시 전환해 배경색이 실제로 바뀌는 것을 실측 후 원복 (2026-09-03 토글 도입 후 재실측: "시스템" 상태에서 OS 다크 + 새로고침 시 `data-theme="dark"`, 배경 `rgb(10,10,10)` 확인)
 - [x] 폼 label 연결 및 키보드 조작 가능
 
-→ 전 항목 통과 시 세 저장소에 `v1.0.0` 태그. **37개 중 36개 통과 (2026-09-03 후속 검증 반영).** 남은 1개는 두 번째 렌더링 엔진 항목으로, **이 PC에 Chromium 외의 엔진이 설치되어 있지 않아 환경상 충족 불가**다(Firefox 설치가 선행되어야 한다). 태그는 이 항목의 처리 방침을 정한 뒤 별도로 승인받는다.
+→ 전 항목 통과 시 세 저장소에 `v1.0.0` 태그. **37개 중 36개 통과 (2026-09-03 후속 검증 반영).** 남은 1개는 두 번째 렌더링 엔진 항목으로, **이 PC에 Chromium 외의 엔진이 설치되어 있지 않아 환경상 충족 불가**다(Firefox 설치가 선행되어야 한다). **결정 (2026-09-07): Firefox를 지금 설치하지 않고 Phase 11 배포 후 실기기로 확인하기로 했다 — Phase 11 DoD에 이관.** 이 결정으로 Phase 10은 ✅로 표시하되, `v1.0.0` 태그는 아직 걸지 않았다(이연된 항목이 남아 있어 태깅 시점은 별도로 확인이 필요하다).
 
 > ### Phase 10 재검증 / 발견 기록 (2026-09-03)
 >
@@ -933,6 +935,8 @@ DoD 17개를 전부 실제 조작으로 확인했다. 최종 구성은 **백엔�
 > #### 남은 1건 — 두 번째 렌더링 엔진
 >
 > ROADMAP이 대안으로 제시했던 **Edge는 Chromium(Blink)이라 "다른 엔진"이 아니다.** 지난 세션이 기다리던 Edge 확인은 받았더라도 이 항목을 충족시키지 못했을 것이다. 이 PC에는 Gecko·WebKit이 전혀 없어(Firefox 미설치, Playwright도 Blink) 환경상 충족 불가다. 선택지는 (a) Firefox 설치 후 확인, (b) 항목을 "단일 엔진 확인"으로 낮춰 명시적으로 인정, (c) 배포 후 실기기 확인으로 미룸 — 사용자 결정 사항이다.
+>
+> **결정 (2026-09-07): (c) 배포 후 실기기 확인으로 미룬다.** Phase 11 DoD에 항목을 추가했다. Phase 10은 이 1건을 이연 상태로 남긴 채 ✅로 표시하고, `v1.0.0` 태그는 Phase 11에서 이 항목까지 확인한 뒤 건다.
 
 ---
 
@@ -1044,18 +1048,18 @@ Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 
 
 **저장소**: 전체 · **Docker 사용하지 않음**
 
-> ### ⚠️ 미해결 리스크 — Amplify의 Next.js 16 지원 (2026-09-01 확인)
+> ### ⚠️ 알려진 리스크 — Amplify의 Next.js 16 지원 (2026-09-01 확인, 2026-09-07 결정)
 >
 > AWS 공식 문서는 이 시점에도 Amplify Hosting의 Next.js 지원 범위를 **12~15**로 명시하고 있고 **16은 목록에 없다.**
 > 출처: [SSR supported features](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-supported-features.html) · [Amplify support for Next.js](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-amplify-support.html)
 >
-> 프로젝트는 2026-09-01에 **Next.js 16.3.3 유지**를 확정했다(실제 코드·`CLAUDE.md` 3장·`docs/guides` 5개 문서가 모두 16 기준이라 15 다운그레이드 비용이 더 컸다). 따라서 이 Phase 착수 시 **다음 중 하나를 먼저 결정해야 한다**:
+> **결정 (2026-09-07): 옵션 1 — 실제로 Amplify에 배포해 동작 여부를 직접 확인한다.** 미지원 목록이 곧 실패를 뜻하지는 않으므로, 다운그레이드나 호스팅 교체 전에 먼저 시도한다(실제 코드·`CLAUDE.md` 3장·`docs/guides` 5개 문서가 모두 16 기준이라 15 다운그레이드는 비용이 크다). **11-4에서 빌드·SSR이 실패하면** 그 시점에 다음을 순서대로 검토한다(변경 범위가 작은 순):
 >
-> 1. 실제로 Amplify에 배포해 동작 여부를 확인한다 (미지원 목록이 곧 실패를 뜻하지는 않는다)
-> 2. 배포 시점에 15.x로 다운그레이드한다
+> 1. 실패 원인이 좁은 범위(특정 API 미지원 등)면 해당 부분만 우회
+> 2. 15.x로 다운그레이드 (`CLAUDE.md` 3장·`docs/guides` 5개 문서를 함께 수정해야 한다)
 > 3. 호스팅을 바꾼다 (OpenNext + SST, Vercel, EC2 자체 호스팅 등)
 >
-> **이 결정 전에는 Phase 11을 시작하지 않는다.**
+> 대안으로 넘어가는 경우 이 문서와 위에서 언급한 문서들을 함께 갱신한다.
 
 ### 11-0. 사전 준비
 
@@ -1077,11 +1081,44 @@ Phase 10 종료 후 사용자 요청으로 처리했다. 새 Phase가 아니라 
      > EC2에 `postgresql-client` 설치 → `scp`로 DDL 파일을 EC2에 전송 → **EC2에서 `psql -h <rds-endpoint> -U <user> -d todolist_db -f schema.sql`** 실행.
      > 이 경로를 준비하지 않으면 11-1 중반에 막힌다. EC2를 먼저 띄운 뒤 RDS 스키마를 적용하는 순서가 된다.
 
+> **✅ 완료 (2026-09-09) — 다만 위 전제와 실제가 달랐다.**
+>
+> **1) RDS는 프라이빗이 아니라 퍼블릭 액세스 상태다.** 로컬 PC에서 엔드포인트로 바로 접속됐다.
+> 그래서 EC2 경유 없이 로컬에서 스키마를 적용했고, 위 ⚠️ 콜아웃의 우회 경로는 쓰지 않았다.
+> **이는 11-1이 요구한 "프라이빗 서브넷 + 퍼블릭 액세스 비활성화"와 어긋난다.** 지금은 마스터 비밀번호
+> 하나가 유일한 방어선이다. 실사용자 오픈 전에 퍼블릭 액세스를 끄고 보안그룹을 EC2로 제한할 것.
+>
+> **2) 개발 내내 RDS의 `postgres` 데이터베이스를 직접 써왔다.** `application-local.properties`가
+> localhost가 아니라 RDS를 가리키고 있었고 `ddl-auto=update`였다. 그 결과 `postgres` DB에 스키마와
+> 데이터(users 34행 / todos 10,144행 / attachments 21행)가 이미 쌓여 있었다. todos 1만여 행은
+> `seed-perf.sql` 성능 테스트 데이터다.
+>
+> **3) 조치 (2026-09-09 결정): 빈 `todolist_db`를 새로 만들고 스키마만 적용했다.**
+> 성능 테스트 데이터가 운영 DB에 섞이지 않게 하려는 것이다. 기존 데이터는 `postgres` DB에 그대로
+> 남아 있어 필요하면 나중에 옮길 수 있다. 운영 DB명은 `CLAUDE.md` 절대 규칙 2대로 `todolist_db`다.
+>
+> **4) `db/schema.sql` 추출은 `pg_dump`가 아니라 Hibernate 스키마 생성으로 했다.**
+> 로컬 클라이언트가 17.x인데 RDS 서버가 18.3이라 `pg_dump`가 버전 불일치로 덤프를 거부했다
+> (`psql` 접속 자체는 된다). 엔티티 정의에서 DDL을 뽑고, `@Table(indexes=...)`로 만들 수 없는
+> `LOWER(title)` 함수 기반 인덱스만 `db/add-title-index.sql` 기준으로 보강했다.
+> 적용 후 prod 프로파일(`ddl-auto=validate`)로 실제 기동해 정합성을 확인했다.
+
 ### 11-1-1. 비밀번호 재설정 메일 발송 (Phase 14에서 이관)
 
 Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profile("local")`)으로 기능을 완성했다.
 **운영 프로파일용 구현체는 아직 없다.** `PasswordResetMailSender` 구현 빈이 하나도 없으면
 `PasswordResetService` 주입이 실패해 **운영 프로파일 기동 자체가 안 된다** — 배포 전 반드시 처리한다.
+
+> **⏸ 임시 조치 (2026-09-09) — 해소되지 않았다. 이월된 항목이다.**
+>
+> EC2 배포(11-2)를 먼저 진행하기 위해 `LocalPasswordResetMailSender`의 `@Profile("!prod")` 제한을
+> **임시로 풀어** 운영에서도 콘솔 로그 방식이 뜨게 했다. 기동 실패는 해소됐지만 **메일 발송 기능은
+> 여전히 없다.** 운영에서 이 빈이 활성화되면 기동 시 WARN 로그를 남기도록 해뒀다.
+>
+> **감수 중인 리스크:** 재설정 링크가 서버 로그(journald)에 평문으로 남는다. 즉
+> **EC2 로그 열람 권한이 곧 임의 계정의 비밀번호 재설정 권한**이 된다.
+> **실사용자에게 공개하기 전에 반드시 해소한다.** 아래 SMTP 구현체를 만들면서
+> `@Profile("!prod")`를 복원하는 것이 해소 조건이다.
 
 - `@Profile("prod")` SMTP 구현체 작성 (AWS SES 또는 외부 SMTP)
 - `spring-boot-starter-mail` 의존성 추가 — **`CLAUDE.md` 절대 규칙 11에 따라 착수 시 승인을 받는다**
@@ -1090,6 +1127,69 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
   `frontend.url`은 이미 있으므로 링크 조립에 그대로 재사용한다
 
 ### 11-2. 백엔드 (EC2)
+
+> **✅ 배포 자산 작성 완료 (2026-09-09).** `todo-backend/deploy/`에 5개 파일이 있다.
+> 남은 것은 EC2에서 실제로 돌려보는 일이다.
+>
+> | 파일 | 역할 |
+> |---|---|
+> | `todolist.service` | systemd 유닛. 전용 계정(`todolist`) 실행 + 샌드박싱 |
+> | `todolist.conf` | 비-비밀 설정(DB 호스트·CORS·JVM 옵션). **git 추적함** |
+> | `todolist.env.example` | 비밀 6개 예시. 실제 `todolist.env`는 커밋하지 않는다 |
+> | `install.sh` | 최초 1회 설치. JDK·psql·스왑 2GB·계정·유닛 등록 |
+> | `redeploy.sh` | 백업 → 교체 → 헬스체크, **실패 시 자동 롤백** |
+>
+> **설계 결정 3가지**
+> 1. **비밀/비-비밀을 파일로 분리했다.** systemd는 `EnvironmentFile`을 여러 번 선언할 수 있어
+>    런타임에 합쳐진다. 설정 변경 이력은 git에 남기면서 비밀은 서버에만 둘 수 있다.
+> 2. **`install.sh`에 `--no-start`가 있다.** prod는 `ddl-auto=validate`라 스키마가 먼저 있어야
+>    뜨는데, 스키마를 넣을 `psql`은 이 스크립트가 깐다. 그래서 최초 1회는 설치만 하고,
+>    스키마를 적용한 뒤 기동한다.
+> 3. **JVM 상한을 힙 밖까지 걸고 스왑 2GB를 만든다.** `-Xmx512m`은 총 사용량이 아니다.
+>    메타스페이스·코드캐시·스레드 스택이 200~300MB를 더 써 1GB 물리 메모리를 넘기면
+>    OOM Killer가 자바를 죽인다. Amazon Linux는 기본 스왑이 없다.
+>
+> **헬스체크 엔드포인트도 함께 추가했다** (`spring-boot-starter-actuator` 의존성 승인받아 도입).
+> `/actuator/health`는 DataSource까지 보는 레디니스라 배포 스크립트의 성공/롤백 판정에 쓰고,
+> `/api/health`는 DB를 조회하지 않는 경량 라이브니스라 외부 상시 폴링용이다.
+> `/actuator` 전체가 아니라 health 하위만 연다 — `env`·`beans`·`configprops`가 열리면
+> 환경변수와 빈 구성이 그대로 노출된다.
+
+> **✅ 배포 완료 — 1단계(HTTP) 실동작 확인 (2026-09-09)**
+>
+> 인스턴스 `i-01e7e7e93d2079cf2` (t3.micro, ap-northeast-2c, Amazon Linux 2023, 공인 IP `13.125.173.54`)
+>
+> | 검증 | 결과 |
+> |---|---|
+> | 서비스 | `active` / `enabled` |
+> | 프로파일 | `The following 1 profile is active: "prod"` |
+> | `/actuator/health` | 200 `{"status":"UP"}` — DataSource까지 UP이므로 **RDS 연결·스키마 validate 동시 통과** |
+> | `/api/health` | 200 |
+> | Swagger | 200 (EC2 내부·외부 모두) |
+> | 인증 경로 | `/api/todos` 401 — permitAll이 과도하게 열리지 않음 |
+> | **actuator 노출 제한** | `/actuator/env`·`/actuator/beans` **401** — health만 열림을 실측 확인 |
+> | 재부팅 자동기동 | `systemctl reboot` 후 **약 40초 만에 스스로 UP** |
+> | 재배포 | `redeploy.sh` 정상 왕복 성공 (종료코드 0) |
+> | **롤백** | 손상 jar로 2가지 경로 모두 확인 (아래) |
+> | 메모리 | JVM RSS **409MB** / 총 913Mi 중 532Mi 사용, 스왑 2.0Gi 확보(사용량 0) |
+> | 기동 시간 | 약 18초 |
+>
+> **롤백은 2단 방어로 동작했다.**
+> 1. 크기·zip 무결성 검사가 **교체 전에** 손상 파일을 거부 → 서비스 무중단 유지
+> 2. 검사를 통과하지만 기동에 실패하는 jar(MANIFEST 제거)로 시험 →
+>    헬스체크 실패 감지 → **백업으로 자동 롤백 → 재기동 성공 → 종료코드 1**
+>
+> **막혔던 지점 (기록):** 첫 기동이 `Unable to determine Dialect without JDBC metadata`로 실패했다.
+> 표면 메시지와 달리 근본 원인은 `Caused by` 최하단의 `SocketTimeoutException: Connect timed out`,
+> 즉 **RDS 보안그룹 미설정**이었다. `refused`가 아니라 `timeout`인 점이 방화벽/보안그룹의 신호다.
+> 로컬 PC에서는 붙는데 EC2에서만 막힌 이유는, 같은 VPC라 EC2가 RDS를 **프라이빗 IP**(`172.31.35.123`)로
+> 해석해 접근하므로 집 공인 IP 허용 규칙에 걸리지 않기 때문이다.
+> **해결:** `todolist-rds-sg`(`sg-0a954993100afa1f0`) 인바운드에 `PostgreSQL 5432`,
+> 소스 = `todolist-EC2-sg`(`sg-01497e7b27019def2`) 추가.
+>
+> **⚠️ 미해결 — IAM 역할이 인스턴스에 부착돼 있지 않다.** 메타데이터 조회가 404다.
+> 기동은 막지 않지만(AWS SDK는 자격증명을 요청 시점에만 확인한다) **S3 첨부 업로드·조회가 실패한다.**
+> 프론트 연동 전에 부착할 것.
 
 - EC2에 JDK 21 설치
 - `./mvnw package`로 jar 생성 후 전송
@@ -1100,7 +1200,73 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
 
 ### 11-3. HTTPS (방식 확정: nginx + certbot)
 
-개인 프로젝트 규모이므로 **EC2 한 대에 nginx 리버스 프록시 + Let's Encrypt**로 간다. ALB + ACM은 관리가 편하지만 상시 비용... (12KB 남음)
+개인 프로젝트 규모이므로 **EC2 한 대에 nginx 리버스 프록시 + Let's Encrypt**로 간다. ALB + ACM은 관리가 편하지만 상시 비용이 발생해 이 규모에는 과하다.
+
+> **결정 (2026-09-09): 11-2를 HTTP 1단계와 HTTPS 2단계로 나눈다.**
+> 도메인이 아직 없어서다. 1단계는 EC2 공인 IP + HTTP로 띄워 **헬스체크와 Swagger까지만** 검증하고,
+> 도메인을 확보한 뒤 이 절(11-3)에서 HTTPS로 전환한다.
+>
+> **1단계에서 동작하지 않는 것 (정상이다, 버그가 아니다)**
+> - **구글 로그인** — 구글은 `localhost` 외에는 리다이렉트 URI에 HTTPS를 요구한다.
+>   (그래도 `GOOGLE_CLIENT_ID`/`SECRET`은 기본값이 없어 기동을 위해 값은 채워야 한다.)
+> - **Amplify 프론트 연동** — HTTPS 페이지에서 HTTP API 호출은 mixed content로 차단되고,
+>   `Secure` 쿠키도 HTTP에서는 거부된다. 로그인이 아예 성립하지 않는다.
+>
+> **2단계 전환 시 할 일**: `todolist.conf`에서 `REFRESH_COOKIE_SAME_SITE`·`REFRESH_COOKIE_SECURE`
+> 두 줄을 지운다(= `application-prod.properties`의 기본값 `None`/`true`로 복귀).
+> `server.forward-headers-strategy=framework` 주석을 푼다. 보안그룹에서 80/443을 열고 8080을 닫는다.
+> **jar 재빌드는 필요 없다.**
+
+- EC2에 nginx 설치
+- nginx가 80/443을 받아 `localhost:8080`(Spring Boot)으로 리버스 프록시
+  - 80은 443으로 리다이렉트만 한다 (평문 응답 금지 — 11-2에서 이미 결정)
+  - `proxy_set_header X-Forwarded-Proto $scheme;` · `X-Forwarded-For $proxy_add_x_forwarded_for;` · `X-Forwarded-Host $host;`를 반드시 넣는다 (아래 forward-headers 설정의 전제)
+- `certbot --nginx -d api.example.com`으로 인증서 발급
+  > Route 53(또는 DNS 제공자)에 `api.example.com` A 레코드가 EC2를 가리키도록 **먼저** 만들어 둬야 certbot의 HTTP-01 챌린지가 통과한다.
+- **`application-prod.properties`에 `server.forward-headers-strategy=framework` 추가.** nginx가 TLS를 종료하고 백엔드에는 평문 HTTP로 전달하므로, 이 설정이 없으면 Spring이 모든 요청을 `http`로 인식한다. 영향받는 지점:
+  - Google OAuth2 리다이렉트 URI가 `{baseUrl}/login/oauth2/code/google`로 조립될 때 스킴이 `http`가 되어, 구글 콘솔에 등록한 `https://...` 리다이렉트 URI와 불일치해 콜백이 실패한다
+  - 프록시 구간의 스킴 인식이 꼬이면 `X-Forwarded-*` 기반의 다른 보안 판단에도 영향을 줄 수 있어 함께 켠다
+- certbot 자동 갱신 확인 — 설치 시 함께 등록되는 systemd timer(`certbot.timer`)가 활성 상태인지 확인하고 `certbot renew --dry-run`으로 사전 점검
+
+### 11-4. 프론트엔드 (Amplify)
+
+> ⚠️ 위 "알려진 리스크" 콜아웃 참조. Next.js 16이 Amplify 공식 지원 목록(12~15) 밖이므로, **이 단계의 첫 빌드·배포 결과가 이번 Phase 전체 방향을 가른다.**
+
+- AWS Amplify Hosting 콘솔에서 `todo-frontend` GitHub 저장소 연결 (배포 브랜치: `main`)
+- 빌드 설정 — `npm ci` → `npm run build`. Amplify가 자동 감지한 빌드 스펙을 그대로 쓰되, 감지가 틀리면 `amplify.yml`을 직접 추가한다
+- 환경변수 등록: `NEXT_PUBLIC_API_BASE_URL=https://api.example.com` (11-3에서 발급한 도메인)
+- 커스텀 도메인 연결 (`todo.example.com`)
+- **첫 빌드·SSR 동작을 직접 확인한다.**
+  - 빌드 로그에서 Amplify가 Next.js 16을 SSR 컴퓨트로 인식하는지, 빌드 자체가 성공하는지 확인
+  - 배포된 URL에서 서버 컴포넌트(레이아웃 등)가 정상 렌더되는지, `'use client'` 컴포넌트가 정상 하이드레이션되는지 확인
+  - 실패하면 위 리스크 콜아웃의 대안 1→2→3 순서로 넘어간다. 어떤 실패였는지(빌드 실패/런타임 500/부분 기능 깨짐)를 이 문서에 기록한 뒤 진행한다
+
+### 11-5. 도메인 전환 마무리 (백엔드 설정 갱신)
+
+프론트·백엔드 도메인이 11-3·11-4에서 실제로 확정된 뒤에만 할 수 있다.
+
+- Google Cloud Console → OAuth 클라이언트의 승인된 리다이렉트 URI에 `https://api.example.com/login/oauth2/code/google` 추가 (로컬용 `http://localhost:8080/...`은 유지)
+- EC2 systemd `EnvironmentFile`에 운영 환경변수 채우기
+  - `CORS_ALLOWED_ORIGIN=https://todo.example.com`
+  - `FRONTEND_URL=https://todo.example.com` (비밀번호 재설정 링크 조립에 사용 — `CLAUDE.md` 5장)
+  - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+  - `AWS_S3_BUCKET` / `AWS_REGION` / `STORAGE_SIGNING_SECRET` (Phase 13에서 이미 정의된 값 재사용)
+  - 11-1-1에서 만든 SMTP/SES 자격증명
+- systemd 서비스 재시작 후 기동 로그에서 `spring.profiles.active=prod`로 뜨는지 확인
+
+**DoD**
+
+- [ ] `https://api.example.com/swagger-ui/index.html`이 200으로 열림 (인증서 유효, nginx 프록시 정상)
+- [ ] `http://api.example.com`이 `https://`로 리다이렉트됨 (평문 응답 없음)
+- [ ] `https://todo.example.com`에서 서버 컴포넌트·클라이언트 컴포넌트가 정상 렌더됨 (Amplify 빌드·SSR 동작 확인 — 11-4의 실질적 판정 지점)
+- [ ] 운영 URL에서 회원가입 → 로그인 → Todo 생성이 실제로 성공함 (cross-site CORS·쿠키 설정 검증)
+- [ ] 운영 URL에서 구글 로그인 콜백이 성공함 (`server.forward-headers-strategy` + 구글 콘솔 리다이렉트 URI 등록 검증)
+- [ ] 브라우저 개발자도구에서 `refresh_token` 쿠키가 `Secure; HttpOnly; SameSite=None`으로 설정됨을 확인
+- [ ] 로그아웃 후 새로고침 시 `/login`으로 이동함 (서버 측 Refresh Token 폐기 확인 — 클라이언트 삭제만으로 끝나지 않았는지)
+- [ ] 비밀번호 재설정 요청 시 콘솔 로그가 아니라 실제 이메일이 발송됨 (11-1-1 SMTP/SES 구현체 검증)
+- [ ] `certbot renew --dry-run` 성공 (자동 갱신 준비 확인)
+- [ ] `todo-backend`·`todo-frontend` 소스 어디에도 AWS/Google 키가 하드코딩되어 있지 않음 — `grep -rn "AKIA"` 0건
+- [ ] **(Phase 10에서 이관)** 운영 URL을 Chromium 계열이 아닌 다른 렌더링 엔진(Firefox 등 Gecko, 또는 모바일 Safari 등 WebKit)에서 열어 레이아웃·다크 모드·폼 동작이 동일하게 나타남을 확인 — 개발 PC에 Blink 외 엔진이 없어 Phase 10에서는 확인 불가했다
 
 ---
 
@@ -1181,6 +1347,9 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
   > 정책(정적 웹사이트 호스팅 예시 정책)이 남아 있어 서명 없는 접근이 열려 있었다 — 코드 결함이 아니라
   > 버킷 설정 문제였다. 정책 삭제 후 `403 AccessDenied`로 정상 차단 확인 (2026-09-07, `docs/CHECKLIST.md`
   > 16-1.6). presigned URL은 이 정책과 무관한 별개 인증 경로라 이 수정이 위 흐름에 영향을 주지 않는다.
+  > ⚠️ **같은 날 오후 재발했고, 사용자 결정으로 그대로 두었다.** 서명 없는 직접 접근이 다시 200으로 열려
+  > 있다. 위 "403 차단 확인"은 오전 시점의 기록이다 — 현재 상태와 감수 사유는 `docs/CHECKLIST.md`
+  > 16-1.6을 정본으로 본다. **Phase 11 배포 전 재검토 대상이다.**
 - [x] **`todo-frontend`에 커밋이 발생하지 않는다** (git status 클린) — F-50의 최종 수용 기준
   > Phase 12·13 커밋 완료 후 세 저장소 모두 git status 클린 확인 (2026-09-07)
 - [x] `app.storage.type=local`로 되돌리면 다시 로컬 스토리지로 동작한다
