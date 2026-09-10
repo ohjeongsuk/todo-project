@@ -22,7 +22,7 @@
 | 8     | Todo 화면                  | frontend | ✅   |
 | 9     | 인터랙션 다듬기            | frontend | ✅   |
 | 10    | 전체 검증                  | 전체     | ✅   |
-| 11    | AWS 배포                   | 전체     | ⬜   |
+| 11    | AWS 배포                   | 전체     | 🟡   |
 | 12    | 로컬 이미지 첨부           | 전체     | ✅   |
 | 13    | S3 전환                    | backend  | ✅   |
 | 14    | 비밀번호 재설정            | 전체     | ✅   |
@@ -1256,17 +1256,56 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
 
 **DoD**
 
-- [ ] `https://api.example.com/swagger-ui/index.html`이 200으로 열림 (인증서 유효, nginx 프록시 정상)
-- [ ] `http://api.example.com`이 `https://`로 리다이렉트됨 (평문 응답 없음)
-- [ ] `https://todo.example.com`에서 서버 컴포넌트·클라이언트 컴포넌트가 정상 렌더됨 (Amplify 빌드·SSR 동작 확인 — 11-4의 실질적 판정 지점)
-- [ ] 운영 URL에서 회원가입 → 로그인 → Todo 생성이 실제로 성공함 (cross-site CORS·쿠키 설정 검증)
-- [ ] 운영 URL에서 구글 로그인 콜백이 성공함 (`server.forward-headers-strategy` + 구글 콘솔 리다이렉트 URI 등록 검증)
-- [ ] 브라우저 개발자도구에서 `refresh_token` 쿠키가 `Secure; HttpOnly; SameSite=None`으로 설정됨을 확인
-- [ ] 로그아웃 후 새로고침 시 `/login`으로 이동함 (서버 측 Refresh Token 폐기 확인 — 클라이언트 삭제만으로 끝나지 않았는지)
-- [ ] 비밀번호 재설정 요청 시 콘솔 로그가 아니라 실제 이메일이 발송됨 (11-1-1 SMTP/SES 구현체 검증)
-- [ ] `certbot renew --dry-run` 성공 (자동 갱신 준비 확인)
-- [ ] `todo-backend`·`todo-frontend` 소스 어디에도 AWS/Google 키가 하드코딩되어 있지 않음 — `grep -rn "AKIA"` 0건
-- [ ] **(Phase 10에서 이관)** 운영 URL을 Chromium 계열이 아닌 다른 렌더링 엔진(Firefox 등 Gecko, 또는 모바일 Safari 등 WebKit)에서 열어 레이아웃·다크 모드·폼 동작이 동일하게 나타남을 확인 — 개발 PC에 Blink 외 엔진이 없어 Phase 10에서는 확인 불가했다
+> ### ⚠️ 2026-09-10 실검증 — 계획(nginx+certbot·전용 도메인)과 실제 배포가 다르다
+>
+> 도메인을 구입하지 않고 **AWS 기본 도메인 그대로** 배포됐다. 프론트는 Amplify 기본 도메인
+> (`https://main.d1prwks7k0qzzg.amplifyapp.com`), 백엔드는 EC2 앞에 **CloudFront**를 붙여
+> (`https://d1ohmep7p8olsq.cloudfront.net`) TLS를 종료한다. 11-3이 계획한 **nginx + certbot은
+> 쓰지 않았다** — CloudFront가 인증서 발급·갱신·HTTPS 리다이렉트를 대신 처리한다. 아래 DoD는
+> 이 실제 구성 기준으로 재작성해 검증했다 (원래 문구가 가리키던 `api.example.com`·`todo.example.com`·
+> `certbot`은 이 배포에 존재하지 않는다).
+>
+> 검증은 curl(서버 측)과 Playwright 브라우저 자동화(클라이언트 측, 테스트 계정
+> `todo-dod-test-20260910@example.com` 신규 가입)로 수행했다.
+
+- [x] `https://d1ohmep7p8olsq.cloudfront.net/swagger-ui/index.html`이 200으로 열림 — curl로 확인 (2026-09-10)
+- [x] `http://d1ohmep7p8olsq.cloudfront.net/...`이 `https://`로 리다이렉트됨(301) — CloudFront가 처리, 평문 응답 없음 확인 (2026-09-10)
+- [x] `https://main.d1prwks7k0qzzg.amplifyapp.com`에서 서버 컴포넌트·클라이언트 컴포넌트가 정상 렌더됨 — Playwright로 `/login` SSR 렌더 확인, 로그인/회원가입 폼 하이드레이션(클릭·입력) 정상 동작 확인. **Next.js 16이 Amplify에서 실제로 동작한다** — 11-4 리스크 콜아웃의 우려는 해소됐다 (2026-09-10)
+- [x] 운영 URL에서 회원가입 → 로그인 → Todo 생성이 실제로 성공함 — 테스트 계정으로 회원가입 즉시 `/todos`로 이동(자동 로그인), Todo 1건(`id=5`) 생성까지 확인. `/api/auth/signup`·`/api/todos` 모두 200, cross-site 쿠키 발급 정상 (2026-09-10)
+  > ⚠️ 이 테스트 계정과 Todo는 **운영 DB에 실제로 남아 있다.** 정리 필요 여부는 사용자 확인 대상.
+- [ ] 운영 URL에서 구글 로그인 콜백이 성공함 — **미검증.** "Google로 계속하기" 링크가 올바른 CloudFront 콜백 주소(`https://d1ohmep7p8olsq.cloudfront.net/oauth2/authorization/google`)를 가리키는 것까지만 확인했다. 실제 구글 계정 인증(OAuth 동의)은 사용자 승인이 필요한 영역이라 자동화하지 않았다 — 사용자가 직접 확인 필요
+- [x] 운영 URL에서 `refresh_token` 쿠키가 `Secure; HttpOnly; SameSite=None`으로 설정됨 — curl로 `/api/auth/login` 응답의 `Set-Cookie` 실측: `Path=/api/auth; Max-Age=1209600; Secure; HttpOnly; SameSite=None`. `CLAUDE.md` 5장 정책과 정확히 일치 (2026-09-10)
+  > 브라우저 네트워크 탭 캡처(Playwright)에는 `Set-Cookie`·요청 `Cookie` 헤더가 보이지 않았는데, 이는 도구가 HttpOnly 쿠키 헤더를 캡처에서 숨기는 것이었다 — `fetch(credentials:'include')`로 `/api/auth/refresh`를 직접 호출해 200과 새 accessToken을 받아 **쿠키가 실제로 브라우저에 저장·전송됨**을 재확인했다
+- [x] 로그아웃 후 새로고침 시 `/login`으로 이동함 — 로그아웃 클릭 후 `/login` 이동 확인. 이어서 `/api/auth/refresh`를 재호출해 **401**을 받아 서버 측에서 Refresh Token이 실제로 폐기됐음을 확인(클라이언트 삭제만으로 끝나지 않음) (2026-09-10)
+- [ ] 비밀번호 재설정 요청 시 콘솔 로그가 아니라 실제 이메일이 발송됨 — **FAIL.** 11-1-1의 SMTP/SES 구현체는 여전히 없다. `LocalPasswordResetMailSender`가 `@Profile("!prod")` 제한이 풀린 채 운영에서도 그대로 활성화되어 있다(코드 확인, 2026-09-10). 재설정 링크가 EC2 서버 로그(journald)에 평문으로 남는 상태가 **배포 이후에도 해소되지 않았다**
+- [ ] `certbot renew --dry-run` 성공 — **해당 없음으로 변경.** nginx+certbot을 쓰지 않고 CloudFront+ACM 조합으로 실제 배포됐으므로 이 DoD 자체가 이 구성에 적용되지 않는다. (CloudFront 인증서 자동 갱신은 AWS가 관리하므로 별도 확인 불필요)
+- [x] `todo-backend`·`todo-frontend` 소스 어디에도 AWS/Google 키가 하드코딩되어 있지 않음 — `grep -rn "AKIA"` 0건 확인 (2026-09-10)
+- [ ] **(Phase 10에서 이관)** 운영 URL을 Chromium 계열이 아닌 다른 렌더링 엔진에서 확인 — **미검증.** 이번 검증에 쓴 Playwright MCP도 Chromium(Chrome 152) 기반이라 Blink 외 엔진 확인 도구가 여전히 없다. 이월
+
+> ### 🔴 이번 실검증에서 새로 발견한 문제 (DoD 항목에는 없었으나 11-2 자체 DoD 위반)
+>
+> **EC2 인스턴스의 8080 포트가 전 세계에 평문 HTTP로 열려 있다.** `http://13.125.173.54:8080/actuator/health`가
+> 200으로 응답한다 — CloudFront와 HTTPS를 완전히 우회해 백엔드에 직접, 평문으로 접근할 수 있다는 뜻이다.
+> 11-2 작업 목록이 명시한 "8080은 외부에 열지 않는다"에 위배된다. CloudFront가 오리진에 도달하려면 8080이
+> 인터넷에서 열려 있어야 하지만, 그것이 "전체 공개(0.0.0.0/0)"를 뜻하지는 않는다 — 보안그룹 인바운드 소스를
+> AWS가 제공하는 CloudFront 전용 관리형 프리픽스 리스트로 좁히면 직접 접근을 막으면서 CloudFront→EC2
+> 트래픽은 그대로 허용할 수 있다. **실사용자 공개 전 반드시 조치할 것.**
+>
+> RDS 퍼블릭 액세스(11-1에 기록)·S3 퍼블릭 읽기 재발(Phase 13 DoD에 기록)은 이번에 재확인하지 않았다 —
+> 기존 기록을 그대로 정본으로 본다.
+
+**남은 조치 (2026-09-10 기준)**
+
+1. 🔴 EC2 보안그룹 8080 인바운드를 CloudFront 프리픽스 리스트로 제한 (미착수)
+2. ❌ 11-1-1 SMTP/SES 구현체 작성 — 비밀번호 재설정이 여전히 서버 로그 노출 상태 (미착수)
+3. ⏸ 구글 로그인 콜백 실동작 확인 (사용자 확인 필요)
+4. ⏸ RDS 퍼블릭 액세스·S3 퍼블릭 읽기 재검토 (기존 이월 항목, 미해소)
+5. 테스트 계정(`todo-dod-test-20260910@example.com`)·Todo(`id=5`) 정리 여부 결정
+6. 이 문서의 `api.example.com`/`todo.example.com`/nginx+certbot 서술은 실제 구성(CloudFront·Amplify 기본 도메인)과
+   다르다 — 커스텀 도메인을 나중에 붙이기 전까지는 이 섹션 전체가 "계획"이 아니라 "다른 방식으로 대체된 계획"임을 유의
+
+DoD 11개 중 **7개 통과, 2개 실패(FAIL), 2개 미검증**이다. Phase 10에서 이관된 항목까지 포함하면 완료로
+판정하기엔 이르다 — 위 1·2번(보안 노출·SMTP 미구현)이 남아 있는 한 진행 현황은 ✅가 아니라 🟡로 둔다.
 
 ---
 
