@@ -1272,7 +1272,8 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
 - [x] `http://d1ohmep7p8olsq.cloudfront.net/...`이 `https://`로 리다이렉트됨(301) — CloudFront가 처리, 평문 응답 없음 확인 (2026-09-10)
 - [x] `https://main.d1prwks7k0qzzg.amplifyapp.com`에서 서버 컴포넌트·클라이언트 컴포넌트가 정상 렌더됨 — Playwright로 `/login` SSR 렌더 확인, 로그인/회원가입 폼 하이드레이션(클릭·입력) 정상 동작 확인. **Next.js 16이 Amplify에서 실제로 동작한다** — 11-4 리스크 콜아웃의 우려는 해소됐다 (2026-09-10)
 - [x] 운영 URL에서 회원가입 → 로그인 → Todo 생성이 실제로 성공함 — 테스트 계정으로 회원가입 즉시 `/todos`로 이동(자동 로그인), Todo 1건(`id=5`) 생성까지 확인. `/api/auth/signup`·`/api/todos` 모두 200, cross-site 쿠키 발급 정상 (2026-09-10)
-  > ⚠️ 이 테스트 계정과 Todo는 **운영 DB에 실제로 남아 있다.** 정리 필요 여부는 사용자 확인 대상.
+  > Todo(`id=5`)는 API로 소프트 삭제 완료(2026-09-10, `DELETE /api/todos/5` → 204). 테스트 계정
+  > 자체는 회원 탈퇴 기능이 없어(`docs/PRD.md` "후속" 항목) 운영 DB에 그대로 남아 있다 — 사용자 결정으로 유지.
 - [x] 운영 URL에서 구글 로그인 콜백이 성공함 — 사용자가 실제 구글 계정으로 직접 인증해 성공 확인 (2026-09-10). Claude는 OAuth 동의가 사용자 승인 영역이라 자동화하지 않았고, "Google로 계속하기" 링크가 올바른 CloudFront 콜백 주소를 가리키는 것까지만 사전 확인했다
 - [x] 운영 URL에서 `refresh_token` 쿠키가 `Secure; HttpOnly; SameSite=None`으로 설정됨 — curl로 `/api/auth/login` 응답의 `Set-Cookie` 실측: `Path=/api/auth; Max-Age=1209600; Secure; HttpOnly; SameSite=None`. `CLAUDE.md` 5장 정책과 정확히 일치 (2026-09-10)
   > 브라우저 네트워크 탭 캡처(Playwright)에는 `Set-Cookie`·요청 `Cookie` 헤더가 보이지 않았는데, 이는 도구가 HttpOnly 쿠키 헤더를 캡처에서 숨기는 것이었다 — `fetch(credentials:'include')`로 `/api/auth/refresh`를 직접 호출해 200과 새 accessToken을 받아 **쿠키가 실제로 브라우저에 저장·전송됨**을 재확인했다
@@ -1299,7 +1300,7 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
 1. 🔴 EC2 보안그룹 8080 인바운드를 CloudFront 프리픽스 리스트로 제한 (미착수)
 2. ❌ 11-1-1 SMTP/SES 구현체 작성 — 비밀번호 재설정이 여전히 서버 로그 노출 상태 (미착수)
 3. ⏸ RDS 퍼블릭 액세스·S3 퍼블릭 읽기 재검토 (기존 이월 항목, 미해소)
-4. 테스트 계정(`todo-dod-test-20260910@example.com`)·Todo(`id=5`) 정리 여부 결정
+4. ~~테스트 계정·Todo 정리~~ — Todo는 소프트 삭제 완료. 계정은 탈퇴 기능이 없어 유지하기로 결정 (2026-09-10)
 5. 이 문서의 `api.example.com`/`todo.example.com`/nginx+certbot 서술은 실제 구성(CloudFront·Amplify 기본 도메인)과
    다르다 — 커스텀 도메인을 나중에 붙이기 전까지는 이 섹션 전체가 "계획"이 아니라 "다른 방식으로 대체된 계획"임을 유의
 
