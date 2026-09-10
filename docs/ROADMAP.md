@@ -1337,6 +1337,17 @@ Phase 14는 로컬 콘솔 로그 방식(`LocalPasswordResetMailSender`, `@Profil
   퍼블릭 액세스 차단 유지, IAM은 해당 버킷의 `PutObject`/`GetObject`/`DeleteObject`만
   > presigned PUT은 **`Content-Type`이 서명에 포함**된다. presign 시 보낸 값과 PUT 헤더 값이
   > 한 글자라도 다르면 403이다. 로컬 테스트에서는 재현되지 않고 이 Phase에서만 터진다.
+  >
+  > **[2026-09-10] 이 CORS 항목은 Phase 13 DoD 통과 시점에 실제로는 적용되지 않은 채 넘어갔다.**
+  > 당시 검증이 전부 서버 측 curl이라 `Origin` 헤더가 없었고, 따라서 프리플라이트를 한 번도 거치지
+  > 않았기 때문이다. CORS는 브라우저만 강제하는 규칙이라 curl·SDK 테스트로는 드러나지 않는다.
+  > Amplify 배포(Phase 11) 후 브라우저에서 이미지 첨부를 시도하고 나서야 프리플라이트 403으로
+  > 드러났다. 재발 방지를 위해 `docs/CHECKLIST.md`에 16-1.7(프리플라이트)·16-1.8(브라우저 E2E)을
+  > 추가했다.
+  >
+  > 허용 origin은 운영 `https://main.d1prwks7k0qzzg.amplifyapp.com`과 로컬
+  > `http://localhost:3000` 두 개다. 로컬도 `app.storage.type=s3`라 같은 버킷을 쓰므로 둘 다 필요하다.
+  > 적용할 JSON 원문과 콘솔 경로는 `todo-backend/deploy/README.md` §2-1에 있다.
 
 **DoD**
 

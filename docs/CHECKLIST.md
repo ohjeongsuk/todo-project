@@ -446,17 +446,33 @@
 
 | # | 검증 항목 | 기대 결과 |
 |---|---|---|
-| 16-1.1 | ☑ S3 프로파일 기동 | `app.storage.type=s3` 로 실제 버킷(`todolist-dev-ojs933327`)에 presign → PUT → complete → GET 전체 흐름이 바이트 완전 일치로 통과 (2026-09-07) |
+| 16-1.1 | ☑ S3 프로파일 기동 | `app.storage.type=s3` 로 실제 버킷(`todolist-dev-ojs933327`)에 presign → PUT → complete → GET 전체 흐름이 바이트 완전 일치로 통과 (2026-09-07). **서버 측 curl 기준이며, 브라우저 origin 검증은 16-1.7·16-1.8이 담당한다** |
 | 16-1.2 | ☑ **프론트 무변경** | `todo-frontend` git status 가 클린하다 — 이 기능의 최종 수용 기준 |
 | 16-1.3 | ☑ 역방향 전환 | `app.storage.type=local` 로 되돌리면 다시 로컬 스토리지로 동작한다 |
 | 16-1.4 | ☑ 자격증명 미노출 | AWS 키가 소스·설정 파일 어디에도 없다 (NF-05) |
 | 16-1.5 | ☑ presigned Content-Type | 실제 S3에 PUT 성공(HTTP 200). presign 서명의 `SignedHeaders=content-type;host`와 실제 헤더가 일치 (2026-09-07) |
 | 16-1.6 | ☐ 버킷 비공개 | **재발 (2026-09-07 오후 재확인).** 서명 없는 직접 URL 접근이 `200 OK`로 파일 전체를 반환한다. 오전에 한 번 고쳤으나 버킷 정책을 다시 설정하는 과정에서 퍼블릭 읽기가 되살아났다. **사용자가 현 상태 유지를 결정** — 아래 주석 참고 |
+| 16-1.7 | ☐ **버킷 CORS 프리플라이트** | `OPTIONS`(`Origin`=Amplify / `http://localhost:3000`, `ACRM: PUT`, `ACRH: content-type`) → `200` + 요청 origin이 `Access-Control-Allow-Origin`에 그대로 에코. 미등록 origin은 `403` |
+| 16-1.8 | ☐ 브라우저 업로드 E2E | Amplify와 `http://localhost:3000` 양쪽에서 Tiptap 이미지 첨부 시 `OPTIONS 200 → PUT 200 → complete 200` |
 
 > 2026-09-07 오전, 실제 AWS 계정(`todolist-dev-ojs933327`, ap-northeast-2)으로 라이브 검증했다.
 > **16-1.6을 제외한 전 항목 PASS.**
 > presigned URL(SigV4 서명)은 버킷 정책·퍼블릭 액세스 차단과 무관한 별개 인증 경로다. 그래서 16-1.6이
 > 깨져 있어도 16-1.1·16-1.5의 정상 흐름은 그대로 통과한다 — **기능 테스트만으로는 이 구멍이 드러나지 않는다.**
+
+> ### 16-1.7·16-1.8 추가 경위 (2026-09-10)
+>
+> 16-1.5는 **서버에서 curl로 PUT한 결과**라 `Origin` 헤더가 없었고, 따라서 프리플라이트를 한 번도
+> 거치지 않았다. CORS는 브라우저만 강제하는 규칙이라 curl·SDK 테스트로는 드러나지 않는다.
+> 그 결과 **버킷에 CORS 규칙이 아예 없는 상태로 16-1.5가 ☑ 통과했고**, Amplify 배포 후 브라우저에서
+> 이미지 첨부를 시도하자 프리플라이트가 403으로 막혀 업로드가 100% 실패했다.
+>
+> 16-1.6과 같은 종류의 사각지대다 — **정상 흐름을 통과시키면서 조용히 깨져 있는** 항목이다.
+> 두 항목 모두 Amplify와 `http://localhost:3000` **양쪽에서** 확인해야 한다.
+> `application-local.properties`의 `app.storage.type=s3` 때문에 로컬 개발도 같은 버킷을 쓰므로,
+> `AllowedOrigins`에서 localhost를 빠뜨리면 운영만 고쳐지고 로컬은 그대로 깨진다.
+>
+> 적용할 CORS JSON과 콘솔 경로는 `todo-backend/deploy/README.md` §2-1에 있다.
 
 > ### 16-1.6 미통과 상태 유지 결정 (2026-09-07)
 >
